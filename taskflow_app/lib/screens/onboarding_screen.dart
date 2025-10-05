@@ -9,7 +9,6 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController();
   int _currentPage = 0;
   final int _totalPages = 3;
 
@@ -32,44 +31,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: 'Pronto para Começar!',
       subtitle: 'Protegemos seus dados com transparência',
       description: 'Antes de começar, precisamos que você leia e concorde com nossa política de privacidade e termos de uso. Sua privacidade é nossa prioridade.',
-      icon: Icons.privacy_tip,
+      icon: Icons.rocket_launch,
       color: const Color(0xFFF59E0B), // Amber acento
     ),
   ];
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
 
-  void _onPageChanged(int page) {
-    setState(() {
-      _currentPage = page;
-    });
-  }
+
+
 
   void _nextPage() {
     if (_currentPage < _totalPages - 1) {
-      final targetPage = _currentPage + 1;
-      _pageController.animateToPage(
-        targetPage,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      setState(() {
+        _currentPage++;
+      });
+      print('➡️ Avançando para página: $_currentPage');
     } else {
       _navigateToConsent();
     }
   }
 
   void _previousPage() {
+    print('⬅️ PreviousPage chamado: Página atual = $_currentPage');
     if (_currentPage > 0) {
-      final targetPage = _currentPage - 1;
-      _pageController.animateToPage(
-        targetPage,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      setState(() {
+        _currentPage--;
+      });
+      print('🎯 Navegando para página: $_currentPage');
     }
   }
 
@@ -117,185 +105,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                 // Page content
                 Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: _onPageChanged,
-                    itemCount: _totalPages,
-                    itemBuilder: (context, index) {
-                      final page = _pages[index];
-                      
-                      // Layout especial para a terceira tela (última)
-                      if (index == _totalPages - 1) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Ícone animado especial
-                              Container(
-                                width: 140,
-                                height: 140,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      page.color.withValues(alpha: 0.3),
-                                      page.color.withValues(alpha: 0.1),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(70),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: page.color.withValues(alpha: 0.3),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  page.icon,
-                                  size: 70,
-                                  color: page.color,
-                                ),
-                              ),
-                              
-                              const SizedBox(height: 40),
-                              
-                              // Título com estilo especial
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: page.color.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  page.title,
-                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    color: page.color,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              
-                              const SizedBox(height: 20),
-                              
-                              // Subtítulo
-                              Text(
-                                page.subtitle,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              
-                              const SizedBox(height: 30),
-                              
-                              // Card com descrição
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.shield_outlined,
-                                      color: page.color,
-                                      size: 32,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      page.description,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey.shade700,
-                                        height: 1.6,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
+                  child: GestureDetector(
+                    onHorizontalDragEnd: (details) {
+                      if (details.primaryVelocity! > 0) {
+                        _previousPage();
+                      } else if (details.primaryVelocity! < 0) {
+                        _nextPage();
                       }
-                      
-                      // Layout padrão para as outras telas
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Ícone
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: page.color.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(60),
-                              ),
-                              child: Icon(
-                                page.icon,
-                                size: 60,
-                                color: page.color,
-                              ),
-                            ),
-                            
-                            const SizedBox(height: 40),
-                            
-                            // Título
-                            Text(
-                              page.title,
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            // Subtítulo
-                            Text(
-                              page.subtitle,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: page.color,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            
-                            const SizedBox(height: 24),
-                            
-                            // Descrição
-                            Text(
-                              page.description,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                                height: 1.5,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      );
                     },
+                    child: IndexedStack(
+                      index: _currentPage,
+                      children: [
+                        _buildPageContent(0),
+                        _buildPageContent(1),
+                        _buildPageContent(2),
+                      ],
+                    ),
                   ),
-                ),            // Dots indicator (ocultos na última página conforme RF-1)
+                ),
+                
+            // Dots indicator (ocultos na última página conforme RF-1)
             if (_currentPage < _totalPages - 1)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
@@ -377,6 +206,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+
+  Widget _buildPageContent(int index) {
+    final page = _pages[index];
+    print('🏗️ Construindo página $index: ${page.title} - Ícone: ${page.icon} - Cor: ${page.color}');
+    
+    return Container(
+      key: ValueKey('page_$index'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                color: page.color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Icon(
+                page.icon,
+                size: 120,
+                color: page.color,
+              ),
+            ),
+            const SizedBox(height: 40),
+            Text(
+              page.title,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              page.subtitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: page.color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              page.description,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+
+
+
+
 }
 
 class OnboardingPage {
