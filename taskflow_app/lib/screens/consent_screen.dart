@@ -63,7 +63,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
       // Marca onboarding como completo se for primeira vez
       if (prefsService.isFirstTimeUser) {
         await prefsService.setOnboardingCompleted(true);
-        await prefsService.setFirstTimeUser(false);
+        await prefsService.completeFirstTimeSetup();
       }
 
       if (mounted) {
@@ -95,11 +95,14 @@ class _ConsentScreenState extends State<ConsentScreen> {
         automaticallyImplyLeading: false, // Remove botão de voltar
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               // Título e descrição
               Text(
                 'Antes de continuar',
@@ -184,10 +187,39 @@ class _ConsentScreenState extends State<ConsentScreen> {
                 ),
               ),
               
-              const Spacer(),
+              const SizedBox(height: 32),
               
-              // Botão de consentimento
-              SizedBox(
+              // Informação sobre versão
+              Center(
+                child: Text(
+                  'Versão das políticas: ${PreferencesService.currentPolicyVersion}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+            ],
+                ),
+              ),
+            ),
+            
+            // Botão fixo na parte inferior
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    offset: const Offset(0, -2),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _canProceed && !_isLoading ? _grantConsent : null,
@@ -215,21 +247,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                         ),
                 ),
               ),
-              
-              const SizedBox(height: 16),
-              
-              // Informação sobre versão
-              Center(
-                child: Text(
-                  'Versão das políticas: ${PreferencesService.currentPolicyVersion}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

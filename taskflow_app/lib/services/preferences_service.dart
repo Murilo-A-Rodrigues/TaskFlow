@@ -39,6 +39,12 @@ class PreferencesService extends ChangeNotifier {
     notifyListeners();
   }
   
+  // Método para marcar que o usuário completou o primeiro uso
+  Future<void> completeFirstTimeSetup() async {
+    await setFirstTimeUser(false);
+    print('✅ Primeiro uso marcado como completo');
+  }
+  
   // Onboarding
   bool get isOnboardingCompleted => prefs.getBool(_keyOnboardingCompleted) ?? false;
   
@@ -162,5 +168,25 @@ class PreferencesService extends ChangeNotifier {
       return '/splash';
     }
     return '/home';
+  }
+  
+  // Método de debug para verificar o estado das preferências
+  void debugPrintState() {
+    print('🔍 === Estado das Preferências ===');
+    print('isFirstTimeUser: $isFirstTimeUser');
+    print('isOnboardingCompleted: $isOnboardingCompleted');
+    print('hasValidConsent: $hasValidConsent');
+    print('privacyReadV1: $privacyReadV1');
+    print('termsReadV1: $termsReadV1');
+    print('policiesVersionAccepted: $policiesVersionAccepted');
+    print('currentPolicyVersion: $currentPolicyVersion');
+    print('=================================');
+  }
+  
+  // Método para limpar todas as preferências (útil para testes)
+  Future<void> clearAllPreferences() async {
+    await prefs.clear();
+    print('🗑️ Todas as preferências foram limpar');
+    notifyListeners();
   }
 }

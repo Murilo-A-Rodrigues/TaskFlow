@@ -55,7 +55,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
       ),
       body: Form(
         key: _formKey,
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

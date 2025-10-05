@@ -55,6 +55,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     
     final prefsService = context.read<PreferencesService>();
     
+    // Debug: mostra o estado atual das preferências
+    prefsService.debugPrintState();
+    
     // Decide a rota baseada nas flags/versão de aceite (RF-5)
     String nextRoute;
     

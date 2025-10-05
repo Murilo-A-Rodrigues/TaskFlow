@@ -28,17 +28,22 @@ class TaskService extends ChangeNotifier {
         print('📋 Carregadas ${_tasks.length} tarefas salvas');
       } catch (e) {
         print('❌ Erro ao carregar tarefas: $e');
-        // Em caso de erro, usa dados de exemplo
-        _tasks.addAll(SampleData.getSampleTasks());
+        _tasks.clear();
       }
-    } else {
-      // Primeira vez - usa dados de exemplo
-      _tasks.addAll(SampleData.getSampleTasks());
-      print('📋 Primeira execução - carregando ${_tasks.length} tarefas de exemplo');
-      await _saveTasks();
     }
+    // Para primeira vez, não cria tarefas automaticamente
+    // Isso permite uma experiência limpa para novos usuários
     
     _isInitialized = true;
+    notifyListeners();
+  }
+  
+  // Método separado para criar tarefas de exemplo (opcional)
+  Future<void> loadSampleTasks() async {
+    _tasks.clear();
+    _tasks.addAll(SampleData.getSampleTasks());
+    await _saveTasks();
+    print('📋 Carregadas ${_tasks.length} tarefas de exemplo');
     notifyListeners();
   }
 

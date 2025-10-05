@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/preferences_service.dart';
+import '../services/task_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -215,6 +216,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Implementar tela de ajuda
                 },
               ),
+
+              // Seção de Debug (apenas para desenvolvimento)
+              const Divider(),
+              const ListTile(
+                leading: Icon(Icons.bug_report, color: Colors.orange),
+                title: Text(
+                  'Debug',
+                  style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text('Ferramentas de desenvolvimento'),
+              ),
+              
+              ListTile(
+                leading: const Icon(Icons.refresh, color: Colors.red),
+                title: const Text('Limpar Dados'),
+                subtitle: const Text('Reset completo do app (Cuidado!)'),
+                onTap: () {
+                  _showResetDialog();
+                },
+              ),
             ],
           );
         },
@@ -306,6 +327,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return '${date.day}/${date.month}/${date.year} às ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return 'Data inválida';
+    }
+  }
+
+  void _showResetDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Reset Completo'),
+          ],
+        ),
+        content: const Text(
+          '⚠️ ATENÇÃO: Esta ação irá:\n\n'
+          '• Limpar todas as tarefas\n'
+          '• Limpar todas as preferências\n'
+          '• Voltar o app ao estado inicial\n\n'
+          'Esta ação não pode ser desfeita!',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _performReset();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('LIMPAR TUDO'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performReset() async {
+    try {
+      final prefsService = context.read<PreferencesService>();
+      final taskService = context.read<TaskService>();
+      
+      // Limpa todas as tarefas
+      await taskService.clearAllTasks();
+      
+      // Limpa todas as preferências
+      await prefsService.clearAllPreferences();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Reset completo realizado! Reiniciando app...'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // Aguarda um pouco e então navega para o splash
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/splash',
+            (route) => false,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Erro ao fazer reset: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }
