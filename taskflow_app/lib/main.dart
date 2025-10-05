@@ -16,19 +16,32 @@ void main() async {
   final preferencesService = PreferencesService();
   await preferencesService.init();
   
-  runApp(TaskFlowApp(preferencesService: preferencesService));
+  // Inicializa o serviço de tarefas
+  final taskService = TaskService();
+  // Aguarda a inicialização das tarefas
+  await taskService.initializeTasks();
+  
+  runApp(TaskFlowApp(
+    preferencesService: preferencesService,
+    taskService: taskService,
+  ));
 }
 
 class TaskFlowApp extends StatelessWidget {
   final PreferencesService preferencesService;
+  final TaskService taskService;
   
-  const TaskFlowApp({super.key, required this.preferencesService});
+  const TaskFlowApp({
+    super.key, 
+    required this.preferencesService,
+    required this.taskService,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => TaskService()),
+        ChangeNotifierProvider.value(value: taskService),
         ChangeNotifierProvider.value(value: preferencesService),
       ],
       child: MaterialApp(

@@ -99,21 +99,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   children: [
                     // Logo/Ícone do app
                     Container(
-                      width: 120,
-                      height: 120,
+                      width: 240,
+                      height: 240,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(60),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                            blurRadius: 30,
+                            offset: const Offset(0, 15),
                           ),
                         ],
                       ),
                       child: const TaskFlowIcon(
-                        size: 80,
+                        size: 220,
                       ),
                     ),
                     const SizedBox(height: 24),

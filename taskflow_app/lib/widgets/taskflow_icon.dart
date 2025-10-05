@@ -40,30 +40,30 @@ class TaskFlowIconPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint();
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.45;
+    final radius = size.width * 0.48; // Aumentado de 0.45 para 0.48
 
     // Fundo branco com borda
     paint.color = Colors.white;
     paint.style = PaintingStyle.fill;
     canvas.drawCircle(center, radius, paint);
 
-    // Borda cinza
+    // Borda cinza mais fina
     paint.color = Colors.grey.shade400;
     paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = size.width * 0.05;
+    paint.strokeWidth = size.width * 0.03; // Reduzido de 0.05 para 0.03
     canvas.drawCircle(center, radius, paint);
 
     // Configurações para os elementos
-    final itemHeight = size.height * 0.12;
-    final itemWidth = size.width * 0.6;
-    final startY = size.height * 0.25;
-    final itemSpacing = size.height * 0.15;
+    final itemHeight = size.height * 0.14; // Aumentado de 0.12 para 0.14
+    final itemWidth = size.width * 0.65; // Aumentado de 0.6 para 0.65
+    final startY = size.height * 0.22; // Reduzido de 0.25 para 0.22
+    final itemSpacing = size.height * 0.16; // Aumentado de 0.15 para 0.16
 
     // Primeiro item (completo - com check laranja)
     _drawTaskItem(
       canvas,
       size,
-      Offset(size.width * 0.2, startY),
+      Offset(size.width * 0.175, startY), // Mais centralizado: 0.175 em vez de 0.2
       itemWidth,
       itemHeight,
       isCompleted: true,
@@ -73,7 +73,7 @@ class TaskFlowIconPainter extends CustomPainter {
     _drawTaskItem(
       canvas,
       size,
-      Offset(size.width * 0.2, startY + itemSpacing),
+      Offset(size.width * 0.175, startY + itemSpacing), // Mais centralizado
       itemWidth,
       itemHeight,
       isCompleted: false,

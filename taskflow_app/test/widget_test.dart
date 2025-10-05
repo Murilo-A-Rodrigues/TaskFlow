@@ -8,15 +8,22 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:taskflow_app/main.dart';
 import 'package:taskflow_app/services/preferences_service.dart';
+import 'package:taskflow_app/services/task_service.dart';
 
 void main() {
   testWidgets('TaskFlow app smoke test', (WidgetTester tester) async {
     // Inicializa o serviço de preferências
     final preferencesService = PreferencesService();
     await preferencesService.init();
+    
+    final taskService = TaskService();
+    await taskService.initializeTasks();
 
     // Build our app and trigger a frame.
-    await tester.pumpWidget(TaskFlowApp(preferencesService: preferencesService));
+    await tester.pumpWidget(TaskFlowApp(
+      preferencesService: preferencesService,
+      taskService: taskService,
+    ));
 
     // Verifica se o app carrega a tela de splash
     expect(find.text('TaskFlow'), findsOneWidget);

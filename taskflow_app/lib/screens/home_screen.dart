@@ -315,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
 
     if (result != null && mounted) {
-      context.read<TaskService>().addTask(result);
+      await context.read<TaskService>().addTask(result);
     }
   }
 
@@ -327,12 +327,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
 
     if (result != null && mounted) {
-      context.read<TaskService>().updateTask(result);
+      await context.read<TaskService>().updateTask(result);
     }
   }
 
-  void _toggleTask(String taskId) {
-    context.read<TaskService>().toggleTaskCompletion(taskId);
+  void _toggleTask(String taskId) async {
+    await context.read<TaskService>().toggleTaskCompletion(taskId);
   }
 
   void _deleteTask(Task task) {
@@ -347,9 +347,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () {
-              context.read<TaskService>().deleteTask(task.id);
-              Navigator.of(context).pop();
+            onPressed: () async {
+              await context.read<TaskService>().deleteTask(task.id);
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
             child: const Text(
               'Excluir',
