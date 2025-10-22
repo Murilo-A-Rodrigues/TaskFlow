@@ -10,6 +10,8 @@ class PreferencesService extends ChangeNotifier {
   static const String _keyAcceptedAt = 'accepted_at';
   static const String _keyFirstTimeUser = 'first_time_user';
   static const String _keyTipsEnabled = 'tips_enabled';
+  static const String _keyUserName = 'user_name';
+  static const String _keyUserPhotoPath = 'user_photo_path';
   
   // Mantém compatibilidade com versões antigas
   static const String _keyPrivacyPolicyAccepted = 'privacy_policy_accepted';
@@ -106,6 +108,26 @@ class PreferencesService extends ChangeNotifier {
   
   Future<void> setTipsEnabled(bool value) async {
     await prefs.setBool(_keyTipsEnabled, value);
+    notifyListeners();
+  }
+
+  // User Name
+  String get userName => prefs.getString(_keyUserName) ?? 'Usuário';
+  
+  Future<void> setUserName(String name) async {
+    await prefs.setString(_keyUserName, name);
+    notifyListeners();
+  }
+
+  // User Photo Path
+  String? get userPhotoPath => prefs.getString(_keyUserPhotoPath);
+  
+  Future<void> setUserPhotoPath(String? path) async {
+    if (path == null) {
+      await prefs.remove(_keyUserPhotoPath);
+    } else {
+      await prefs.setString(_keyUserPhotoPath, path);
+    }
     notifyListeners();
   }
 

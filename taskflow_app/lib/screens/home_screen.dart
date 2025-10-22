@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/task.dart';
 import '../services/task_service.dart';
+import '../services/preferences_service.dart';
+import '../services/photo_service.dart';
 import '../widgets/task_card.dart';
+import '../widgets/user_avatar.dart';
 import 'add_edit_task_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -38,41 +42,63 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _buildDrawer(context),
       appBar: AppBar(
         title: const Text('TaskFlow'),
         centerTitle: true,
         actions: [
+          // Avatar do usuário no AppBar
+          Consumer<PreferencesService>(
+            builder: (context, prefsService, child) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 4.0),
+                child: UserAvatar(
+                  photoPath: prefsService.userPhotoPath,
+                  userName: prefsService.userName,
+                  radius: 14,
+                  onTap: () => _showPhotoOptions(context),
+                  showBorder: true,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
               Navigator.of(context).pushNamed('/settings');
             },
+            padding: const EdgeInsets.all(12),
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100),
+          preferredSize: const Size.fromHeight(110),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Buscar tarefas...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: SizedBox(
+                  height: 48,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Buscar tarefas...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
                   ),
                 ),
               ),
@@ -83,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Tab(text: 'Pendentes'),
                   Tab(text: 'Concluídas'),
                 ],
+                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
             ],
           ),
@@ -118,30 +145,32 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildStatsCard(TaskService taskService) {
     return Card(
       margin: const EdgeInsets.all(16),
+      elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatItem(
                   'Total',
                   taskService.totalTasks.toString(),
                   Icons.assignment,
-                  Colors.blue,
+                  const Color(0xFF3B82F6), // Blue com melhor contraste
                 ),
+                const SizedBox(width: 12),
                 _buildStatItem(
                   'Pendentes',
                   taskService.pendingTasksCount.toString(),
                   Icons.pending,
-                  Colors.orange,
+                  const Color(0xFFF59E0B), // Orange com melhor contraste
                 ),
+                const SizedBox(width: 12),
                 _buildStatItem(
                   'Concluídas',
                   taskService.completedTasksCount.toString(),
                   Icons.check_circle,
-                  Colors.green,
+                  const Color(0xFF10B981), // Green com melhor contraste
                 ),
               ],
             ),
@@ -167,25 +196,54 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildStatItem(String label, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 32),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withValues(alpha: 0.3),
+            width: 1,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon, 
+                color: color.withValues(alpha: 0.8), 
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -199,60 +257,88 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.start,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Primeiros Passos',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+      elevation: 2,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).primaryColor.withValues(alpha: 0.05),
+              Theme.of(context).primaryColor.withValues(alpha: 0.02),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.trending_up,
+                      color: Theme.of(context).primaryColor,
+                      size: 24,
+                    ),
                   ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Primeiros Passos',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              Text(
+                'Crie suas primeiras $tasksRemaining tarefas do dia para começar a organizar sua produtividade!',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                  height: 1.4,
                 ),
-              ],
-            ),
-            
-            const SizedBox(height: 12),
-            
-            Text(
-              'Crie suas primeiras $tasksRemaining tarefas do dia para começar a organizar sua produtividade!',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
               ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            LinearProgressIndicator(
-              value: taskService.totalTasks / 3,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).primaryColor,
+              
+              const SizedBox(height: 20),
+              
+              LinearProgressIndicator(
+                value: taskService.totalTasks / 3,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).primaryColor,
+                ),
+                minHeight: 6,
               ),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            Text(
-              '${taskService.totalTasks}/3 tarefas criadas',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
+              
+              const SizedBox(height: 12),
+              
+              Text(
+                '${taskService.totalTasks}/3 tarefas criadas',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -260,36 +346,64 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildTaskList(List<Task> tasks) {
     if (tasks.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.task_alt,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _searchQuery.isNotEmpty
-                  ? 'Nenhuma tarefa encontrada'
-                  : 'Nenhuma tarefa aqui',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade600,
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          // Calcula o tamanho do ícone baseado na altura disponível
+          final double availableHeight = constraints.maxHeight;
+          final double iconSize = availableHeight > 150 ? 36 : 24;
+          final double fontSize = availableHeight > 150 ? 14 : 12;
+          final double smallFontSize = availableHeight > 150 ? 12 : 10;
+          
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: availableHeight > 100 ? 80 : availableHeight * 0.8,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.task_alt,
+                        size: iconSize,
+                        color: Colors.grey.shade400,
+                      ),
+                      SizedBox(height: availableHeight > 150 ? 8 : 4),
+                      Text(
+                        _searchQuery.isNotEmpty
+                            ? 'Nenhuma tarefa encontrada'
+                            : 'Nenhuma tarefa aqui',
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: availableHeight > 150 ? 4 : 2),
+                      Text(
+                        _searchQuery.isNotEmpty
+                            ? 'Tente outro termo'
+                            : 'Adicione uma tarefa',
+                        style: TextStyle(
+                          fontSize: smallFontSize,
+                          color: Colors.grey.shade500,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              _searchQuery.isNotEmpty
-                  ? 'Tente buscar por outro termo'
-                  : 'Adicione uma nova tarefa para começar',
-              style: TextStyle(
-                color: Colors.grey.shade500,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       );
     }
 
@@ -360,6 +474,301 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
         ],
       ),
+    );
+  }
+  // ========== DRAWER COM AVATAR ==========
+
+  Widget _buildDrawer(BuildContext context) {
+    final prefsService = context.watch<PreferencesService>();
+    final userName = prefsService.userName;
+    final userPhotoPath = prefsService.userPhotoPath;
+
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Container(
+            height: 180,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    // Avatar com espaçamento adequado
+                    Center(
+                      child: UserAvatar(
+                        photoPath: userPhotoPath,
+                        userName: userName,
+                        radius: 32,
+                        onTap: () => _showPhotoOptions(context),
+                        showBorder: true,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Nome do usuário
+                    Text(
+                      userName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Texto de instrução
+                    Text(
+                      userPhotoPath != null ? 'Toque para alterar foto' : 'Toque para adicionar foto',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Editar Nome'),
+            onTap: () => _showEditNameDialog(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_camera),
+            title: const Text('Gerenciar Foto'),
+            onTap: () => _showPhotoOptions(context),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Configurações'),
+            onTap: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed('/settings');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Sobre'),
+            onTap: () {
+              Navigator.of(context).pop();
+              _showAboutDialog(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPhotoOptions(BuildContext context) {
+    final prefsService = context.read<PreferencesService>();
+    final hasPhoto = prefsService.userPhotoPath != null;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasPhoto) ...[
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Sua foto neste dispositivo. Você pode removê-la quando quiser.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ] else ...[
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Sua foto será salva apenas localmente neste dispositivo.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Tirar Foto'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickPhoto(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Escolher da Galeria'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickPhoto(ImageSource.gallery);
+              },
+            ),
+            if (hasPhoto)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Remover Foto', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _confirmDeletePhoto(context);
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    final photoService = PhotoService();
+    
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final photoPath = await photoService.pickCompressAndSave(source);
+      
+      if (!mounted) return;
+      Navigator.of(context).pop();
+
+      if (photoPath != null) {
+        await context.read<PreferencesService>().setUserPhotoPath(photoPath);
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto salva com sucesso!')),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nenhuma foto foi selecionada')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao processar foto: $e')),
+      );
+    }
+  }
+
+  void _confirmDeletePhoto(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remover Foto'),
+        content: const Text('Tem certeza que deseja remover sua foto de perfil?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _deletePhoto();
+            },
+            child: const Text(
+              'Remover',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deletePhoto() async {
+    final photoService = PhotoService();
+    final success = await photoService.deletePhoto();
+    
+    if (!mounted) return;
+    
+    if (success) {
+      await context.read<PreferencesService>().setUserPhotoPath(null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto removida com sucesso')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao remover foto')),
+      );
+    }
+  }
+
+  void _showEditNameDialog(BuildContext context) {
+    final prefsService = context.read<PreferencesService>();
+    final controller = TextEditingController(text: prefsService.userName);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar Nome'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Seu nome',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                await prefsService.setUserName(newName);
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Nome atualizado!')),
+                );
+              }
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: 'TaskFlow',
+      applicationVersion: '1.0.0',
+      applicationIcon: const Icon(Icons.task_alt, size: 48),
+      children: [
+        const Text('Um aplicativo de gerenciamento de tarefas desenvolvido em Flutter.'),
+        const SizedBox(height: 8),
+        const Text('© 2025 TaskFlow'),
+      ],
     );
   }
 }

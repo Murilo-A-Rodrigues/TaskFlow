@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>O TaskFlow precisa acessar sua câmera para que você possa tirar uma foto de perfil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>O TaskFlow precisa acessar sua galeria para que você possa escolher uma foto de perfil.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>O TaskFlow precisa salvar fotos na sua galeria.</string>
 </dict>
 </plist>

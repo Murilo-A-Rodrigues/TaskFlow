@@ -68,8 +68,23 @@ class TaskFlowApp extends StatelessWidget {
             foregroundColor: Colors.white,
             elevation: 2,
           ),
+          tabBarTheme: const TabBarThemeData(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            indicatorSize: TabBarIndicatorSize.tab,
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+            unselectedLabelStyle: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: 14,
+            ),
+          ),
           floatingActionButtonTheme: const FloatingActionButtonThemeData(
             backgroundColor: Color(0xFFF59E0B), // Amber acento
+            foregroundColor: Colors.white,
           ),
         ),
         initialRoute: '/splash',
