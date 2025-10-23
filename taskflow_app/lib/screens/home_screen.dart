@@ -51,11 +51,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           Consumer<PreferencesService>(
             builder: (context, prefsService, child) {
               return Padding(
-                padding: const EdgeInsets.only(right: 4.0),
+                padding: const EdgeInsets.only(right: 8.0), // Aumentado de 4 para 8
                 child: UserAvatar(
                   photoPath: prefsService.userPhotoPath,
                   userName: prefsService.userName,
-                  radius: 14,
+                  radius: 16, // Aumentado de 14 para 16 para melhor visibilidade
                   onTap: () => _showPhotoOptions(context),
                   showBorder: true,
                 ),
@@ -67,18 +67,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             onPressed: () {
               Navigator.of(context).pushNamed('/settings');
             },
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8), // Reduzido de 12 para 8
+            constraints: const BoxConstraints(
+              minWidth: 40,
+              minHeight: 40,
+            ), // Adicionado constraints para garantir tamanho mínimo
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(110),
+          preferredSize: const Size.fromHeight(120), // Aumentado de 110 para 120
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: SizedBox(
-                  height: 48,
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8), // Reduzido padding top de 8 para 4
+                child: Container(
+                  height: 44, // Reduzido de 48 para 44
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
@@ -97,19 +101,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Reduzido vertical padding
+                      isDense: true, // Adiciona densidade para reduzir altura
                     ),
                   ),
                 ),
               ),
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: 'Todas'),
-                  Tab(text: 'Pendentes'),
-                  Tab(text: 'Concluídas'),
-                ],
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+              Container(
+                height: 48, // Altura fixa para o TabBar
+                child: TabBar(
+                  controller: _tabController,
+                  tabs: const [
+                    Tab(text: 'Todas'),
+                    Tab(text: 'Pendentes'),
+                    Tab(text: 'Concluídas'),
+                  ],
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
               ),
             ],
           ),
@@ -488,7 +496,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         padding: EdgeInsets.zero,
         children: [
           Container(
-            height: 180,
+            height: 200, // Aumentado de 180 para 200
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -501,39 +509,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(12.0), // Reduzido de 16 para 12
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min, // Adicionado para evitar overflow
                   children: [
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8), // Reduzido de 16 para 8
                     // Avatar com espaçamento adequado
                     Center(
                       child: UserAvatar(
                         photoPath: userPhotoPath,
                         userName: userName,
-                        radius: 32,
+                        radius: 28, // Reduzido de 32 para 28
                         onTap: () => _showPhotoOptions(context),
                         showBorder: true,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12), // Reduzido de 16 para 12
                     // Nome do usuário
                     Text(
                       userName,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16, // Reduzido de 18 para 16
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2), // Reduzido de 4 para 2
                     // Texto de instrução
                     Text(
                       userPhotoPath != null ? 'Toque para alterar foto' : 'Toque para adicionar foto',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 11, // Reduzido de 12 para 11
                         color: Colors.white70,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
