@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../services/storage/preferences_service.dart';
-import '../../services/integrations/photo_service.dart';
-import '../common/user_avatar.dart';
+import '../../../services/storage/preferences_service.dart';
+import '../../../services/integrations/photo_service.dart';
+import '../../../shared/widgets/user_avatar.dart';
 
 /// Drawer da tela inicial com perfil do usuário e opções de navegação
 /// Permite editar nome, gerenciar foto e acessar configurações

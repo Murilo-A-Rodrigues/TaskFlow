@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/storage/preferences_service.dart';
-import '../services/core/task_service.dart';
+import '../../../services/storage/preferences_service.dart';
+import '../../../services/core/task_service_v2.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

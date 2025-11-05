@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/storage/preferences_service.dart';
-import '../widgets/taskflow_icon.dart';
+import '../../../services/storage/preferences_service.dart';
+import '../../../shared/widgets/taskflow_icon.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

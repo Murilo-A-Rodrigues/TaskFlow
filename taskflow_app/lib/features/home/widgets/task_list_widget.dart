@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../models/task.dart';
-import '../task_card.dart';
+import '../../../features/app/domain/entities/task.dart';
+import '../../tasks/widgets/task_card.dart';
 
 /// Widget que exibe a lista de tarefas com estado vazio
 /// Adapta-se ao espaço disponível e exibe mensagens contextuais

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/storage/preferences_service.dart';
+import '../../../services/storage/preferences_service.dart';
 import 'policy_viewer_screen.dart';
 
 class ConsentScreen extends StatefulWidget {

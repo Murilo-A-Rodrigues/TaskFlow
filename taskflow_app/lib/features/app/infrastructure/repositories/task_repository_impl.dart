@@ -27,6 +27,7 @@ class TaskRepositoryImpl implements TaskRepository {
   /// 3. Sincroniza em background (incremental)
   /// 4. Atualiza cache com novos DTOs
   /// 5. Retorna Entities atualizadas
+  @override
   Future<List<Task>> getAllTasks({bool forceSync = false}) async {
     try {
       print('📋 Carregando tarefas (cache-first)...');
@@ -68,24 +69,31 @@ class TaskRepositoryImpl implements TaskRepository {
       
       // 2. Optimistic update - adiciona ao cache imediatamente
       await _addDtoToCache(dto);
+      print('✅ Tarefa adicionada ao cache local');
       
-      // 3. Envia para Supabase usando Map direto
-      final taskMap = TaskMapper.toMap(entity);
-      final response = await _supabase
-          .from('tasks')
-          .insert(taskMap)
-          .select()
-          .single();
-      
-      // 4. Atualiza cache com resposta do servidor
-      final serverDto = TaskDto.fromMap(response);
-      await _updateDtoInCache(serverDto);
-      
-      print('✅ Tarefa criada no servidor');
-      return TaskMapper.toEntity(serverDto);
+      // 3. Tenta enviar para Supabase (não crítico)
+      try {
+        final taskMap = TaskMapper.toMap(entity);
+        final response = await _supabase
+            .from('tasks')
+            .insert(taskMap)
+            .select()
+            .single();
+        
+        // 4. Atualiza cache com resposta do servidor
+        final serverDto = TaskDto.fromMap(response);
+        await _updateDtoInCache(serverDto);
+        
+        print('✅ Tarefa sincronizada com servidor');
+        return TaskMapper.toEntity(serverDto);
+      } catch (syncError) {
+        print('⚠️ Falha na sincronização (funcionando offline): $syncError');
+        // Retorna a versão do cache local
+        return TaskMapper.toEntity(dto);
+      }
       
     } catch (e) {
-      print('❌ Erro ao criar tarefa: $e');
+      print('❌ Erro crítico ao criar tarefa: $e');
       throw Exception('Falha ao criar tarefa: $e');
     }
   }
@@ -102,30 +110,38 @@ class TaskRepositoryImpl implements TaskRepository {
       
       // 2. Optimistic update no cache
       await _updateDtoInCache(dto);
+      print('✅ Tarefa atualizada no cache local');
       
-      // 3. Envia para Supabase
-      final taskMap = TaskMapper.toMap(updatedEntity);
-      final response = await _supabase
-          .from('tasks')
-          .update(taskMap)
-          .eq('id', entity.id)
-          .select()
-          .single();
-      
-      // 4. Confirma no cache com resposta do servidor
-      final serverDto = TaskDto.fromMap(response);
-      await _updateDtoInCache(serverDto);
-      
-      print('✅ Tarefa atualizada no servidor');
-      return TaskMapper.toEntity(serverDto);
+      // 3. Tenta enviar para Supabase (não crítico)
+      try {
+        final taskMap = TaskMapper.toMap(updatedEntity);
+        final response = await _supabase
+            .from('tasks')
+            .update(taskMap)
+            .eq('id', entity.id)
+            .select()
+            .single();
+        
+        // 4. Confirma no cache com resposta do servidor
+        final serverDto = TaskDto.fromMap(response);
+        await _updateDtoInCache(serverDto);
+        
+        print('✅ Tarefa sincronizada com servidor');
+        return TaskMapper.toEntity(serverDto);
+      } catch (syncError) {
+        print('⚠️ Falha na sincronização (funcionando offline): $syncError');
+        // Retorna a versão do cache local
+        return TaskMapper.toEntity(dto);
+      }
       
     } catch (e) {
-      print('❌ Erro ao atualizar tarefa: $e');
+      print('❌ Erro crítico ao atualizar tarefa: $e');
       throw Exception('Falha ao atualizar tarefa: $e');
     }
   }
   
   /// Remove tarefa
+  @override
   Future<bool> deleteTask(String taskId) async {
     try {
       print('🗑️ Removendo tarefa: $taskId');
@@ -149,6 +165,7 @@ class TaskRepositoryImpl implements TaskRepository {
   }
   
   /// Força sincronização completa
+  @override
   Future<void> forceSyncAll() async {
     try {
       print('🔄 Sincronização completa forçada...');
@@ -176,6 +193,7 @@ class TaskRepositoryImpl implements TaskRepository {
   }
   
   /// Remove todas as tarefas (cache + servidor)
+  @override
   Future<void> clearAllTasks() async {
     try {
       print('🧹 Limpando todas as tarefas...');

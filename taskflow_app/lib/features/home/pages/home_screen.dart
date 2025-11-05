@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/task.dart';
-import '../services/core/task_service.dart';
-import '../services/storage/preferences_service.dart';
-import '../widgets/common/user_avatar.dart';
-import '../widgets/home/stats_card.dart';
-import '../widgets/home/first_steps_card.dart';
-import '../widgets/home/task_list_widget.dart';
-import '../widgets/home/home_drawer.dart';
-import 'add_edit_task_screen.dart';
+import '../../app/domain/entities/task.dart';
+import '../../../services/core/task_service_v2.dart';
+import '../../../services/storage/preferences_service.dart';
+import '../../../shared/widgets/user_avatar.dart';
+import '../widgets/stats_card.dart';
+import '../widgets/home_drawer.dart';
+import '../../tasks/pages/add_edit_task_screen.dart';
+import '../../tasks/widgets/task_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 8), // Reduzido padding top de 8 para 4
-                child: Container(
+                child: SizedBox(
                   height: 44, // Reduzido de 48 para 44
                   child: TextField(
                     controller: _searchController,
@@ -108,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
               ),
-              Container(
+              SizedBox(
                 height: 48, // Altura fixa para o TabBar
                 child: TabBar(
                   controller: _tabController,
@@ -126,37 +125,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
       body: Consumer<TaskService>(
         builder: (context, taskService, child) {
-          return Column(
+          return TabBarView(
+            controller: _tabController,
             children: [
-              StatsCard(taskService: taskService),
-              FirstStepsCard(taskService: taskService),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    TaskListWidget(
-                      tasks: taskService.searchTasks(_searchQuery),
-                      searchQuery: _searchQuery,
-                      onToggleTask: _toggleTask,
-                      onEditTask: _editTask,
-                      onDeleteTask: _deleteTask,
-                    ),
-                    TaskListWidget(
-                      tasks: taskService.searchTasks(_searchQuery).where((task) => !task.isCompleted).toList(),
-                      searchQuery: _searchQuery,
-                      onToggleTask: _toggleTask,
-                      onEditTask: _editTask,
-                      onDeleteTask: _deleteTask,
-                    ),
-                    TaskListWidget(
-                      tasks: taskService.searchTasks(_searchQuery).where((task) => task.isCompleted).toList(),
-                      searchQuery: _searchQuery,
-                      onToggleTask: _toggleTask,
-                      onEditTask: _editTask,
-                      onDeleteTask: _deleteTask,
-                    ),
-                  ],
-                ),
+              _buildScrollableTaskView(
+                taskService: taskService,
+                tasks: taskService.searchTasks(_searchQuery),
+              ),
+              _buildScrollableTaskView(
+                taskService: taskService,
+                tasks: taskService.searchTasks(_searchQuery).where((task) => !task.isCompleted).toList(),
+              ),
+              _buildScrollableTaskView(
+                taskService: taskService,
+                tasks: taskService.searchTasks(_searchQuery).where((task) => task.isCompleted).toList(),
               ),
             ],
           );
@@ -179,6 +161,62 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (result != null && mounted) {
       await context.read<TaskService>().addTask(result);
     }
+  }
+
+  Widget _buildScrollableTaskView({
+    required TaskService taskService,
+    required List<Task> tasks,
+  }) {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: StatsCard(taskService: taskService),
+          ),
+        ),
+        if (tasks.isEmpty)
+          SliverToBoxAdapter(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.task_alt,
+                      size: 48,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Nenhuma tarefa encontrada',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final task = tasks[index];
+                return TaskCard(
+                  task: task,
+                  onToggle: () => _toggleTask(task.id),
+                  onEdit: () => _editTask(task),
+                  onDelete: () => _deleteTask(task),
+                );
+              },
+              childCount: tasks.length,
+            ),
+          ),
+      ],
+    );
   }
 
   void _editTask(Task task) async {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../services/core/task_service.dart';
+import '../../../services/core/task_service_v2.dart';
 
 /// Widget que exibe as estatísticas das tarefas em formato de card
 /// Mostra total, pendentes, concluídas e progresso visual

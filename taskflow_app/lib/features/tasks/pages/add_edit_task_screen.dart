@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/task.dart';
+import '../../app/domain/entities/task.dart';
+import '../../app/domain/entities/task_priority.dart';
 
 class AddEditTaskScreen extends StatefulWidget {
   final Task? task;
@@ -191,6 +192,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
         priority: _selectedPriority,
         dueDate: _selectedDueDate,
         createdAt: widget.task?.createdAt ?? DateTime.now(),
+        updatedAt: DateTime.now(),
         isCompleted: widget.task?.isCompleted ?? false,
       );
       

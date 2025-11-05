@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../services/core/task_service.dart';
+import '../../../services/core/task_service_v2.dart';
 
 /// Widget que exibe dicas e progresso para novos usuários
 /// Aparece apenas quando o usuário tem menos de 3 tarefas criadas

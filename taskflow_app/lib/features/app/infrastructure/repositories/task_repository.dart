@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../models/task.dart';
+import '../../domain/entities/task.dart';
+import '../dtos/task_dto.dart';
+import '../mappers/task_mapper.dart';
 
 /// Repository seguindo o padrão offline-first do guia FoodSafe
 /// Cache local + sincronização incremental baseada em updated_at
@@ -40,18 +42,10 @@ class TaskRepository {
       await _addToCache(task);
       
       // 2. Envia para o Supabase
+      final dto = TaskMapper.toDto(task);
       final response = await _supabase
           .from('tasks')
-          .insert({
-            'title': task.title,
-            'description': task.description,
-            'is_completed': task.isCompleted,
-            'priority': _priorityToInt(task.priority),
-            'due_date': task.dueDate?.toIso8601String(),
-            'metadata': {
-              'created_locally': true,
-            }
-          })
+          .insert(dto.toMap())
           .select()
           .single();
       
@@ -78,14 +72,7 @@ class TaskRepository {
       // 2. Envia para Supabase
       await _supabase
           .from('tasks')
-          .update({
-            'title': task.title,
-            'description': task.description,
-            'is_completed': task.isCompleted,
-            'priority': _priorityToInt(task.priority),
-            'due_date': task.dueDate?.toIso8601String(),
-            'updated_at': DateTime.now().toIso8601String(),
-          })
+          .update(TaskMapper.toDto(task).toMap())
           .eq('id', task.id);
       
       print('✅ Tarefa atualizada no Supabase: ${task.title}');
@@ -129,18 +116,9 @@ class TaskRepository {
   
   Future<void> _syncIncrementally({bool forceFull = false}) async {
     try {
-      final lastSync = await _getLastSync();
+      // TODO: Implementar sync incremental baseado em lastSync
       
-      String query = 'updated_at';
-      if (!forceFull && lastSync != null) {
-        // Sync incremental: apenas registros novos/alterados
-        query = 'updated_at.gte.${lastSync.toIso8601String()}';
-        print('🔄 Sync incremental desde: $lastSync');
-      } else {
-        // Sync completo
-        print('🔄 Sync completo');
-      }
-      
+
       final response = await _supabase
           .from('tasks')
           .select()
@@ -184,7 +162,10 @@ class TaskRepository {
       
       if (jsonString != null) {
         final List<dynamic> jsonList = jsonDecode(jsonString);
-        return jsonList.map((json) => Task.fromJson(json)).toList();
+        return jsonList.map((json) {
+          final dto = TaskDto.fromMap(json);
+          return TaskMapper.toEntity(dto);
+        }).toList();
       }
     } catch (e) {
       print('❌ Erro ao carregar cache: $e');
@@ -196,7 +177,10 @@ class TaskRepository {
   Future<void> _saveToCache(List<Task> tasks) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonString = jsonEncode(tasks.map((t) => t.toJson()).toList());
+      final jsonString = jsonEncode(tasks.map((t) {
+        final dto = TaskMapper.toDto(t);
+        return dto.toMap();
+      }).toList());
       await prefs.setString(_cacheKey, jsonString);
     } catch (e) {
       print('❌ Erro ao salvar cache: $e');
@@ -275,36 +259,17 @@ class TaskRepository {
   // ==========================================
   
   Task _mapFromSupabase(Map<String, dynamic> data) {
-    return Task(
-      id: data['id'].toString(),
+    final dto = TaskDto(
+      id: data['id']?.toString() ?? '',
       title: data['title'] ?? '',
-      description: data['description'] ?? '',
-      isCompleted: data['is_completed'] ?? false,
-      createdAt: data['updated_at'] != null 
-          ? DateTime.parse(data['updated_at'])
-          : DateTime.now(),
-      dueDate: data['due_date'] != null 
-          ? DateTime.parse(data['due_date']) 
-          : null,
-      priority: _intToPriority(data['priority'] ?? 2),
+      description: data['description'],
+      is_completed: data['is_completed'] ?? false,
+      created_at: data['created_at'] ?? DateTime.now().toIso8601String(),
+      due_date: data['due_date'],
+      priority: data['priority'] ?? 2,
+      updated_at: data['updated_at'] ?? DateTime.now().toIso8601String(),
     );
-  }
-  
-  TaskPriority _intToPriority(int priority) {
-    switch (priority) {
-      case 1: return TaskPriority.low;
-      case 2: return TaskPriority.medium;
-      case 3: return TaskPriority.high;
-      default: return TaskPriority.medium;
-    }
-  }
-  
-  int _priorityToInt(TaskPriority priority) {
-    switch (priority) {
-      case TaskPriority.low: return 1;
-      case TaskPriority.medium: return 2;
-      case TaskPriority.high: return 3;
-    }
+    return TaskMapper.toEntity(dto);
   }
 
   Future<void> clearAllTasks() async {
@@ -320,7 +285,7 @@ class TaskRepository {
       print('✅ Todas as tarefas foram removidas do cache e Supabase');
     } catch (e) {
       print('❌ Erro ao limpar tarefas: $e');
-      throw e;
+      rethrow;
     }
   }
 }
