@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:taskflow_app/widgets/user_avatar.dart';
+import 'package:taskflow_app/widgets/common/user_avatar.dart';
 
 void main() {
   group('UserAvatar Widget', () {

@@ -20,6 +20,9 @@ dependencies:
   path_provider: ^2.1.2
   permission_handler: ^11.3.0
   path: ^1.8.3
+  flutter_dotenv: ^5.1.0
+  supabase_flutter: ^2.3.4
+  uuid: ^4.3.3
 
 dev_dependencies:
   flutter_test:
@@ -34,6 +37,7 @@ flutter:
   assets:
     - assets/images/
     - assets/docs/
+    - .env
 
 flutter_launcher_icons:
   android: "launcher_icon"

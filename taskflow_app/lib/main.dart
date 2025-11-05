@@ -1,48 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'services/task_service.dart';
-import 'services/preferences_service.dart';
-import 'screens/splash_screen.dart';
-import 'screens/onboarding_screen.dart';
-import 'screens/consent_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/policy_viewer_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'services/core/task_service_v2.dart';
+import 'services/storage/preferences_service.dart';
+import 'features/app/domain/repositories/task_repository.dart';
+import 'features/app/infrastructure/repositories/task_repository_impl.dart';
+import 'features/splashscreen/pages/splash_screen.dart';
+import 'features/onboarding/pages/onboarding_screen.dart';
+import 'features/auth/pages/consent_screen.dart';
+import 'features/home/pages/home_screen.dart';
+import 'features/settings/pages/settings_screen.dart';
+import 'features/settings/pages/policy_viewer_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Carrega variáveis de ambiente (.env)
+  await dotenv.load(fileName: ".env");
+  
+  final supabaseUrl = dotenv.env['SUPABASE_URL'];
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+  
+  if (supabaseUrl == null || supabaseAnonKey == null) {
+    throw Exception('Faltam SUPABASE_URL/SUPABASE_ANON_KEY no .env');
+  }
+  
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
   
   // Inicializa o serviço de preferências
   final preferencesService = PreferencesService();
   await preferencesService.init();
   
-  // Inicializa o serviço de tarefas
-  final taskService = TaskService();
-  // Aguarda a inicialização das tarefas
-  await taskService.initializeTasks();
-  
   runApp(TaskFlowApp(
     preferencesService: preferencesService,
-    taskService: taskService,
   ));
 }
 
 class TaskFlowApp extends StatelessWidget {
   final PreferencesService preferencesService;
-  final TaskService taskService;
   
   const TaskFlowApp({
     super.key, 
     required this.preferencesService,
-    required this.taskService,
   });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: taskService),
         ChangeNotifierProvider.value(value: preferencesService),
+        // Injeção de dependência: Repository → Service
+        Provider<TaskRepository>(
+          create: (_) => TaskRepositoryImpl(), // Implementação concreta
+        ),
+        ChangeNotifierProxyProvider<TaskRepository, TaskService>(
+          create: (context) => TaskService(context.read<TaskRepository>()),
+          update: (context, taskRepo, previous) => 
+              previous ?? TaskService(taskRepo),
+        ),
       ],
       child: MaterialApp(
         title: 'TaskFlow',

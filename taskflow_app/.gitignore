@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment files (local secrets)
+.env
+.env.production
+# Allow example file to be committed
+!.env.example
