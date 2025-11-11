@@ -14,6 +14,7 @@ class Task {
   final DateTime? dueDate;
   final TaskPriority priority;
   final DateTime updatedAt;
+  final String? categoryId;
 
   Task({
     required this.id,
@@ -24,6 +25,7 @@ class Task {
     this.dueDate,
     TaskPriority? priority,
     required this.updatedAt,
+    this.categoryId,
   }) : description = description?.trim() ?? '',
        priority = priority ?? TaskPriority.medium;
 
@@ -109,6 +111,7 @@ class Task {
     DateTime? dueDate,
     TaskPriority? priority,
     DateTime? updatedAt,
+    String? categoryId,
   }) {
     return Task(
       id: id ?? this.id,
@@ -118,6 +121,7 @@ class Task {
       createdAt: createdAt ?? this.createdAt,
       dueDate: dueDate ?? this.dueDate,
       priority: priority ?? this.priority,
+      categoryId: categoryId ?? this.categoryId,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }

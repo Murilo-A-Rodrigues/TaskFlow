@@ -189,6 +189,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
 
+              ListTile(
+                leading: const Icon(Icons.notifications),
+                title: const Text('Meus Lembretes'),
+                subtitle: const Text('Gerenciar lembretes de tarefas'),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.of(context).pushNamed('/reminders');
+                },
+              ),
+
               const Divider(),
 
               // Revogar consentimento

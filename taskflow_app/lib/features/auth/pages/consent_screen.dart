@@ -60,10 +60,11 @@ class _ConsentScreenState extends State<ConsentScreen> {
       // Concede o consentimento
       await prefsService.grantConsent();
       
-      // Marca onboarding como completo se for primeira vez
+      // Marca onboarding como completo (mas não marca como completeFirstTimeSetup ainda)
+      // O tutorial ainda precisa ser mostrado na HomeScreen
       if (prefsService.isFirstTimeUser) {
         await prefsService.setOnboardingCompleted(true);
-        await prefsService.completeFirstTimeSetup();
+        // NÃO chama completeFirstTimeSetup() aqui - deixa para o tutorial
       }
 
       if (mounted) {

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/domain/entities/task.dart';
 import '../../../services/core/task_service_v2.dart';
+import '../../../services/core/task_filter_service.dart';
 import '../../../services/storage/preferences_service.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../widgets/stats_card.dart';
 import '../widgets/home_drawer.dart';
 import '../../tasks/widgets/task_card.dart';
 import '../../tasks/widgets/task_form_dialog.dart';
+import '../../tasks/widgets/filter_bottom_sheet.dart';
+import '../../tasks/widgets/active_filters_chip.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -80,6 +83,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       print('🔍 Checking first time user on HomeScreen...');
       print('   isFirstTimeUser: ${prefsService.isFirstTimeUser}');
+      print('   isOnboardingCompleted: ${prefsService.isOnboardingCompleted}');
+      print('   hasValidConsent: ${prefsService.hasValidConsent}');
       
       if (prefsService.isFirstTimeUser) {
         print('🎉 First time detected! Showing tutorial and starting animation...');
@@ -92,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         });
         
         print('✅ Tutorial state set to true, animation started');
+        print('✅ _showTutorial = $_showTutorial');
       } else {
         print('ℹ️ Not first time, skipping tutorial');
         // Garante que animação está parada se não for primeira vez
@@ -135,15 +141,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         title: const Text('TaskFlow'),
         centerTitle: true,
         actions: [
+          // Botão de filtros
+          Consumer<TaskFilterService>(
+            builder: (context, filterService, child) {
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.filter_list),
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const FilterBottomSheet(),
+                      );
+                    },
+                  ),
+                  if (filterService.hasActiveFilters)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${filterService.activeFiltersCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           // Avatar do usuário no AppBar
           Consumer<PreferencesService>(
             builder: (context, prefsService, child) {
               return Padding(
-                padding: const EdgeInsets.only(right: 8.0), // Aumentado de 4 para 8
+                padding: const EdgeInsets.only(right: 8.0),
                 child: UserAvatar(
                   photoPath: prefsService.userPhotoPath,
                   userName: prefsService.userName,
-                  radius: 16, // Aumentado de 14 para 16 para melhor visibilidade
+                  radius: 16,
                   onTap: () => _showPhotoOptions(context),
                   showBorder: true,
                 ),
@@ -155,22 +201,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onPressed: () {
               Navigator.of(context).pushNamed('/settings');
             },
-            padding: const EdgeInsets.all(8), // Reduzido de 12 para 8
+            padding: const EdgeInsets.all(8),
             constraints: const BoxConstraints(
               minWidth: 40,
               minHeight: 40,
-            ), // Adicionado constraints para garantir tamanho mínimo
+            ),
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(120), // Aumentado de 110 para 120
+          preferredSize: const Size.fromHeight(160), // Aumentado para comportar filtros
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8), // Reduzido padding top de 8 para 4
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4), // Reduzido padding
                 child: SizedBox(
-                  height: 44, // Reduzido de 48 para 44
+                  height: 44,
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
@@ -189,11 +235,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Reduzido vertical padding
-                      isDense: true, // Adiciona densidade para reduzir altura
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      isDense: true,
                     ),
                   ),
                 ),
+              ),
+              // Chips de filtros ativos com SafeArea
+              SafeArea(
+                bottom: false,
+                child: const ActiveFiltersChip(),
               ),
               SizedBox(
                 height: 48, // Altura fixa para o TabBar
@@ -211,22 +262,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
       ),
-      body: Consumer<TaskService>(
-        builder: (context, taskService, child) {
+      body: Consumer2<TaskService, TaskFilterService>(
+        builder: (context, taskService, filterService, child) {
+          // Aplica busca e filtros
+          List<Task> allTasks = taskService.searchTasks(_searchQuery);
+          allTasks = filterService.applyFilters(allTasks);
+          
           return TabBarView(
             controller: _tabController,
             children: [
               _buildScrollableTaskView(
                 taskService: taskService,
-                tasks: taskService.searchTasks(_searchQuery),
+                tasks: allTasks,
               ),
               _buildScrollableTaskView(
                 taskService: taskService,
-                tasks: taskService.searchTasks(_searchQuery).where((task) => !task.isCompleted).toList(),
+                tasks: allTasks.where((task) => !task.isCompleted).toList(),
               ),
               _buildScrollableTaskView(
                 taskService: taskService,
-                tasks: taskService.searchTasks(_searchQuery).where((task) => task.isCompleted).toList(),
+                tasks: allTasks.where((task) => task.isCompleted).toList(),
               ),
             ],
           );
