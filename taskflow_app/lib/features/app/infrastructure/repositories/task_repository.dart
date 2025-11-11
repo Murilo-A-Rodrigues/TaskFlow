@@ -17,15 +17,12 @@ class TaskRepository {
   /// Renderização imediata do cache + atualização silenciosa em background
   Future<List<Task>> getAllTasks({bool forceSync = false}) async {
     try {
-      // 1. Carrega do cache primeiro (UX rápida)
-      final cachedTasks = await _loadFromCache();
-      
-      // 2. Sincronização incremental em background
+      // 1. Sincronização incremental em background (se necessário)
       if (forceSync || await _shouldSync()) {
         await _syncIncrementally();
       }
       
-      // 3. Retorna o cache atualizado
+      // 2. Retorna o cache atualizado
       return await _loadFromCache();
       
     } catch (e) {

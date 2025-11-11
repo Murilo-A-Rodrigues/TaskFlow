@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../../models/task.dart';
-import '../../data/sample_data.dart';
-import '../../repositories/task_repository.dart';
+import '../../features/app/domain/entities/task.dart';
+import '../../features/app/domain/entities/task_priority.dart';
+import '../../features/app/infrastructure/repositories/task_repository.dart';
 
 class TaskService extends ChangeNotifier {
   final TaskRepository _repository = TaskRepository();
@@ -78,14 +78,8 @@ class TaskService extends ChangeNotifier {
   }
 
   Future<void> loadSampleTasks() async {
-    final sampleTasks = SampleData.getSampleTasks();
-    
-    for (final task in sampleTasks) {
-      await _repository.createTask(task);
-    }
-    
-    await _refreshTasks();
-    print('📋 ${sampleTasks.length} tarefas de exemplo adicionadas');
+    // Função removida - não há mais dados de exemplo no projeto
+    print('📋 Função loadSampleTasks() foi descontinuada');
   }
 
   Future<void> _refreshTasks() async {
