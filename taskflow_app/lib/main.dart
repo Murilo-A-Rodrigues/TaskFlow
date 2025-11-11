@@ -3,15 +3,18 @@ import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/core/task_service_v2.dart';
+import 'services/core/category_service.dart';
 import 'services/storage/preferences_service.dart';
 import 'features/app/domain/repositories/task_repository.dart';
 import 'features/app/infrastructure/repositories/task_repository_impl.dart';
+import 'features/app/infrastructure/local/category_local_dto_shared_prefs.dart';
 import 'features/splashscreen/pages/splash_screen.dart';
 import 'features/onboarding/pages/onboarding_screen.dart';
 import 'features/auth/pages/consent_screen.dart';
 import 'features/app/presentation/main_navigation_scaffold.dart';
 import 'features/settings/pages/settings_screen.dart';
 import 'features/settings/pages/policy_viewer_screen.dart';
+import 'features/categories/pages/category_management_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +64,10 @@ class TaskFlowApp extends StatelessWidget {
           create: (context) => TaskService(context.read<TaskRepository>()),
           update: (context, taskRepo, previous) => 
               previous ?? TaskService(taskRepo),
+        ),
+        // CategoryService com DAO local
+        ChangeNotifierProvider<CategoryService>(
+          create: (_) => CategoryService(CategoryLocalDtoSharedPrefs()),
         ),
       ],
       child: MaterialApp(
@@ -113,6 +120,7 @@ class TaskFlowApp extends StatelessWidget {
           '/consent': (context) => const ConsentScreen(),
           '/home': (context) => const MainNavigationScaffold(),
           '/settings': (context) => const SettingsScreen(),
+          '/categories': (context) => const CategoryManagementPage(),
         },
         onGenerateRoute: (settings) {
           // Para rotas com parâmetros como /policy-viewer/privacy

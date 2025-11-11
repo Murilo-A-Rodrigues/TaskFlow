@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 
+# Java heap dumps (memory diagnostics)
+*.hprof
+
 # IntelliJ related
 *.iml
 *.ipr

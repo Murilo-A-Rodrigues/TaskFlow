@@ -167,6 +167,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const Divider(),
 
+              // Categorias
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Organização',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.category),
+                title: const Text('Gerenciar Categorias'),
+                subtitle: const Text('Organize suas tarefas por categorias'),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.of(context).pushNamed('/categories');
+                },
+              ),
+
+              const Divider(),
+
               // Revogar consentimento
               ListTile(
                 leading: const Icon(
