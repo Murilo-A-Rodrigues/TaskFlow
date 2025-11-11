@@ -28,6 +28,7 @@ class TaskMapper {
           : null,
       priority: TaskPriorityHelper.fromValue(dto.priority),
       updatedAt: DateTime.parse(dto.updated_at),
+      categoryId: dto.category_id,
     );
   }
 
@@ -49,6 +50,7 @@ class TaskMapper {
       due_date: entity.dueDate?.toIso8601String(),
       priority: entity.priority.value,
       updated_at: entity.updatedAt.toIso8601String(),
+      category_id: entity.categoryId,
     );
   }
 

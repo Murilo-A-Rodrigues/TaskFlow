@@ -167,6 +167,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const Divider(),
 
+              // Categorias
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Organização',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.category),
+                title: const Text('Gerenciar Categorias'),
+                subtitle: const Text('Organize suas tarefas por categorias'),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.of(context).pushNamed('/categories');
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.notifications),
+                title: const Text('Meus Lembretes'),
+                subtitle: const Text('Gerenciar lembretes de tarefas'),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.of(context).pushNamed('/reminders');
+                },
+              ),
+
+              const Divider(),
+
               // Revogar consentimento
               ListTile(
                 leading: const Icon(
@@ -234,6 +268,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: const Text('Reset completo do app (Cuidado!)'),
                 onTap: () {
                   _showResetDialog();
+                },
+              ),
+              
+              ListTile(
+                leading: const Icon(Icons.school, color: Colors.blue),
+                title: const Text('Resetar Tutorial'),
+                subtitle: const Text('Ver tutorial de primeiro uso novamente'),
+                onTap: () async {
+                  final prefsService = context.read<PreferencesService>();
+                  await prefsService.setFirstTimeUser(true);
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tutorial resetado! Vá para a aba Tarefas'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
                 },
               ),
             ],

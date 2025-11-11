@@ -34,10 +34,15 @@ class PreferencesService extends ChangeNotifier {
   }
   
   // First Time User
-  bool get isFirstTimeUser => prefs.getBool(_keyFirstTimeUser) ?? true;
+  bool get isFirstTimeUser {
+    final value = prefs.getBool(_keyFirstTimeUser) ?? true;
+    print('📱 isFirstTimeUser check: $value');
+    return value;
+  }
   
   Future<void> setFirstTimeUser(bool value) async {
     await prefs.setBool(_keyFirstTimeUser, value);
+    print('📝 First time user set to: $value');
     notifyListeners();
   }
   
