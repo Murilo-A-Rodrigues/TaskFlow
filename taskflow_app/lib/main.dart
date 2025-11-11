@@ -9,7 +9,7 @@ import 'features/app/infrastructure/repositories/task_repository_impl.dart';
 import 'features/splashscreen/pages/splash_screen.dart';
 import 'features/onboarding/pages/onboarding_screen.dart';
 import 'features/auth/pages/consent_screen.dart';
-import 'features/home/pages/home_screen.dart';
+import 'features/app/presentation/main_navigation_scaffold.dart';
 import 'features/settings/pages/settings_screen.dart';
 import 'features/settings/pages/policy_viewer_screen.dart';
 
@@ -111,7 +111,7 @@ class TaskFlowApp extends StatelessWidget {
           '/splash': (context) => const SplashScreen(),
           '/onboarding': (context) => const OnboardingScreen(),
           '/consent': (context) => const ConsentScreen(),
-          '/home': (context) => const HomeScreen(),
+          '/home': (context) => const MainNavigationScaffold(),
           '/settings': (context) => const SettingsScreen(),
         },
         onGenerateRoute: (settings) {

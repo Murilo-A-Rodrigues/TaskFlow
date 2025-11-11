@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../app/domain/entities/task.dart';
 import '../../app/domain/entities/task_priority.dart';
+import 'celebration_animation.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
@@ -29,7 +30,13 @@ class TaskCard extends StatelessWidget {
               children: [
                 Checkbox(
                   value: task.isCompleted,
-                  onChanged: (_) => onToggle(),
+                  onChanged: (_) {
+                    // Se estiver marcando como completa, mostra animação de celebração
+                    if (!task.isCompleted) {
+                      showCelebrationAnimation(context);
+                    }
+                    onToggle();
+                  },
                   activeColor: Theme.of(context).primaryColor,
                 ),
                 Expanded(

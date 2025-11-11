@@ -236,6 +236,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _showResetDialog();
                 },
               ),
+              
+              ListTile(
+                leading: const Icon(Icons.school, color: Colors.blue),
+                title: const Text('Resetar Tutorial'),
+                subtitle: const Text('Ver tutorial de primeiro uso novamente'),
+                onTap: () async {
+                  final prefsService = context.read<PreferencesService>();
+                  await prefsService.setFirstTimeUser(true);
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tutorial resetado! Vá para a aba Tarefas'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                },
+              ),
             ],
           );
         },
