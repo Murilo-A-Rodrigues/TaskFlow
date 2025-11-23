@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'services/core/task_service_v2.dart';
-import 'services/core/category_service.dart';
+// Clean Architecture - Application Layer
+import 'features/tasks/application/task_service.dart';
+import 'features/categories/application/category_service.dart';
+import 'features/reminders/application/reminder_service.dart';
+// Clean Architecture - Infrastructure Layer
 import 'services/core/task_filter_service.dart';
-import 'services/core/reminder_service.dart';
 import 'services/notifications/notification_helper.dart';
 import 'services/storage/preferences_service.dart';
 import 'features/app/domain/repositories/task_repository.dart';

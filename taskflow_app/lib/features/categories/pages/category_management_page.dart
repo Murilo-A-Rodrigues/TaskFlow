@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../services/core/category_service.dart';
+import '../../categories/application/category_service.dart';
 import '../../../features/app/domain/entities/category.dart';
 import '../widgets/category_form_dialog.dart';
 

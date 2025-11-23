@@ -16,12 +16,20 @@ Um aplicativo completo de gerenciamento de tarefas desenvolvido em Flutter com a
 
 ## ✨ Características
 
+### 🏗️ Arquitetura Clean Architecture
+- **Separação em camadas** (Domain, Infrastructure, Application, Presentation)
+- **Independência de frameworks** - Lógica de negócio pura em Dart
+- **Testabilidade** - Código organizado e facilmente testável
+- **Independência de UI** - Interfaces podem ser alteradas sem impactar o domínio
+- **Independência de BD** - Persistência intercambiável (SQLite, Supabase, Firebase)
+
 ### 📝 Feature 1: Sistema de DAOs e Persistência
 - **5 DAOs implementados** seguindo padrões profissionais
 - **Interface Repository Pattern** para abstração de dados
-- **DTOs e Mappers** para transformação de dados
+- **DTOs e Mappers** para transformação de dados (Entity ↔ DTO)
 - **Cache offline-first** com sincronização incremental
 - **Integração Supabase** para backend
+- **Entidades de domínio**: Task, Category, Reminder, Provider, User
 
 ### 🏷️ Feature 2: Sistema de Categorização e Filtros
 - **Categorias personalizadas** com cores e ícones
@@ -40,8 +48,17 @@ Um aplicativo completo de gerenciamento de tarefas desenvolvido em Flutter com a
 - **Múltiplos lembretes** por tarefa
 - **Timezone support** (America/Sao_Paulo)
 
+### 📋 Sistema de Listagem com Interações (Prompts 08-11)
+- ✅ **Listagem paginada** (Prompt 08) - ListView com pull-to-refresh
+- ✅ **Seleção de item** (Prompt 09) - PopupMenu com ações (Editar/Remover)
+- ✅ **Edição de itens** (Prompt 10) - Ícone de edição com formulário de diálogo
+- ✅ **Remoção por swipe** (Prompt 11) - Dismissible com confirmação de exclusão
+- **Diálogos não-dismissable** - Fechamento apenas por botões explícitos
+- **Feedback visual** com SnackBar de sucesso/erro
+- **Tratamento de erros** com try/catch em todas operações
+
 ### 🎨 Funcionalidades Gerais
-- ✅ **CRUD completo** de tarefas
+- ✅ **CRUD completo** de tarefas com validações
 - ✅ **Sistema de prioridades** (alta, média, baixa)
 - ✅ **Datas de vencimento** com validações
 - ✅ **Busca inteligente** por título e descrição
@@ -49,6 +66,7 @@ Um aplicativo completo de gerenciamento de tarefas desenvolvido em Flutter com a
 - ✅ **Tutorial interativo** para novos usuários
 - ✅ **Tema personalizado** Material Design 3
 - ✅ **Consentimento LGPD** integrado
+- ✅ **Animações de celebração** ao concluir tarefas
 
 ---
 
@@ -141,46 +159,115 @@ flutter run
 
 ## 🏗️ Arquitetura
 
-### Clean Architecture
+### Clean Architecture - Camadas e Responsabilidades
+
+O projeto segue **Clean Architecture** de Robert C. Martin com separação clara de camadas:
+
+#### 1️⃣ Domain (Domínio) - `lib/features/*/domain/`
+- **Entidades de negócio**: Task, Category, Reminder, Provider, User
+- **Interfaces de repositórios**: Contratos para acesso a dados
+- **Regras de negócio puras**: Código 100% Dart sem dependências do Flutter
+- **Value Objects**: TaskPriority, enums, validators
+
+#### 2️⃣ Infrastructure (Infraestrutura) - `lib/features/*/infrastructure/`
+- **DTOs**: Objetos de transferência de dados (snake_case para APIs)
+- **Mappers**: Conversão bidirecional Entity ↔ DTO
+- **Repositórios**: Implementações concretas dos contratos do domínio
+- **DAOs locais**: ProvidersLocalDaoShared, TasksLocalDao
+- **APIs remotas**: Integração com Supabase
+
+#### 3️⃣ Application (Aplicação) - `lib/features/*/application/`
+- **Services**: TaskService, CategoryService, ReminderService
+- **Casos de uso**: Lógica de orquestração entre camadas
+- **Gerenciamento de estado**: Provider/ChangeNotifier
+
+#### 4️⃣ Presentation (Apresentação) - `lib/features/*/pages|widgets/`
+- **Pages**: TaskListPage, CategoryPage, SettingsPage
+- **Widgets**: TaskCard, CategoryChip, FilterBottomSheet
+- **Dialogs**: TaskFormDialog, ConfirmationDialog
+- **UI/UX**: Material Design 3, animações, feedback visual
+
 ```
 lib/
-├── features/           # Módulos por funcionalidade
+├── features/           # 🎯 Organização por funcionalidade
 │   ├── app/
-│   │   ├── domain/         # Entidades e regras de negócio
-│   │   │   ├── entities/   # Task, Category, Reminder
-│   │   │   └── repositories/  # Interfaces dos DAOs
+│   │   ├── domain/
+│   │   │   ├── entities/       # Task, Category, Reminder, Provider, User
+│   │   │   └── repositories/   # Interfaces (contratos)
 │   │   └── infrastructure/
-│   │       ├── dtos/       # Data Transfer Objects
-│   │       ├── mappers/    # Entity ↔ DTO conversão
-│   │       └── repositories/  # Implementação dos DAOs
-│   ├── tasks/          # UI de tarefas
-│   ├── categories/     # UI de categorias
-│   ├── reminders/      # UI de lembretes
-│   ├── settings/       # Configurações
-│   └── home/           # Tela principal
-├── services/           # Serviços de negócio
-│   ├── core/           # TaskService, CategoryService
+│   │       ├── dtos/           # TaskDto, CategoryDto, etc
+│   │       ├── mappers/        # TaskMapper, CategoryMapper
+│   │       └── repositories/   # Implementações dos contratos
+│   ├── tasks/
+│   │   ├── application/        # TaskService
+│   │   ├── pages/              # TaskListPage, AddEditTaskScreen
+│   │   └── widgets/            # TaskCard, TaskFormDialog
+│   ├── categories/
+│   │   ├── application/        # CategoryService
+│   │   ├── pages/              # CategoryPage
+│   │   └── widgets/            # CategoryChip, CategoryForm
+│   ├── reminders/
+│   │   ├── application/        # ReminderService
+│   │   ├── pages/              # RemindersPage
+│   │   └── widgets/            # ReminderCard, ReminderForm
+│   ├── providers/
+│   │   ├── domain/             # Provider entity + repository interface
+│   │   └── infrastructure/     # ProviderDto, Mapper, DAO, API
+│   ├── settings/               # Configurações
+│   ├── home/                   # Tela principal
+│   ├── auth/                   # Autenticação
+│   ├── onboarding/             # Tutorial inicial
+│   └── splashscreen/           # Splash
+├── services/           # ⚙️ Serviços transversais
 │   ├── storage/        # PreferencesService
 │   └── notifications/  # NotificationHelper
-├── shared/             # Componentes compartilhados
-├── theme/              # Tema e estilos
-└── main.dart           # Entry point
+├── shared/             # 🔗 Componentes compartilhados
+│   ├── widgets/        # Botões, cards, inputs reutilizáveis
+│   └── utils/          # Helpers, extensões, constantes
+├── theme/              # 🎨 Tema e estilos
+└── main.dart           # 🚀 Entry point
 ```
 
-### Padrões de Design
-- **Repository Pattern**: Abstração de acesso a dados
-- **DTO Pattern**: Transformação segura de dados
-- **Singleton Pattern**: NotificationHelper, PreferencesService
-- **Observer Pattern**: Provider/ChangeNotifier
-- **Strategy Pattern**: Filtros compostos
-- **Factory Pattern**: Criação de DTOs e Entities
+### Padrões de Design Implementados
+- ✅ **Repository Pattern**: Abstração de acesso a dados
+- ✅ **DTO Pattern**: Transformação segura entre camadas
+- ✅ **Mapper Pattern**: Conversão Entity ↔ DTO
+- ✅ **Singleton Pattern**: NotificationHelper, PreferencesService
+- ✅ **Observer Pattern**: Provider/ChangeNotifier para estado reativo
+- ✅ **Strategy Pattern**: Filtros compostos e ordenação
+- ✅ **Factory Pattern**: Criação de DTOs e Entities
+- ✅ **Dependency Injection**: Services injetados via Provider
 
-### Fluxo de Dados
+### Fluxo de Dados (Clean Architecture)
 ```
-UI → Service → Repository → DTO → Mapper → Entity → UI
-         ↓           ↓
-    Provider    Supabase/Cache
+┌─────────────┐
+│ Presentation│ ← UI/Widgets
+└──────┬──────┘
+       │
+       ↓
+┌─────────────┐
+│ Application │ ← Services/UseCases
+└──────┬──────┘
+       │
+       ↓
+┌─────────────┐
+│   Domain    │ ← Entities + Repository Interfaces
+└──────┬──────┘
+       │
+       ↓
+┌──────────────┐
+│Infrastructure│ ← DTOs, Mappers, DAOs, APIs
+└──────────────┘
+       │
+       ↓
+  [Supabase/SharedPreferences]
 ```
+
+**Regra de Dependência**: Camadas internas nunca dependem de externas
+- Domain não conhece Infrastructure
+- Application usa Domain (interfaces)
+- Infrastructure implementa contratos do Domain
+- Presentation consome Application
 
 ---
 
@@ -203,20 +290,33 @@ Todas as permissões são **solicitadas automaticamente** quando necessárias.
 
 ## 📊 Estatísticas do Projeto
 
-- **Linhas de código**: ~5.200 (Dart)
-- **Arquivos criados**: 49
-- **Features implementadas**: 3 completas
-- **Tempo de desenvolvimento**: ~40 horas
-- **Commits organizados**: Histórico limpo com conventional commits
+- **Linhas de código**: ~6.500+ (Dart)
+- **Arquivos criados**: 70+
+- **Features implementadas**: 
+  - ✅ 3 features principais completas (DAOs, Categorização, Lembretes)
+  - ✅ Sistema de listagem com interações (Prompts 08-11)
+  - ✅ Clean Architecture implementada
+  - ✅ 5 entidades de domínio com DTOs e Mappers
+- **Camadas arquiteturais**: Domain, Infrastructure, Application, Presentation
+- **Padrões de design**: 7 padrões implementados
+- **Testes**: Entity/DTO/Mapper com cobertura
+- **Documentação**: 4.000+ linhas de documentação técnica
 
 ---
 
 ## 📚 Documentação
 
-- **[PRD_TaskFlow.md](PRD_TaskFlow.md)**: Product Requirements Document
-- **[docs/apresentacao.md](docs/apresentacao.md)**: Documentação completa (2.926 linhas)
-- **[GUIA_SUPABASE.md](taskflow_app/GUIA_SUPABASE.md)**: Guia de integração Supabase
-- **[Prompts/](Prompts/)**: Documentação de assistência IA (7 arquivos)
+- **[PRD_TaskFlow.md](../PRD_TaskFlow.md)**: Product Requirements Document
+- **[docs/apresentacao.md](../docs/apresentacao.md)**: Documentação completa (2.926 linhas)
+- **[CLEAN_ARCHITECTURE_GUIDE.md](CLEAN_ARCHITECTURE_GUIDE.md)**: Guia completo de Clean Architecture (395 linhas)
+- **[CLEAN_ARCHITECTURE_MIGRATION.md](CLEAN_ARCHITECTURE_MIGRATION.md)**: Histórico de migração para Clean Arch
+- **[supabase_setup.sql](supabase_setup.sql)**: Script de setup do banco de dados Supabase
+- **[Prompts/](Prompts/)**: Documentação dos prompts de implementação
+  - `08_agent_list_prompt.md` - Especificação de listagem
+  - `09_agent_list_selection.md` - Seleção com diálogo de ações
+  - `10_agent_list_edit.md` - Edição com formulário
+  - `11_agent_list_remove.md` - Remoção por swipe com confirmação
+- **[Alterações por IA/](Alterações%20por%20IA/)**: Registros detalhados de refatorações e melhorias
 
 ---
 
@@ -250,11 +350,15 @@ flutter test
 # Testes com cobertura
 flutter test --coverage
 
-# Teste específico
-flutter test test/unit/task_mapper_test.dart
+# Teste específico de mapper
+flutter test test/entity_dto_mapper_test.dart
 ```
 
-**Cobertura**: Entity/DTO/Mapper testados
+**Cobertura Atual**:
+- ✅ Entity/DTO/Mapper testados (TaskMapper)
+- ✅ Testes unitários de conversão bidirecional
+- ✅ Validações de campos obrigatórios
+- 🔄 Testes de integração em desenvolvimento
 
 ## 📄 Licença
 

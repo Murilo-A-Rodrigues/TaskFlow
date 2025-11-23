@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/domain/entities/task.dart';
 import '../../app/domain/entities/task_priority.dart';
-import '../../../services/core/category_service.dart';
-import '../../../services/core/reminder_service.dart';
+import '../../categories/application/category_service.dart';
+import '../../reminders/application/reminder_service.dart';
 import '../../app/domain/entities/reminder.dart';
 
 /// Dialog reutilizável para criação e edição de tarefas

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/domain/entities/task.dart';
-import '../../../services/core/task_service_v2.dart';
+import '../../tasks/application/task_service.dart';
 import '../widgets/task_form_dialog.dart';
 import '../widgets/task_card.dart';
 

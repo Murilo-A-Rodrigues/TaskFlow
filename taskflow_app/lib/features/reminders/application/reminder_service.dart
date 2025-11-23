@@ -3,9 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../../features/app/domain/entities/reminder.dart';
-import '../../features/app/domain/entities/task.dart';
-import '../notifications/notification_helper.dart';
+import '../../app/domain/entities/reminder.dart';
+import '../../app/domain/entities/task.dart';
+import '../../../services/notifications/notification_helper.dart';
 
 /// ReminderService - Gerencia lembretes de tarefas
 /// 

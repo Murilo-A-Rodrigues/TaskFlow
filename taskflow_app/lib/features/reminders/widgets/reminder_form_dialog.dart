@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../services/core/reminder_service.dart';
+import '../../reminders/application/reminder_service.dart';
 import '../../../features/app/domain/entities/reminder.dart';
 import '../../../features/app/domain/entities/task.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import '../../../services/core/category_service.dart';
+import '../../categories/application/category_service.dart';
 import '../../../features/app/domain/entities/category.dart';
 
 /// CategoryFormDialog - Diálogo para criar/editar categorias
