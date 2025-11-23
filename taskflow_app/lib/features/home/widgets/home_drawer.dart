@@ -252,6 +252,7 @@ class HomeDrawer extends StatelessWidget {
     
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Remover Foto'),
         content: const Text('Deseja realmente remover sua foto de perfil?'),
@@ -286,6 +287,7 @@ class HomeDrawer extends StatelessWidget {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => Dialog(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -320,6 +322,7 @@ class HomeDrawer extends StatelessWidget {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Editar Nome'),
         content: TextField(

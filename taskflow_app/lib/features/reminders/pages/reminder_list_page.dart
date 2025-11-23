@@ -287,6 +287,7 @@ class _ReminderTile extends StatelessWidget {
       case 'edit':
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (context) => ReminderFormDialog(
             task: task,
             reminder: reminder,
@@ -297,6 +298,7 @@ class _ReminderTile extends StatelessWidget {
       case 'delete':
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Text('Excluir Lembrete'),
             content: const Text(

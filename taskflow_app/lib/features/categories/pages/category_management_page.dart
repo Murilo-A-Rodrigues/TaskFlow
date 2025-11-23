@@ -80,6 +80,7 @@ class CategoryManagementPage extends StatelessWidget {
   void _showAddDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => const CategoryFormDialog(),
     );
   }
@@ -87,6 +88,7 @@ class CategoryManagementPage extends StatelessWidget {
   void _showEditDialog(BuildContext context, Category category) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => CategoryFormDialog(category: category),
     );
   }
@@ -94,6 +96,7 @@ class CategoryManagementPage extends StatelessWidget {
   void _confirmDelete(BuildContext context, Category category) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Excluir Categoria'),
         content: Text(

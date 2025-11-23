@@ -15,6 +15,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showRevokeConsentDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Revogar Consentimento'),
         content: const Text(
@@ -301,6 +302,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Detalhes do Consentimento'),
         content: Column(
@@ -386,6 +388,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showResetDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Row(
           children: [

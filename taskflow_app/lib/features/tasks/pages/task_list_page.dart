@@ -44,26 +44,47 @@ class _TaskListPageState extends State<TaskListPage> {
               final tasks = taskService.tasks;
 
               if (tasks.isEmpty) {
-                return _buildEmptyState();
+                return RefreshIndicator(
+                  onRefresh: () => _refreshTasks(),
+                  child: _buildEmptyState(),
+                );
               }
 
-              return ListView.builder(
-                padding: const EdgeInsets.only(
-                  top: 16,
-                  left: 8,
-                  right: 8,
-                  bottom: 80, // Espaço para FAB
+              return RefreshIndicator(
+                onRefresh: () => _refreshTasks(),
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(
+                    top: 16,
+                    left: 8,
+                    right: 8,
+                    bottom: 80, // Espaço para FAB
+                  ),
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return Dismissible(
+                      key: Key(task.id),
+                      direction: DismissDirection.endToStart,
+                      confirmDismiss: (direction) => _confirmDelete(task),
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        color: Colors.red,
+                        child: const Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                      child: TaskCard(
+                        task: task,
+                        onToggle: () => _toggleTask(task.id),
+                        onEdit: () => _editTask(task),
+                        onDelete: () => _deleteTask(task),
+                      ),
+                    );
+                  },
                 ),
-                itemCount: tasks.length,
-                itemBuilder: (context, index) {
-                  final task = tasks[index];
-                  return TaskCard(
-                    task: task,
-                    onToggle: () => _toggleTask(task.id),
-                    onEdit: () => _editTask(task),
-                    onDelete: () => _deleteTask(task),
-                  );
-                },
               );
             },
           ),
@@ -82,12 +103,18 @@ class _TaskListPageState extends State<TaskListPage> {
 
   /// Estado vazio com caixa de diálogo instrutiva
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
             // Caixa de diálogo com dica
             Container(
               padding: const EdgeInsets.all(24),
@@ -180,9 +207,13 @@ class _TaskListPageState extends State<TaskListPage> {
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -198,9 +229,64 @@ class _TaskListPageState extends State<TaskListPage> {
     }
   }
 
+  Future<void> _refreshTasks() async {
+    await context.read<TaskService>().forceSyncAll();
+  }
+
+  Future<bool> _confirmDelete(Task task) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // Não fecha ao tocar fora
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir tarefa'),
+        content: Text('Deseja realmente excluir "${task.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      try {
+        await context.read<TaskService>().deleteTask(task.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tarefa "${task.title}" excluída com sucesso'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        return true;
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao excluir tarefa: $e'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        return false;
+      }
+    }
+    return false;
+  }
+
   void _deleteTask(Task task) {
     showDialog(
       context: context,
+      barrierDismissible: false, // Não fecha ao tocar fora
       builder: (context) => AlertDialog(
         title: const Text('Excluir tarefa'),
         content: Text('Deseja realmente excluir "${task.title}"?'),
@@ -213,6 +299,15 @@ class _TaskListPageState extends State<TaskListPage> {
             onPressed: () async {
               Navigator.of(context).pop();
               await context.read<TaskService>().deleteTask(task.id);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Tarefa "${task.title}" excluída com sucesso'),
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Excluir'),

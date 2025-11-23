@@ -398,6 +398,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _deleteTask(Task task) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Excluir tarefa'),
         content: Text('Deseja realmente excluir "${task.title}"?'),
