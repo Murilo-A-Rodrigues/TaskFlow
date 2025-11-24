@@ -1,8 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../../domain/entities/task.dart';
-import '../../domain/repositories/task_repository.dart';
+import '../../../tasks/domain/entities/task.dart';
+import '../../../tasks/domain/repositories/task_repository.dart';
 import '../dtos/task_dto.dart';
 import '../mappers/task_mapper.dart';
 

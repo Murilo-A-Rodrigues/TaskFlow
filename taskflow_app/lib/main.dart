@@ -4,13 +4,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 // Clean Architecture - Application Layer
 import 'features/tasks/application/task_service.dart';
+import 'features/tasks/application/task_filter_service.dart';
 import 'features/categories/application/category_service.dart';
 import 'features/reminders/application/reminder_service.dart';
 // Clean Architecture - Infrastructure Layer
-import 'services/core/task_filter_service.dart';
 import 'services/notifications/notification_helper.dart';
 import 'services/storage/preferences_service.dart';
-import 'features/app/domain/repositories/task_repository.dart';
 import 'features/app/infrastructure/repositories/task_repository_impl.dart';
 import 'features/app/infrastructure/local/category_local_dto_shared_prefs.dart';
 import 'features/splashscreen/pages/splash_screen.dart';
@@ -70,14 +69,9 @@ class TaskFlowApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: preferencesService),
-        // Injeção de dependência: Repository → Service
-        Provider<TaskRepository>(
-          create: (_) => TaskRepositoryImpl(), // Implementação concreta
-        ),
-        ChangeNotifierProxyProvider<TaskRepository, TaskService>(
-          create: (context) => TaskService(context.read<TaskRepository>()),
-          update: (context, taskRepo, previous) => 
-              previous ?? TaskService(taskRepo),
+        // TaskService com Repository atualizado
+        ChangeNotifierProvider<TaskService>(
+          create: (_) => TaskService(TaskRepositoryImpl()),
         ),
         // CategoryService com DAO local
         ChangeNotifierProvider<CategoryService>(

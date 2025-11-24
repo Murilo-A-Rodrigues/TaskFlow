@@ -1,12 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../../domain/entities/task.dart';
+import '../../../tasks/domain/entities/task.dart';
 import '../dtos/task_dto.dart';
 import '../mappers/task_mapper.dart';
 
 /// Repository seguindo o padrão offline-first do guia FoodSafe
 /// Cache local + sincronização incremental baseada em updated_at
+/// NOTA: Usa Task da nova estrutura mas mantém implementação legada por compatibilidade
 class TaskRepository {
   static const String _cacheKey = 'taskflow_cache';
   static const String _lastSyncKey = 'taskflow_last_sync';

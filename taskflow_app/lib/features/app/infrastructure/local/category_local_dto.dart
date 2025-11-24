@@ -34,6 +34,14 @@ abstract class CategoryLocalDto {
   /// - CategoryDto se encontrado, null caso contrário
   Future<CategoryDto?> getById(String id);
 
+  /// Remove uma categoria por id.
+  /// 
+  /// Remove o registro com o id especificado do armazenamento local.
+  /// 
+  /// Parâmetros:
+  /// - [id]: Identificador único da categoria a ser removida
+  Future<void> delete(String id);
+
   /// Limpa o cache (útil para reset/diagnóstico).
   /// 
   /// Remove todos os registros de categorias do armazenamento local.

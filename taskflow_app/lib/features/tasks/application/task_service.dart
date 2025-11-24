@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../../app/domain/entities/task.dart';
-import '../../app/domain/entities/task_priority.dart';
-import '../../app/domain/repositories/task_repository.dart';
+import '../domain/entities/task.dart';
+import '../domain/entities/task_priority.dart';
+import '../domain/repositories/task_repository.dart';
 
 /// TaskService - Camada de serviço usando arquitetura Entity/DTO/Mapper
 /// 

@@ -1,5 +1,5 @@
-import '../../../tasks/domain/entities/task.dart';
-import '../../../tasks/domain/entities/task_priority.dart';
+import '../../domain/entities/task.dart';
+import '../../domain/entities/task_priority.dart';
 import '../dtos/task_dto.dart';
 
 /// TaskMapper - Conversor centralizado entre TaskDto e Task Entity
@@ -104,17 +104,11 @@ class TaskMapper {
           ? updatedEntity.description 
           : null,
       is_completed: updatedEntity.isCompleted,
-      created_at: originalDto.created_at, // Mantém data original de criação
+      created_at: originalDto.created_at, // Mantém created_at original
       due_date: updatedEntity.dueDate?.toIso8601String(),
       priority: updatedEntity.priority.value,
       updated_at: DateTime.now().toIso8601String(), // Atualiza timestamp
-    );
-  }
-
-  /// Cria uma Task Entity com timestamp atualizado para sincronização
-  static Task withUpdatedTimestamp(Task entity) {
-    return entity.copyWith(
-      updatedAt: DateTime.now(),
+      category_id: updatedEntity.categoryId,
     );
   }
 }

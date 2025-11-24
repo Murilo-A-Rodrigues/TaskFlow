@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../app/domain/entities/task.dart';
-import '../../app/domain/entities/task_priority.dart';
+import '../domain/entities/task.dart';
+import '../domain/entities/task_priority.dart';
 import '../../categories/application/category_service.dart';
 import 'celebration_animation.dart';
 

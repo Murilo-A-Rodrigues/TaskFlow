@@ -115,6 +115,38 @@ class CategoryLocalDtoSharedPrefs implements CategoryLocalDto {
   }
 
   @override
+  Future<void> delete(String id) async {
+    try {
+      final prefs = await _prefs;
+      final raw = prefs.getString(_cacheKey);
+      
+      if (raw == null || raw.isEmpty) {
+        print('⚠️ Cache vazio, nada para deletar');
+        return;
+      }
+
+      // Carrega lista atual
+      final List<dynamic> jsonList = jsonDecode(raw) as List<dynamic>;
+      
+      // Remove o item com o id especificado
+      final filtered = jsonList
+          .where((item) {
+            final m = Map<String, dynamic>.from(item as Map);
+            return m['id'] != id;
+          })
+          .toList();
+      
+      // Salva lista atualizada
+      await prefs.setString(_cacheKey, jsonEncode(filtered));
+      
+      print('🗑️ Categoria $id removida do cache. Total restante: ${filtered.length}');
+    } catch (e) {
+      print('❌ Erro ao deletar categoria ($id): $e');
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> clear() async {
     try {
       final prefs = await _prefs;

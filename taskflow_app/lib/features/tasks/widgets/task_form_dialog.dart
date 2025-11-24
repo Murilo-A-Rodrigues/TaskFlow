@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../app/domain/entities/task.dart';
-import '../../app/domain/entities/task_priority.dart';
+import '../domain/entities/task.dart';
+import '../domain/entities/task_priority.dart';
 import '../../categories/application/category_service.dart';
 import '../../reminders/application/reminder_service.dart';
 import '../../app/domain/entities/reminder.dart';
@@ -481,6 +481,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
       onTap: () async {
         final selected = await showDialog<String>(
           context: context,
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Text('Selecionar Categoria'),
             content: SingleChildScrollView(
@@ -625,6 +626,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
     
     return showDialog<TimeOfDay>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => _CustomTimePickerDialog(initialTime: initialTime),
     );
   }

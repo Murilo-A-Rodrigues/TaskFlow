@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../services/core/task_filter_service.dart';
+import '../application/task_filter_service.dart';
 import '../../categories/application/category_service.dart';
-import '../../../features/app/domain/entities/task_priority.dart';
+import '../domain/entities/task_priority.dart';
 
 /// ActiveFiltersChip - Widget que exibe os filtros ativos como chips removíveis
 /// 

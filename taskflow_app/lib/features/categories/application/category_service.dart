@@ -187,11 +187,11 @@ class CategoryService extends ChangeNotifier {
       
       // Remove da lista local
       _categories.removeWhere((c) => c.id == categoryId);
-      notifyListeners();
       
-      // Persiste no cache local
-      final allDtos = _categories.map((c) => CategoryMapper.toDto(c)).toList();
-      await _localDao.upsertAll(allDtos);
+      // Persiste a remoção no cache local
+      await _localDao.delete(categoryId);
+      
+      notifyListeners();
       
       print('✅ Categoria removida com sucesso');
     } catch (e) {

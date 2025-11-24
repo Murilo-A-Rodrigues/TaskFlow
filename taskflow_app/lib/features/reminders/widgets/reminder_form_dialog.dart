@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../reminders/application/reminder_service.dart';
 import '../../../features/app/domain/entities/reminder.dart';
-import '../../../features/app/domain/entities/task.dart';
+import '../../tasks/domain/entities/task.dart';
 
 /// ReminderFormDialog - Diálogo para criar/editar lembretes
 /// 

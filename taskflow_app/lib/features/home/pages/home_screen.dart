@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../app/domain/entities/task.dart';
+import '../../tasks/domain/entities/task.dart';
 import '../../tasks/application/task_service.dart';
-import '../../../services/core/task_filter_service.dart';
+import '../../tasks/application/task_filter_service.dart';
 import '../../../services/storage/preferences_service.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../widgets/stats_card.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../app/domain/entities/task.dart';
-import '../../app/domain/entities/task_priority.dart';
+import '../domain/entities/task.dart';
+import '../domain/entities/task_priority.dart';
 
 class AddEditTaskScreen extends StatefulWidget {
   final Task? task;
