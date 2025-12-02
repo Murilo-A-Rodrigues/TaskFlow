@@ -539,7 +539,23 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
         ),
         child: Text(
           _selectedCategoryId != null
-              ? categories.firstWhere((c) => c.id == _selectedCategoryId).name
+              ? () {
+                  try {
+                    return categories.firstWhere(
+                      (c) => c.id == _selectedCategoryId,
+                    ).name;
+                  } catch (e) {
+                    // Categoria foi deletada, limpa a seleção
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() {
+                          _selectedCategoryId = null;
+                        });
+                      }
+                    });
+                    return 'Categoria removida';
+                  }
+                }()
               : 'Selecionar categoria',
           style: TextStyle(
             color: _selectedCategoryId != null

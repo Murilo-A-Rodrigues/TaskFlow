@@ -103,7 +103,28 @@ CREATE INDEX IF NOT EXISTS idx_tasks_priority ON public.tasks(priority);
 CREATE INDEX IF NOT EXISTS idx_tasks_updated_at ON public.tasks(updated_at DESC);
 
 -- ========================================
--- � TABELA DE COMENTÁRIOS
+-- ⏰ TABELA DE LEMBRETES
+-- ========================================
+CREATE TABLE IF NOT EXISTS public.reminders (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  task_id UUID NOT NULL REFERENCES public.tasks(id) ON DELETE CASCADE,
+  reminder_date TIMESTAMPTZ NOT NULL,
+  type TEXT NOT NULL DEFAULT 'once' CHECK (type IN ('once', 'daily', 'weekly', 'custom')),
+  custom_message TEXT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  notification_id INTEGER NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Índices para performance
+CREATE INDEX IF NOT EXISTS idx_reminders_task_id ON public.reminders(task_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_reminder_date ON public.reminders(reminder_date);
+CREATE INDEX IF NOT EXISTS idx_reminders_is_active ON public.reminders(is_active);
+CREATE INDEX IF NOT EXISTS idx_reminders_updated_at ON public.reminders(updated_at DESC);
+
+-- ========================================
+-- 💬 TABELA DE COMENTÁRIOS
 -- ========================================
 CREATE TABLE IF NOT EXISTS public.comments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -162,6 +183,10 @@ CREATE TRIGGER update_tasks_updated_at
   BEFORE UPDATE ON tasks 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_reminders_updated_at 
+  BEFORE UPDATE ON reminders 
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TRIGGER update_comments_updated_at 
   BEFORE UPDATE ON comments 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -175,6 +200,7 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reminders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 -- ========================================
@@ -211,6 +237,15 @@ CREATE POLICY "public read tasks" ON public.tasks
   FOR SELECT TO anon USING (true);
 
 CREATE POLICY "public write tasks" ON public.tasks
+  FOR ALL TO anon USING (true);
+
+-- ========================================
+-- ⏰ POLÍTICAS PARA REMINDERS
+-- ========================================
+CREATE POLICY "public read reminders" ON public.reminders
+  FOR SELECT TO anon USING (true);
+
+CREATE POLICY "public write reminders" ON public.reminders
   FOR ALL TO anon USING (true);
 
 -- ========================================

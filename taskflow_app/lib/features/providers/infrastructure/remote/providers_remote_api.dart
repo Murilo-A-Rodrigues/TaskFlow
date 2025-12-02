@@ -1,73 +1,41 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../dtos/provider_dto.dart';
 
-/// API remota para comunicação com Supabase - Provedores
-class ProvidersRemoteApi {
-  static const String _tableName = 'providers';
-  final SupabaseClient _supabase = Supabase.instance.client;
-  
-  Future<List<ProviderDto>> getAllProviders() async {
-    final response = await _supabase
-        .from(_tableName)
-        .select()
-        .order('created_at', ascending: false);
-    
-    return (response as List)
-        .map((json) => ProviderDto.fromMap(json))
-        .toList();
-  }
-  
-  Future<List<ProviderDto>> getActiveProviders() async {
-    final response = await _supabase
-        .from(_tableName)
-        .select()
-        .eq('is_active', true)
-        .order('name', ascending: true);
-    
-    return (response as List)
-        .map((json) => ProviderDto.fromMap(json))
-        .toList();
-  }
-  
-  Future<ProviderDto> createProvider(ProviderDto dto) async {
-    final response = await _supabase
-        .from(_tableName)
-        .insert(dto.toMap())
-        .select()
-        .single();
-    
-    return ProviderDto.fromMap(response);
-  }
-  
-  Future<ProviderDto> updateProvider(ProviderDto dto) async {
-    final response = await _supabase
-        .from(_tableName)
-        .update(dto.toMap())
-        .eq('id', dto.id!)
-        .select()
-        .single();
-    
-    return ProviderDto.fromMap(response);
-  }
-  
-  Future<void> deleteProvider(String providerId) async {
-    await _supabase
-        .from(_tableName)
-        .delete()
-        .eq('id', providerId);
-  }
-  
-  Future<ProviderDto?> getProviderById(String providerId) async {
-    final response = await _supabase
-        .from(_tableName)
-        .select()
-        .eq('id', providerId)
-        .maybeSingle();
-    
-    if (response != null) {
-      return ProviderDto.fromMap(response);
-    }
-    
-    return null;
-  }
+/// Classe auxiliar para paginação de dados remotos
+class RemotePage<T> {
+  final List<T> data;
+  final PageCursor? nextCursor;
+
+  const RemotePage({
+    required this.data,
+    this.nextCursor,
+  });
+}
+
+/// Cursor para controle de paginação
+class PageCursor {
+  final int offset;
+  final int limit;
+  final dynamic value;
+
+  const PageCursor({
+    required this.offset,
+    required this.limit,
+    this.value,
+  });
+}
+
+/// Interface da API remota para provedores (Prompt 15)
+abstract class ProvidersRemoteApi {
+  /// Busca provedores do servidor com suporte a paginação e sync incremental.
+  Future<RemotePage<ProviderDto>> fetchProviders({
+    PageCursor? cursor,
+    DateTime? since,
+    int limit = 100,
+  });
+
+  /// Envia múltiplos provedores para o servidor (batch upsert).
+  Future<void> upsertProviders(List<ProviderDto> dtos);
+
+  /// Deleta provedor no servidor.
+  Future<void> deleteProvider(String id);
 }

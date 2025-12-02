@@ -1,16 +1,76 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../reminders/application/reminder_service.dart';
 import '../../tasks/application/task_service.dart';
 import '../../../features/app/domain/entities/reminder.dart';
+import '../../../services/core/supabase_service.dart';
 import '../widgets/reminder_form_dialog.dart';
+import '../infrastructure/local/reminders_local_dao.dart';
+import '../infrastructure/remote/supabase_reminders_remote_datasource.dart';
+import '../infrastructure/repositories/reminders_repository_impl.dart';
 
 /// ReminderListPage - Tela de listagem de lembretes
 /// 
+/// Implementa os Prompts 16, 17 e 18:
+/// - Sincronização offline-first com Supabase
+/// - Push-then-Pull sync automático
+/// - Uso de Entity (domínio) ao invés de DTO na UI
+/// - Indicador visual durante sincronização
+/// 
 /// Exibe todos os lembretes agrupados por tarefa
 /// Permite editar, excluir e ativar/desativar lembretes
-class ReminderListPage extends StatelessWidget {
+class ReminderListPage extends StatefulWidget {
   const ReminderListPage({super.key});
+
+  @override
+  State<ReminderListPage> createState() => _ReminderListPageState();
+}
+
+class _ReminderListPageState extends State<ReminderListPage> {
+  late final RemindersRepositoryImpl _repository;
+  bool _isSyncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Inicializa repositório com padrão offline-first
+    _repository = RemindersRepositoryImpl(
+      remoteApi: SupabaseRemindersRemoteDatasource(client: SupabaseService.client),
+      localDao: RemindersLocalDaoSharedPrefs(),
+    );
+    
+    // Carrega dados e sincroniza (Prompt 18: two-way sync)
+    _loadAndSync();
+  }
+
+  Future<void> _loadAndSync() async {
+    if (!mounted) return;
+
+    try {
+      setState(() => _isSyncing = true);
+
+      // 1. Carrega do cache primeiro (render rápido)
+      await _repository.loadFromCache();
+
+      // 2. Sincroniza com servidor em background (Prompt 18)
+      final syncedCount = await _repository.syncFromServer();
+
+      if (kDebugMode) {
+        print('[ReminderListPage] Sincronização concluída: $syncedCount items');
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        print('[ReminderListPage] Erro na sincronização: $e');
+        print(stack);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,71 +79,95 @@ class ReminderListPage extends StatelessWidget {
         title: const Text('Meus Lembretes'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        bottom: _isSyncing
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(4),
+                child: LinearProgressIndicator(
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              )
+            : null,
       ),
-      body: Consumer2<ReminderService, TaskService>(
-        builder: (context, reminderService, taskService, child) {
-          final reminders = reminderService.reminders;
+      body: RefreshIndicator(
+        onRefresh: _loadAndSync,
+        child: Consumer2<ReminderService, TaskService>(
+          builder: (context, reminderService, taskService, child) {
+            final reminders = reminderService.reminders;
 
-          if (reminders.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            if (reminders.isEmpty) {
+              // ListView vazio para funcionar o RefreshIndicator
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  Icon(
-                    Icons.notifications_none,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Nenhum lembrete criado',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Crie lembretes para suas tarefas importantes',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.notifications_none,
+                            size: 80,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Nenhum lembrete criado',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Crie lembretes para suas tarefas importantes',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
-              ),
+              );
+            }
+
+            // Agrupa lembretes por tarefa
+            final remindersByTask = <String, List<Reminder>>{};
+            for (final reminder in reminders) {
+              remindersByTask.putIfAbsent(reminder.taskId, () => []).add(reminder);
+            }
+
+            return ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: remindersByTask.length,
+              itemBuilder: (context, index) {
+                final taskId = remindersByTask.keys.elementAt(index);
+                final taskReminders = remindersByTask[taskId]!;
+                
+                // Busca tarefa na lista
+                final task = taskService.tasks.cast<dynamic>().firstWhere(
+                  (t) => t.id == taskId,
+                  orElse: () => null,
+                );
+
+                if (task == null) {
+                  // Tarefa foi deletada, mas lembretes ainda existem
+                  return const SizedBox.shrink();
+                }
+
+                return _TaskReminderGroup(
+                  task: task,
+                  reminders: taskReminders,
+                );
+              },
             );
-          }
-
-          // Agrupa lembretes por tarefa
-          final remindersByTask = <String, List<Reminder>>{};
-          for (final reminder in reminders) {
-            remindersByTask.putIfAbsent(reminder.taskId, () => []).add(reminder);
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: remindersByTask.length,
-            itemBuilder: (context, index) {
-              final taskId = remindersByTask.keys.elementAt(index);
-              final taskReminders = remindersByTask[taskId]!;
-              
-              // Busca tarefa na lista
-              final task = taskService.tasks.cast<dynamic>().firstWhere(
-                (t) => t.id == taskId,
-                orElse: () => null,
-              );
-
-              if (task == null) {
-                // Tarefa foi deletada, mas lembretes ainda existem
-                return const SizedBox.shrink();
-              }
-
-              return _TaskReminderGroup(
-                task: task,
-                reminders: taskReminders,
-              );
-            },
-          );
-        },
+          },
+        ),
       ),
     );
   }

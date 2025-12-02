@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 // Clean Architecture - Application Layer
 import 'features/tasks/application/task_service.dart';
 import 'features/tasks/application/task_filter_service.dart';
@@ -10,6 +8,8 @@ import 'features/reminders/application/reminder_service.dart';
 // Clean Architecture - Infrastructure Layer
 import 'services/notifications/notification_helper.dart';
 import 'services/storage/preferences_service.dart';
+import 'services/core/supabase_service.dart';
+import 'services/core/config_service.dart';
 import 'features/app/infrastructure/repositories/task_repository_impl.dart';
 import 'features/app/infrastructure/local/category_local_dto_shared_prefs.dart';
 import 'features/splashscreen/pages/splash_screen.dart';
@@ -25,19 +25,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Carrega variáveis de ambiente (.env)
-  await dotenv.load(fileName: ".env");
+  await ConfigService.initialize();
   
-  final supabaseUrl = dotenv.env['SUPABASE_URL'];
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
-  
-  if (supabaseUrl == null || supabaseAnonKey == null) {
-    throw Exception('Faltam SUPABASE_URL/SUPABASE_ANON_KEY no .env');
-  }
-  
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
+  // Inicializa o SupabaseService
+  await SupabaseService.initialize();
   
   // Inicializa o serviço de preferências
   final preferencesService = PreferencesService();

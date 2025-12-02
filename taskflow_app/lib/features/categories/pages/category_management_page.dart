@@ -1,18 +1,84 @@
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../categories/application/category_service.dart';
 import '../../../features/app/domain/entities/category.dart';
+import '../../../services/core/supabase_service.dart';
 import '../widgets/category_form_dialog.dart';
+import '../infrastructure/local/categories_local_dao.dart';
+import '../infrastructure/remote/supabase_categories_remote_datasource.dart';
+import '../infrastructure/repositories/categories_repository_impl.dart';
 
 /// CategoryManagementPage - Tela de gerenciamento de categorias
+/// 
+/// Implementa os Prompts 16, 17 e 18:
+/// - Sincronização offline-first com Supabase
+/// - Push-then-Pull sync automático
+/// - Uso de Entity (domínio) ao invés de DTO na UI
+/// - Indicador visual durante sincronização
 /// 
 /// Permite ao usuário:
 /// - Visualizar todas as categorias
 /// - Adicionar novas categorias
 /// - Editar categorias existentes
 /// - Excluir categorias
-class CategoryManagementPage extends StatelessWidget {
+class CategoryManagementPage extends StatefulWidget {
   const CategoryManagementPage({super.key});
+
+  @override
+  State<CategoryManagementPage> createState() => _CategoryManagementPageState();
+}
+
+class _CategoryManagementPageState extends State<CategoryManagementPage> {
+  late final CategoriesRepositoryImpl _repository;
+  bool _isSyncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Inicializa repositório e carrega dados (Prompt 18: two-way sync)
+    _initAndLoad();
+  }
+
+  Future<void> _initAndLoad() async {
+    // Inicializa repositório com padrão offline-first
+    final prefs = await SharedPreferences.getInstance();
+    _repository = CategoriesRepositoryImpl(
+      remoteApi: SupabaseCategoriesRemoteDatasource(SupabaseService.client),
+      localDao: CategoriesLocalDaoSharedPrefs(prefs),
+    );
+    
+    await _loadAndSync();
+  }
+
+  Future<void> _loadAndSync() async {
+    if (!mounted) return;
+
+    try {
+      setState(() => _isSyncing = true);
+
+      // 1. Carrega do cache primeiro (render rápido)
+      await _repository.loadFromCache();
+
+      // 2. Sincroniza com servidor em background (Prompt 18)
+      final syncedCount = await _repository.syncFromServer();
+
+      if (kDebugMode) {
+        print('[CategoryManagementPage] Sincronização concluída: $syncedCount items');
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        print('[CategoryManagementPage] Erro na sincronização: $e');
+        print(stack);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,53 +87,77 @@ class CategoryManagementPage extends StatelessWidget {
         title: const Text('Gerenciar Categorias'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        bottom: _isSyncing
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(4),
+                child: LinearProgressIndicator(
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              )
+            : null,
       ),
-      body: Consumer<CategoryService>(
-        builder: (context, categoryService, child) {
-          final categories = categoryService.rootCategories;
+      body: RefreshIndicator(
+        onRefresh: _loadAndSync,
+        child: Consumer<CategoryService>(
+          builder: (context, categoryService, child) {
+            final categories = categoryService.rootCategories;
 
-          if (categories.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            if (categories.isEmpty) {
+              // ListView vazio para funcionar o RefreshIndicator
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  Icon(
-                    Icons.category_outlined,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Nenhuma categoria encontrada',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Adicione sua primeira categoria',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.category_outlined,
+                            size: 80,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Nenhuma categoria encontrada',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Adicione sua primeira categoria',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              return _CategoryCard(
-                category: category,
-                onEdit: () => _showEditDialog(context, category),
-                onDelete: () => _confirmDelete(context, category),
               );
-            },
-          );
-        },
+            }
+
+            return ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return _CategoryCard(
+                  category: category,
+                  onEdit: () => _showEditDialog(context, category),
+                  onDelete: () => _confirmDelete(context, category),
+                );
+              },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddDialog(context),

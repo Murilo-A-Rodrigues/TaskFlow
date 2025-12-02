@@ -1,32 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-import '../infrastructure/local/providers_local_dao_shared.dart';
-import '../infrastructure/dtos/provider_dto.dart';
+import '../domain/entities/provider.dart';
 
 /// Diálogo de formulário para criar/editar fornecedores
-/// Implementa padrão do Prompt 10 (edição)
-Future<bool?> showProviderFormDialog({
+/// 
+/// Implementa Prompt 17: UI usa Entity (domínio) ao invés de DTO
+/// Também implementa padrão do Prompt 10 (edição)
+Future<void> showProviderFormDialog({
   required BuildContext context,
-  required ProvidersLocalDaoShared dao,
-  ProviderDto? provider,
+  Provider? provider,
+  required Future<void> Function(Provider) onSave,
 }) {
-  return showDialog<bool>(
+  return showDialog(
     context: context,
     barrierDismissible: false, // Conforme especificação dos prompts
     builder: (context) => _ProviderFormDialog(
-      dao: dao,
       provider: provider,
+      onSave: onSave,
     ),
   );
 }
 
 class _ProviderFormDialog extends StatefulWidget {
-  final ProvidersLocalDaoShared dao;
-  final ProviderDto? provider;
+  final Provider? provider;
+  final Future<void> Function(Provider) onSave;
 
   const _ProviderFormDialog({
-    required this.dao,
     this.provider,
+    required this.onSave,
   });
 
   @override
@@ -49,7 +50,7 @@ class _ProviderFormDialogState extends State<_ProviderFormDialog> {
     _emailController = TextEditingController(text: widget.provider?.email ?? '');
     _phoneController = TextEditingController(text: widget.provider?.phone ?? '');
     _addressController = TextEditingController(text: widget.provider?.address ?? '');
-    _isActive = widget.provider?.is_active ?? true;
+    _isActive = widget.provider?.isActive ?? true;
   }
 
   @override
@@ -71,10 +72,8 @@ class _ProviderFormDialogState extends State<_ProviderFormDialog> {
     });
 
     try {
-      // Carrega lista atual
-      final providers = await widget.dao.getSharedProviders();
-
-      final newProvider = ProviderDto(
+      final now = DateTime.now();
+      final newProvider = Provider(
         id: widget.provider?.id ?? const Uuid().v4(),
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
@@ -84,35 +83,15 @@ class _ProviderFormDialogState extends State<_ProviderFormDialog> {
         address: _addressController.text.trim().isEmpty 
             ? null 
             : _addressController.text.trim(),
-        is_active: _isActive,
-        created_at: widget.provider?.created_at ?? DateTime.now(),
-        updated_at: DateTime.now(),
+        isActive: _isActive,
+        createdAt: widget.provider?.createdAt ?? now,
+        updatedAt: now,
       );
 
-      if (_isEditing) {
-        // Atualiza existente
-        final index = providers.indexWhere((p) => p.id == newProvider.id);
-        if (index != -1) {
-          providers[index] = newProvider;
-        }
-      } else {
-        // Adiciona novo
-        providers.add(newProvider);
-      }
-
-      await widget.dao.saveSharedProviders(providers);
+      await widget.onSave(newProvider);
 
       if (mounted) {
-        Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isEditing 
-                  ? '✅ Fornecedor atualizado com sucesso' 
-                  : '✅ Fornecedor cadastrado com sucesso',
-            ),
-          ),
-        );
+        Navigator.of(context).pop();
       }
     } catch (e) {
       setState(() {

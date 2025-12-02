@@ -421,9 +421,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _toggleTask(String taskId) async {
     final taskService = context.read<TaskService>();
-    final task = taskService.tasks.firstWhere((task) => task.id == taskId);
-    final updatedTask = task.copyWith(isCompleted: !task.isCompleted);
-    await taskService.updateTask(updatedTask);
+    try {
+      final task = taskService.tasks.firstWhere(
+        (task) => task.id == taskId,
+        orElse: () => throw Exception('Tarefa não encontrada'),
+      );
+      final updatedTask = task.copyWith(isCompleted: !task.isCompleted);
+      await taskService.updateTask(updatedTask);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao atualizar tarefa: $e')),
+        );
+      }
+    }
   }
 
   void _showPhotoOptions(BuildContext context) {

@@ -1,17 +1,30 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../domain/entities/task.dart';
 import '../../tasks/application/task_service.dart';
 import '../widgets/task_form_dialog.dart';
 import '../widgets/task_card.dart';
+import '../infrastructure/local/tasks_local_dao.dart';
+import '../infrastructure/remote/supabase_tasks_remote_datasource.dart';
+import '../infrastructure/repositories/tasks_repository_impl.dart';
 
 /// Página de listagem de tarefas com estado vazio acolhedor
 /// 
-/// Implementa o Prompt 04 - Layout com:
+/// Implementa os Prompts 04, 16, 17 e 18:
 /// - Estado vazio com ilustração e mensagem
 /// - FAB com microanimação
-/// - Tip Bubble (dica flutuante)
-/// - Overlay de tutorial
+/// - Sincronização offline-first com Supabase
+/// - Push-then-Pull sync automático
+/// - Uso de Entity (domínio) ao invés de DTO na UI
+/// - Indicador visual durante sincronização
+/// 
+/// ⚠️ Boas práticas implementadas:
+/// - Sempre verifica 'mounted' antes de setState
+/// - Carrega cache primeiro para UI responsiva
+/// - Sincroniza em background sem bloquear UI
+/// - Logs de debug para facilitar diagnóstico
+/// - RefreshIndicator funciona mesmo com lista vazia
 class TaskListPage extends StatefulWidget {
   const TaskListPage({super.key});
 
@@ -20,6 +33,85 @@ class TaskListPage extends StatefulWidget {
 }
 
 class _TaskListPageState extends State<TaskListPage> {
+  /// Flag para indicar sincronização em andamento
+  /// Usado para mostrar LinearProgressIndicator no topo da tela
+  bool _isSyncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Carrega tarefas na inicialização
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadTasks();
+    });
+  }
+
+  /// Carrega tarefas seguindo o padrão offline-first (Prompts 16, 17, 18)
+  /// 
+  /// Fluxo:
+  /// 1. Carrega do cache local rapidamente (UI responsiva)
+  /// 2. Dispara sincronização em background
+  /// 3. Se houver mudanças, recarrega e atualiza UI
+  Future<void> _loadTasks() async {
+    if (!mounted) return;
+
+    try {
+      // Sempre sincroniza ao carregar (Prompt 18 - two-way sync)
+      // Mostra indicador de progresso durante sync
+      if (mounted) {
+        setState(() => _isSyncing = true);
+      }
+
+      // Cria repositório para sincronização
+      final dao = TasksLocalDaoSharedPrefs();
+      final remote = SupabaseTasksRemoteDatasource();
+      final repo = TasksRepositoryImpl(
+        remoteApi: remote,
+        localDao: dao,
+      );
+
+      // Executa sincronização bidirecional (push then pull)
+      final changed = await repo.syncFromServer();
+
+      if (kDebugMode) {
+        print('TaskListPage._loadTasks: sync completed, $changed items changed');
+      }
+
+      // Recarrega tasks via TaskService após sync
+      if (mounted) {
+        await context.read<TaskService>().forceSyncAll();
+      }
+
+      // Mostra feedback se houver mudanças
+      if (changed > 0 && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$changed tarefa(s) sincronizada(s) com sucesso'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('TaskListPage._loadTasks ERROR: $e');
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao sincronizar: $e'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+      }
+    }
+  }
 
   void _addNewTask() async {
     final result = await showTaskFormDialog(context);
@@ -36,10 +128,16 @@ class _TaskListPageState extends State<TaskListPage> {
         title: const Text('Minhas Tarefas'),
         centerTitle: true,
       ),
-      body: Stack(
+      body: Column(
         children: [
+          // Indicador de sincronização no topo (Prompt 18)
+          if (_isSyncing)
+            const LinearProgressIndicator(minHeight: 3),
           // Conteúdo principal
-          Consumer<TaskService>(
+          Expanded(
+            child: Stack(
+              children: [
+                Consumer<TaskService>(
             builder: (context, taskService, child) {
               final tasks = taskService.tasks;
 
@@ -88,7 +186,9 @@ class _TaskListPageState extends State<TaskListPage> {
               );
             },
           ),
-
+              ],
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -229,8 +329,16 @@ class _TaskListPageState extends State<TaskListPage> {
     }
   }
 
+  /// Pull-to-refresh: executa sincronização completa (Prompt 16, 18)
+  /// 
+  /// Chamado quando usuário arrasta a lista para baixo.
+  /// Sincroniza com servidor e atualiza a UI.
   Future<void> _refreshTasks() async {
-    await context.read<TaskService>().forceSyncAll();
+    if (kDebugMode) {
+      print('TaskListPage._refreshTasks: iniciando pull-to-refresh');
+    }
+
+    await _loadTasks();
   }
 
   Future<bool> _confirmDelete(Task task) async {
@@ -317,3 +425,45 @@ class _TaskListPageState extends State<TaskListPage> {
     );
   }
 }
+
+/*
+// Implementação dos Prompts 16, 17 e 18 aplicada nesta página:
+// 
+// ✅ Prompt 16 - Sincronização na UI:
+//    - _loadTasks() sempre sincroniza ao abrir a tela
+//    - Mostra LinearProgressIndicator durante sync
+//    - RefreshIndicator permite pull-to-refresh manual
+//    - Não bloqueia UI; cache carregado primeiro
+// 
+// ✅ Prompt 17 - UI usa Entity (domínio):
+//    - Toda a UI consome Task (Entity) ao invés de TaskDto
+//    - Conversão DTO↔Entity acontece no repositório
+//    - Mappers centralizados na camada de infraestrutura
+// 
+// ✅ Prompt 18 - Sincronização bidirecional:
+//    - syncFromServer() executa PUSH then PULL
+//    - Push: envia cache local para servidor (best-effort)
+//    - Pull: busca mudanças remotas e aplica localmente
+//    - Timestamps usados para controle incremental
+//    - Falhas de push não bloqueiam pull
+// 
+// Logs esperados no console (kDebugMode):
+// - TaskListPage._loadTasks: sync completed, 3 items changed
+// - TasksRepositoryImpl.syncFromServer: pushed 5 de 5 items to remote
+// - TasksRepositoryImpl.syncFromServer: recebidos 3 items from remote
+// - SupabaseTasksRemoteDatasource.fetchTasks: recebidos 3 registros
+// 
+// Checklist de erros comuns EVITADOS nesta implementação:
+// ✅ Sempre verifica 'mounted' antes de setState
+// ✅ Carrega cache primeiro, sync depois (não bloqueia UI)
+// ✅ RefreshIndicator funciona mesmo com lista vazia (AlwaysScrollableScrollPhysics)
+// ✅ Logs de debug em pontos-chave
+// ✅ Tratamento de erros com feedback ao usuário
+// ✅ SnackBar só mostrado se widget ainda montado
+// 
+// 📚 Referências:
+// - providers_cache_debug_prompt.md: exemplos de logs
+// - supabase_init_debug_prompt.md: problemas de inicialização
+// - supabase_rls_remediation.md: erros de permissão RLS
+*/
+

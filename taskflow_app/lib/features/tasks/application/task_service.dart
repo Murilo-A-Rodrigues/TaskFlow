@@ -126,7 +126,10 @@ class TaskService extends ChangeNotifier {
   /// Alterna status de conclusão da tarefa
   Future<void> toggleTaskComplete(String taskId) async {
     try {
-      final task = _tasks.firstWhere((task) => task.id == taskId);
+      final task = _tasks.firstWhere(
+        (task) => task.id == taskId,
+        orElse: () => throw Exception('Tarefa não encontrada'),
+      );
       final updatedTask = task.copyWith(isCompleted: !task.isCompleted);
       await updateTask(updatedTask);
     } catch (e) {
