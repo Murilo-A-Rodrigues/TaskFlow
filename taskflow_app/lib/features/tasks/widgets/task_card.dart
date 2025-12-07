@@ -39,7 +39,12 @@ class TaskCard extends StatelessWidget {
                     }
                     onToggle();
                   },
-                  activeColor: Theme.of(context).primaryColor,
+                  activeColor: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFFFBBF24) // AMBER no dark mode
+                      : Theme.of(context).primaryColor, // AZUL no light mode
+                  checkColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black // Check preto no dark mode para contraste
+                      : Colors.white, // Check branco no light mode
                 ),
                 Expanded(
                   child: Column(

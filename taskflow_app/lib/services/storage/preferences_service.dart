@@ -12,6 +12,7 @@ class PreferencesService extends ChangeNotifier {
   static const String _keyTipsEnabled = 'tips_enabled';
   static const String _keyUserName = 'user_name';
   static const String _keyUserPhotoPath = 'user_photo_path';
+  static const String _keyThemeMode = 'theme_mode';
   
   // Mantém compatibilidade com versões antigas
   static const String _keyPrivacyPolicyAccepted = 'privacy_policy_accepted';
@@ -142,6 +143,14 @@ class PreferencesService extends ChangeNotifier {
     }
     notifyListeners();
     print('🔔 PreferencesService - Listeners notificados');
+  }
+
+  // Theme Mode
+  String get themeMode => prefs.getString(_keyThemeMode) ?? 'light';
+  
+  Future<void> setThemeMode(String mode) async {
+    await prefs.setString(_keyThemeMode, mode);
+    notifyListeners();
   }
 
   // Métodos conforme especificação do PRD

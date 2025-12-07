@@ -58,9 +58,13 @@ class StatsCard extends StatelessWidget {
               const SizedBox(height: 8),
               LinearProgressIndicator(
                 value: taskService.completionPercentage,
-                backgroundColor: Colors.grey.shade300,
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF334155) // Cinza escuro no dark mode
+                    : Colors.grey.shade300, // Cinza claro no light mode
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  Theme.of(context).primaryColor,
+                  Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFFFBBF24) // AMBER no dark mode
+                      : Theme.of(context).primaryColor, // AZUL no light mode
                 ),
               ),
             ],

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../services/storage/preferences_service.dart';
 import '../../../services/integrations/photo_service.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../theme/theme_controller.dart';
 
 /// Drawer da tela inicial com perfil do usuário e opções de navegação
 /// Permite editar nome, gerenciar foto e acessar configurações
@@ -96,6 +97,61 @@ class HomeDrawer extends StatelessWidget {
             leading: const Icon(Icons.photo_camera),
             title: const Text('Gerenciar Foto'),
             onTap: () => _showPhotoOptions(context),
+          ),
+          const Divider(),
+          // Toggle de Tema
+          Consumer<ThemeController>(
+            builder: (context, themeController, child) {
+              final isDark = themeController.isDarkMode;
+              final isSystem = themeController.isSystemMode;
+              
+              return SwitchListTile.adaptive(
+                secondary: Icon(
+                  isDark ? Icons.dark_mode : Icons.light_mode,
+                ),
+                title: const Text('Tema escuro'),
+                subtitle: Text(
+                  isSystem ? 'Seguindo o sistema' : (isDark ? 'Ativado' : 'Desativado'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+                value: isDark,
+                onChanged: (value) {
+                  if (value) {
+                    themeController.setThemeMode(ThemeMode.dark);
+                  } else {
+                    themeController.setThemeMode(ThemeMode.light);
+                  }
+                },
+                // Adiciona um botão de reset para o modo sistema
+                contentPadding: const EdgeInsets.only(left: 16, right: 8),
+              );
+            },
+          ),
+          // Botão para voltar ao modo sistema
+          Consumer<ThemeController>(
+            builder: (context, themeController, child) {
+              if (themeController.isSystemMode) return const SizedBox.shrink();
+              
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: TextButton.icon(
+                  onPressed: () {
+                    themeController.setThemeMode(ThemeMode.system);
+                  },
+                  icon: const Icon(Icons.settings_suggest, size: 16),
+                  label: const Text(
+                    'Seguir tema do sistema',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  style: TextButton.styleFrom(
+                    alignment: Alignment.centerLeft,
+                  ),
+                ),
+              );
+            },
           ),
           const Divider(),
           ListTile(

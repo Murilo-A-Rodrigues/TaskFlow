@@ -441,8 +441,12 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                   ElevatedButton(
                     onPressed: _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
-                      foregroundColor: Colors.white,
+                      backgroundColor: theme.brightness == Brightness.dark
+                          ? const Color(0xFFFBBF24) // AMBER no dark mode
+                          : theme.primaryColor, // AZUL no light mode
+                      foregroundColor: theme.brightness == Brightness.dark
+                          ? Colors.black // Texto preto no dark mode para contraste
+                          : Colors.white, // Texto branco no light mode
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 12,
@@ -737,7 +741,11 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
                               style: TextStyle(
                                 fontSize: isSelected ? 32 : 24,
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected ? theme.primaryColor : theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
+                                color: isSelected 
+                                    ? (theme.brightness == Brightness.dark
+                                        ? const Color(0xFFFBBF24) // AMBER no dark mode
+                                        : theme.primaryColor) // AZUL no light mode
+                                    : theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
                               ),
                             ),
                           );
@@ -780,7 +788,11 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
                               style: TextStyle(
                                 fontSize: isSelected ? 32 : 24,
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected ? theme.primaryColor : theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
+                                color: isSelected 
+                                    ? (theme.brightness == Brightness.dark
+                                        ? const Color(0xFFFBBF24) // AMBER no dark mode
+                                        : theme.primaryColor) // AZUL no light mode
+                                    : theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
                               ),
                             ),
                           );

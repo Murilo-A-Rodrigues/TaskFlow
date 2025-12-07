@@ -82,11 +82,17 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gerenciar Categorias'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        backgroundColor: isDarkMode 
+            ? const Color(0xFF0F172A) // Tom mais escuro no dark mode
+            : Theme.of(context).colorScheme.primaryContainer, // Tom claro no light mode
+        foregroundColor: isDarkMode
+            ? Colors.white // Texto branco no dark mode
+            : Theme.of(context).colorScheme.onPrimaryContainer,
         bottom: _isSyncing
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(4),
