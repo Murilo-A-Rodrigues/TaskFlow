@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 /// TaskDto - Data Transfer Object que espelha a tabela tasks do Supabase
-/// 
+///
 /// Esta classe representa os dados como eles são transferidos de e para
 /// o Supabase/rede. Os nomes dos campos seguem snake_case (igual ao banco)
 /// e os tipos são primitivos para facilitar serialização.
@@ -10,12 +10,12 @@ class TaskDto {
   final String id;
   final String title;
   final String? description;
-  final bool is_completed;        // snake_case igual ao banco
-  final String created_at;        // ISO8601 String para o fio
-  final String? due_date;         // ISO8601 String ou null
-  final int priority;             // número para o banco
-  final String updated_at;        // ISO8601 String para sincronização
-  final String? category_id;      // FK para categories table
+  final bool is_completed; // snake_case igual ao banco
+  final String created_at; // ISO8601 String para o fio
+  final String? due_date; // ISO8601 String ou null
+  final int priority; // número para o banco
+  final String updated_at; // ISO8601 String para sincronização
+  final String? category_id; // FK para categories table
 
   TaskDto({
     required this.id,
@@ -61,8 +61,9 @@ class TaskDto {
 
   /// Factory para criar TaskDto a partir de JSON string
   factory TaskDto.fromJson(String jsonString) {
-    final Map<String, dynamic> json = 
-        Map<String, dynamic>.from(jsonDecode(jsonString));
+    final Map<String, dynamic> json = Map<String, dynamic>.from(
+      jsonDecode(jsonString),
+    );
     return TaskDto.fromMap(json);
   }
 
@@ -98,14 +99,14 @@ class TaskDto {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is TaskDto &&
-           other.id == id &&
-           other.title == title &&
-           other.description == description &&
-           other.is_completed == is_completed &&
-           other.created_at == created_at &&
-           other.due_date == due_date &&
-           other.priority == priority &&
-           other.updated_at == updated_at;
+        other.id == id &&
+        other.title == title &&
+        other.description == description &&
+        other.is_completed == is_completed &&
+        other.created_at == created_at &&
+        other.due_date == due_date &&
+        other.priority == priority &&
+        other.updated_at == updated_at;
   }
 
   @override

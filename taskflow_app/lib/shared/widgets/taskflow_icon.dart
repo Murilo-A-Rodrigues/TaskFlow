@@ -16,13 +16,10 @@ class TaskFlowIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = primaryColor ?? const Color(0xFF4A4EE8);
     final accent = accentColor ?? const Color(0xFFF5A623);
-    
+
     return CustomPaint(
       size: Size(size, size),
-      painter: TaskFlowIconPainter(
-        primaryColor: primary,
-        accentColor: accent,
-      ),
+      painter: TaskFlowIconPainter(primaryColor: primary, accentColor: accent),
     );
   }
 }
@@ -31,10 +28,7 @@ class TaskFlowIconPainter extends CustomPainter {
   final Color primaryColor;
   final Color accentColor;
 
-  TaskFlowIconPainter({
-    required this.primaryColor,
-    required this.accentColor,
-  });
+  TaskFlowIconPainter({required this.primaryColor, required this.accentColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -63,7 +57,10 @@ class TaskFlowIconPainter extends CustomPainter {
     _drawTaskItem(
       canvas,
       size,
-      Offset(size.width * 0.175, startY), // Mais centralizado: 0.175 em vez de 0.2
+      Offset(
+        size.width * 0.175,
+        startY,
+      ), // Mais centralizado: 0.175 em vez de 0.2
       itemWidth,
       itemHeight,
       isCompleted: true,
@@ -95,12 +92,12 @@ class TaskFlowIconPainter extends CustomPainter {
     Size size,
     Offset position,
     double width,
-    double height,
-    {required bool isCompleted}
-  ) {
+    double height, {
+    required bool isCompleted,
+  }) {
     final paint = Paint();
     final checkboxSize = height * 0.8;
-    
+
     // Checkbox
     final checkboxRect = Rect.fromLTWH(
       position.dx,
@@ -114,7 +111,10 @@ class TaskFlowIconPainter extends CustomPainter {
       paint.color = accentColor;
       paint.style = PaintingStyle.fill;
       canvas.drawRRect(
-        RRect.fromRectAndRadius(checkboxRect, Radius.circular(checkboxSize * 0.15)),
+        RRect.fromRectAndRadius(
+          checkboxRect,
+          Radius.circular(checkboxSize * 0.15),
+        ),
         paint,
       );
 
@@ -144,7 +144,10 @@ class TaskFlowIconPainter extends CustomPainter {
       paint.style = PaintingStyle.stroke;
       paint.strokeWidth = checkboxSize * 0.1;
       canvas.drawRRect(
-        RRect.fromRectAndRadius(checkboxRect, Radius.circular(checkboxSize * 0.15)),
+        RRect.fromRectAndRadius(
+          checkboxRect,
+          Radius.circular(checkboxSize * 0.15),
+        ),
         paint,
       );
     }

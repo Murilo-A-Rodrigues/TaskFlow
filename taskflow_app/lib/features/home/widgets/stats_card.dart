@@ -6,10 +6,7 @@ import '../../tasks/application/task_service.dart';
 class StatsCard extends StatelessWidget {
   final TaskService taskService;
 
-  const StatsCard({
-    super.key,
-    required this.taskService,
-  });
+  const StatsCard({super.key, required this.taskService});
 
   @override
   Widget build(BuildContext context) {
@@ -74,17 +71,20 @@ class StatsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String label, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-            width: 1,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -96,11 +96,7 @@ class StatsCard extends StatelessWidget {
                 color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon, 
-                color: color.withValues(alpha: 0.8), 
-                size: 24,
-              ),
+              child: Icon(icon, color: color.withValues(alpha: 0.8), size: 24),
             ),
             const SizedBox(height: 10),
             Text(
@@ -118,7 +114,9 @@ class StatsCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
                 height: 1.0,
               ),
               textAlign: TextAlign.center,

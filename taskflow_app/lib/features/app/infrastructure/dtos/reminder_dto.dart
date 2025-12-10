@@ -1,19 +1,19 @@
 import 'dart:convert';
 
 /// ReminderDto - Data Transfer Object que espelha a tabela reminders do Supabase
-/// 
+///
 /// Esta classe representa os dados como eles são transferidos de e para
 /// o Supabase/rede. Os nomes dos campos seguem snake_case (igual ao banco)
 /// e os tipos são primitivos para facilitar serialização.
 /// Segue o padrão DTO do documento "Modelo DTO e Mapeamento".
 class ReminderDto {
   final String id;
-  final String task_id;           // snake_case igual ao banco
-  final String reminder_date;     // ISO8601 String para o fio
-  final String type;              // 'once', 'daily', 'weekly', 'monthly'
-  final bool is_active;           // snake_case igual ao banco
-  final String created_at;        // ISO8601 String
-  final String? custom_message;   // Mensagem personalizada opcional
+  final String task_id; // snake_case igual ao banco
+  final String reminder_date; // ISO8601 String para o fio
+  final String type; // 'once', 'daily', 'weekly', 'monthly'
+  final bool is_active; // snake_case igual ao banco
+  final String created_at; // ISO8601 String
+  final String? custom_message; // Mensagem personalizada opcional
 
   ReminderDto({
     required this.id,
@@ -53,8 +53,9 @@ class ReminderDto {
 
   /// Factory para criar ReminderDto a partir de JSON string
   factory ReminderDto.fromJson(String jsonString) {
-    final Map<String, dynamic> json = 
-        Map<String, dynamic>.from(jsonDecode(jsonString));
+    final Map<String, dynamic> json = Map<String, dynamic>.from(
+      jsonDecode(jsonString),
+    );
     return ReminderDto.fromMap(json);
   }
 

@@ -5,7 +5,7 @@ import '../../categories/application/category_service.dart';
 import '../domain/entities/task_priority.dart';
 
 /// FilterBottomSheet - Bottom sheet para configurar filtros de tarefas
-/// 
+///
 /// Permite ao usuário filtrar tarefas por:
 /// - Categoria (múltipla seleção)
 /// - Prioridade (múltipla seleção)
@@ -25,9 +25,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -54,9 +52,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 const SizedBox(width: 12),
                 Text(
                   'Filtrar Tarefas',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 Consumer<TaskFilterService>(
@@ -136,9 +134,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 }
@@ -156,9 +154,7 @@ class _CategoryFilter extends StatelessWidget {
         if (categories.isEmpty) {
           return Text(
             'Nenhuma categoria disponível',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: Theme.of(context).colorScheme.outline),
           );
         }
 
@@ -166,7 +162,9 @@ class _CategoryFilter extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: categories.map((category) {
-            final isSelected = filterService.selectedCategoryIds.contains(category.id);
+            final isSelected = filterService.selectedCategoryIds.contains(
+              category.id,
+            );
             final categoryColor = _parseColor(category.color);
 
             return FilterChip(
@@ -219,8 +217,10 @@ class _PriorityFilter extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: TaskPriority.values.map((priority) {
-            final isSelected = filterService.selectedPriorities.contains(priority);
-            
+            final isSelected = filterService.selectedPriorities.contains(
+              priority,
+            );
+
             return FilterChip(
               label: Text(_getPriorityLabel(priority)),
               selected: isSelected,
@@ -316,25 +316,28 @@ class _DateRangeFilter extends StatelessWidget {
       builder: (context, filterService, child) {
         return Column(
           children: [
-            ...DateRangeFilter.values.where((f) => f != DateRangeFilter.custom).map((range) {
-              return RadioListTile<DateRangeFilter>(
-                title: Text(range.label),
-                value: range,
-                groupValue: filterService.dateRangeFilter,
-                onChanged: (value) {
-                  if (value != null) {
-                    filterService.setDateRangeFilter(value);
-                  }
-                },
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-              );
-            }),
-            
+            ...DateRangeFilter.values
+                .where((f) => f != DateRangeFilter.custom)
+                .map((range) {
+                  return RadioListTile<DateRangeFilter>(
+                    title: Text(range.label),
+                    value: range,
+                    groupValue: filterService.dateRangeFilter,
+                    onChanged: (value) {
+                      if (value != null) {
+                        filterService.setDateRangeFilter(value);
+                      }
+                    },
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  );
+                }),
+
             // Opção personalizada
             RadioListTile<DateRangeFilter>(
               title: const Text('Personalizado'),
-              subtitle: filterService.dateRangeFilter == DateRangeFilter.custom &&
+              subtitle:
+                  filterService.dateRangeFilter == DateRangeFilter.custom &&
                       filterService.customStartDate != null &&
                       filterService.customEndDate != null
                   ? Text(
@@ -354,10 +357,7 @@ class _DateRangeFilter extends StatelessWidget {
                     firstDate: DateTime(2020),
                     lastDate: DateTime(2030),
                     builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context),
-                        child: child!,
-                      );
+                      return Theme(data: Theme.of(context), child: child!);
                     },
                   );
 

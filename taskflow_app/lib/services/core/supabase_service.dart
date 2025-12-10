@@ -13,7 +13,9 @@ class SupabaseService {
 
     try {
       if (!ConfigService.hasValidSupabaseConfig) {
-        throw Exception('Configuração do Supabase inválida. Verifique o arquivo .env');
+        throw Exception(
+          'Configuração do Supabase inválida. Verifique o arquivo .env',
+        );
       }
 
       await Supabase.initialize(
@@ -23,7 +25,7 @@ class SupabaseService {
 
       _client = Supabase.instance.client;
       _isInitialized = true;
-      
+
       if (ConfigService.isLoggingEnabled) {
         print('✅ SupabaseService - Inicializado com sucesso');
         print('   URL: ${ConfigService.supabaseUrl}');
@@ -37,7 +39,9 @@ class SupabaseService {
   /// Retorna o cliente Supabase
   static SupabaseClient get client {
     if (!_isInitialized || _client == null) {
-      throw Exception('SupabaseService não foi inicializado. Chame SupabaseService.initialize() primeiro.');
+      throw Exception(
+        'SupabaseService não foi inicializado. Chame SupabaseService.initialize() primeiro.',
+      );
     }
     return _client!;
   }
@@ -97,12 +101,12 @@ class SupabaseService {
   }
 
   /// Exemplo: Atualizar uma tarefa
-  static Future<bool> updateTask(String id, Map<String, dynamic> updates) async {
+  static Future<bool> updateTask(
+    String id,
+    Map<String, dynamic> updates,
+  ) async {
     try {
-      await client
-          .from('tasks')
-          .update(updates)
-          .eq('id', id);
+      await client.from('tasks').update(updates).eq('id', id);
 
       if (ConfigService.isLoggingEnabled) {
         print('✅ Task atualizada: $id');
@@ -118,10 +122,7 @@ class SupabaseService {
   /// Exemplo: Deletar uma tarefa
   static Future<bool> deleteTask(String id) async {
     try {
-      await client
-          .from('tasks')
-          .delete()
-          .eq('id', id);
+      await client.from('tasks').delete().eq('id', id);
 
       if (ConfigService.isLoggingEnabled) {
         print('✅ Task deletada: $id');
@@ -142,14 +143,12 @@ class SupabaseService {
   }) async {
     try {
       final path = '${DateTime.now().millisecondsSinceEpoch}_$fileName';
-      
+
       await client.storage
           .from(bucketName)
           .uploadBinary(path, Uint8List.fromList(fileBytes));
 
-      final publicUrl = client.storage
-          .from(bucketName)
-          .getPublicUrl(path);
+      final publicUrl = client.storage.from(bucketName).getPublicUrl(path);
 
       if (ConfigService.isLoggingEnabled) {
         print('✅ Arquivo uploaded: $publicUrl');
@@ -171,11 +170,11 @@ class SupabaseService {
   static Future<bool> signInAnonymously() async {
     try {
       await client.auth.signInAnonymously();
-      
+
       if (ConfigService.isLoggingEnabled) {
         print('✅ Login anônimo realizado');
       }
-      
+
       return true;
     } catch (e) {
       print('❌ Erro no login anônimo: $e');

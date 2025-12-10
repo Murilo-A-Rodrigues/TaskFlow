@@ -5,11 +5,11 @@ import '../../../app/infrastructure/dtos/reminder_dto.dart';
 import 'reminders_remote_api.dart';
 
 /// Implementação Supabase do datasource remoto de Reminders
-/// 
+///
 /// Esta classe comunica com a tabela 'reminders' no Supabase para buscar
 /// e enviar lembretes. Implementa paginação, sincronização incremental
 /// e tratamento robusto de erros.
-/// 
+///
 /// ⚠️ Dicas práticas para evitar erros comuns:
 /// - Garanta que o DTO e o Mapper aceitam múltiplos formatos vindos do backend
 ///   (ex: id como int/string, datas como DateTime/String)
@@ -24,7 +24,7 @@ class SupabaseRemindersRemoteDatasource implements RemindersRemoteApi {
 
   /// Construtor com client opcional (fallback para SupabaseService global)
   SupabaseRemindersRemoteDatasource({SupabaseClient? client})
-      : client = client ?? SupabaseService.client;
+    : client = client ?? SupabaseService.client;
 
   @override
   Future<RemotePage<ReminderDto>> fetchReminders({
@@ -34,8 +34,10 @@ class SupabaseRemindersRemoteDatasource implements RemindersRemoteApi {
   }) async {
     try {
       if (kDebugMode) {
-        print('SupabaseRemindersRemoteDatasource.fetchReminders: '
-            'since=$since, cursor=$cursor, limit=$limit');
+        print(
+          'SupabaseRemindersRemoteDatasource.fetchReminders: '
+          'since=$since, cursor=$cursor, limit=$limit',
+        );
       }
 
       // Inicia query na tabela reminders
@@ -60,14 +62,18 @@ class SupabaseRemindersRemoteDatasource implements RemindersRemoteApi {
         }).toList();
 
         if (kDebugMode) {
-          print('SupabaseRemindersRemoteDatasource.fetchReminders: '
-              'Filtrados ${filteredResponse.length} de ${response.length} items após $since');
+          print(
+            'SupabaseRemindersRemoteDatasource.fetchReminders: '
+            'Filtrados ${filteredResponse.length} de ${response.length} items após $since',
+          );
         }
       }
 
       if (kDebugMode) {
-        print('SupabaseRemindersRemoteDatasource.fetchReminders: '
-            'recebidos ${filteredResponse.length} registros');
+        print(
+          'SupabaseRemindersRemoteDatasource.fetchReminders: '
+          'recebidos ${filteredResponse.length} registros',
+        );
       }
 
       // Converte resposta para DTOs
@@ -79,8 +85,10 @@ class SupabaseRemindersRemoteDatasource implements RemindersRemoteApi {
         } catch (e) {
           // Log de erro de conversão mas continua processando outros registros
           if (kDebugMode) {
-            print('SupabaseRemindersRemoteDatasource.fetchReminders: '
-                'erro ao converter registro: $e\nRow: $row');
+            print(
+              'SupabaseRemindersRemoteDatasource.fetchReminders: '
+              'erro ao converter registro: $e\nRow: $row',
+            );
           }
         }
       }
@@ -89,10 +97,7 @@ class SupabaseRemindersRemoteDatasource implements RemindersRemoteApi {
       final hasMore = response.length == limit;
       final nextCursor = hasMore ? PageCursor(offset + limit) : null;
 
-      return RemotePage<ReminderDto>(
-        items: reminders,
-        next: nextCursor,
-      );
+      return RemotePage<ReminderDto>(items: reminders, next: nextCursor);
     } catch (e, stackTrace) {
       // Log do erro mas retorna página vazia para não quebrar o fluxo
       if (kDebugMode) {
@@ -112,8 +117,10 @@ class SupabaseRemindersRemoteDatasource implements RemindersRemoteApi {
 
     try {
       if (kDebugMode) {
-        print('SupabaseRemindersRemoteDatasource.upsertReminders: '
-            'sending ${reminders.length} items');
+        print(
+          'SupabaseRemindersRemoteDatasource.upsertReminders: '
+          'sending ${reminders.length} items',
+        );
       }
 
       // Converte DTOs para Maps
@@ -122,14 +129,13 @@ class SupabaseRemindersRemoteDatasource implements RemindersRemoteApi {
           .toList();
 
       // Realiza upsert no Supabase
-      final response = await client
-          .from('reminders')
-          .upsert(maps)
-          .select();
+      final response = await client.from('reminders').upsert(maps).select();
 
       if (kDebugMode) {
-        print('SupabaseRemindersRemoteDatasource.upsertReminders: '
-            'response length: ${response.length}');
+        print(
+          'SupabaseRemindersRemoteDatasource.upsertReminders: '
+          'response length: ${response.length}',
+        );
       }
 
       return response.length;

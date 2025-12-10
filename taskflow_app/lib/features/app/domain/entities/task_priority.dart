@@ -1,8 +1,4 @@
-enum TaskPriority {
-  low,
-  medium,
-  high,
-}
+enum TaskPriority { low, medium, high }
 
 extension TaskPriorityExtension on TaskPriority {
   String get displayName {

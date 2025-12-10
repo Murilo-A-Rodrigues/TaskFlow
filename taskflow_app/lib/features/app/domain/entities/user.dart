@@ -1,7 +1,7 @@
 import 'package:uuid/uuid.dart';
 
 /// User Entity - Representação interna rica e validada do usuário
-/// 
+///
 /// Esta classe representa um usuário no domínio da aplicação TaskFlow.
 /// Contém tipos fortes, validações e invariantes de domínio.
 /// Segue o padrão Entity do documento "Modelo DTO e Mapeamento".
@@ -26,12 +26,12 @@ class User {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.lastLoginAt,
-  })  : id = id ?? const Uuid().v4(),
-        name = _validateName(name),
-        email = _validateEmail(email),
-        isActive = isActive ?? true,
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       name = _validateName(name),
+       email = _validateEmail(email),
+       isActive = isActive ?? true,
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   /// Validação de nome - deve ser não vazio e trimmed
   static String _validateName(String name) {
@@ -51,13 +51,15 @@ class User {
     if (trimmedEmail.isEmpty) {
       throw ArgumentError('Email não pode ser vazio');
     }
-    
+
     // Regex básico para validação de email
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
     if (!emailRegex.hasMatch(trimmedEmail)) {
       throw ArgumentError('Formato de email inválido');
     }
-    
+
     return trimmedEmail;
   }
 
@@ -71,7 +73,9 @@ class User {
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
-    return name.length >= 2 ? name.substring(0, 2).toUpperCase() : name.toUpperCase();
+    return name.length >= 2
+        ? name.substring(0, 2).toUpperCase()
+        : name.toUpperCase();
   }
 
   /// Métodos de domínio
@@ -84,10 +88,7 @@ class User {
   }
 
   User updateLastLogin() {
-    return copyWith(
-      lastLoginAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(lastLoginAt: DateTime.now(), updatedAt: DateTime.now());
   }
 
   User updateProfile({

@@ -2,14 +2,14 @@ import '../../domain/entities/category.dart';
 import '../dtos/category_dto.dart';
 
 /// CategoryMapper - Conversor centralizado entre CategoryDto e Category Entity
-/// 
+///
 /// Esta classe é responsável por traduzir entre o formato de transporte (DTO)
 /// e o formato interno da aplicação (Entity). Centraliza todas as regras de
 /// conversão em um único local, facilitando manutenção e testes.
 /// Segue o padrão Mapper do documento "Modelo DTO e Mapeamento".
 class CategoryMapper {
   /// Converte CategoryDto (formato de rede/banco) para Category Entity (formato interno)
-  /// 
+  ///
   /// Aplica conversões como:
   /// - String ISO8601 -> DateTime
   /// - snake_case -> camelCase
@@ -27,11 +27,15 @@ class CategoryMapper {
       isActive: dto.is_active,
       createdAt: DateTime.parse(dto.created_at),
       updatedAt: DateTime.parse(dto.updated_at),
+      isDeleted: dto.is_deleted,
+      deletedAt: dto.deleted_at != null
+          ? DateTime.tryParse(dto.deleted_at!)
+          : null,
     );
   }
 
   /// Converte Category Entity (formato interno) para CategoryDto (formato de rede/banco)
-  /// 
+  ///
   /// Aplica conversões inversas como:
   /// - DateTime -> String ISO8601
   /// - camelCase -> snake_case
@@ -48,6 +52,8 @@ class CategoryMapper {
       is_active: entity.isActive,
       created_at: entity.createdAt.toIso8601String(),
       updated_at: entity.updatedAt.toIso8601String(),
+      is_deleted: entity.isDeleted,
+      deleted_at: entity.deletedAt?.toIso8601String(),
     );
   }
 
@@ -62,7 +68,7 @@ class CategoryMapper {
   }
 
   /// Converte Map (vindo diretamente do Supabase) para Category Entity
-  /// 
+  ///
   /// Útil para quando recebemos dados diretamente do Supabase
   /// sem passar pelo CategoryDto primeiro
   static Category fromMap(Map<String, dynamic> map) {
@@ -71,7 +77,7 @@ class CategoryMapper {
   }
 
   /// Converte Category Entity para Map (para enviar ao Supabase)
-  /// 
+  ///
   /// Útil para quando queremos enviar dados diretamente ao Supabase
   /// sem criar CategoryDto primeiro
   static Map<String, dynamic> toMap(Category entity) {
@@ -90,12 +96,15 @@ class CategoryMapper {
   }
 
   /// Atualiza um CategoryDto existente com dados de uma Category Entity
-  /// 
+  ///
   /// Útil para operações de update onde queremos manter alguns
   /// campos do DTO original e atualizar outros com dados da Entity
-  static CategoryDto updateDtoFromEntity(CategoryDto originalDto, Category updatedEntity) {
+  static CategoryDto updateDtoFromEntity(
+    CategoryDto originalDto,
+    Category updatedEntity,
+  ) {
     return CategoryDto(
-      id: originalDto.id,  // Mantém ID original
+      id: originalDto.id, // Mantém ID original
       name: updatedEntity.name,
       description: updatedEntity.description,
       user_id: updatedEntity.userId,
@@ -104,13 +113,13 @@ class CategoryMapper {
       icon: updatedEntity.icon,
       sort_order: updatedEntity.sortOrder,
       is_active: updatedEntity.isActive,
-      created_at: originalDto.created_at,  // Mantém data criação original
+      created_at: originalDto.created_at, // Mantém data criação original
       updated_at: updatedEntity.updatedAt.toIso8601String(),
     );
   }
 
   /// Helpers para hierarquia - constrói árvore de categorias
-  /// 
+  ///
   /// Útil para transformar lista flat em estrutura hierárquica
   static List<CategoryWithChildren> buildTree(List<Category> categories) {
     final List<CategoryWithChildren> roots = [];
@@ -130,9 +139,12 @@ class CategoryMapper {
     void buildChildren(CategoryWithChildren parent) {
       final children = childrenMap[parent.category.id] ?? [];
       children.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      
+
       for (final child in children) {
-        final childWithChildren = CategoryWithChildren(category: child, children: []);
+        final childWithChildren = CategoryWithChildren(
+          category: child,
+          children: [],
+        );
         parent.children.add(childWithChildren);
         buildChildren(childWithChildren);
       }
@@ -145,7 +157,7 @@ class CategoryMapper {
 
     // Ordena raízes
     roots.sort((a, b) => a.category.sortOrder.compareTo(b.category.sortOrder));
-    
+
     return roots;
   }
 }
@@ -155,14 +167,11 @@ class CategoryWithChildren {
   final Category category;
   final List<CategoryWithChildren> children;
 
-  CategoryWithChildren({
-    required this.category,
-    required this.children,
-  });
+  CategoryWithChildren({required this.category, required this.children});
 
   /// Conveniência para verificar se tem filhos
   bool get hasChildren => children.isNotEmpty;
-  
+
   /// Conta total de descendentes
   int get totalDescendants {
     int count = children.length;
@@ -175,12 +184,12 @@ class CategoryWithChildren {
   /// Busca categoria por ID na subárvore
   Category? findById(String id) {
     if (category.id == id) return category;
-    
+
     for (final child in children) {
       final found = child.findById(id);
       if (found != null) return found;
     }
-    
+
     return null;
   }
 }

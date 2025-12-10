@@ -6,14 +6,14 @@ import '../dtos/provider_dto.dart';
 class ProvidersLocalDaoShared {
   static const String _sharedCacheKey = 'shared_providers_cache';
   static const String _syncKey = 'providers_last_sync';
-  
+
   Future<List<ProviderDto>> getSharedProviders() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = prefs.getString(_sharedCacheKey);
-      
+
       if (jsonString == null) return [];
-      
+
       final List<dynamic> jsonList = json.decode(jsonString);
       return jsonList.map((json) => ProviderDto.fromMap(json)).toList();
     } catch (e) {
@@ -21,19 +21,21 @@ class ProvidersLocalDaoShared {
       return [];
     }
   }
-  
+
   Future<void> saveSharedProviders(List<ProviderDto> providers) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonList = providers.map((provider) => provider.toMap()).toList();
       await prefs.setString(_sharedCacheKey, json.encode(jsonList));
       await _updateLastSync();
-      print('✅ Cache compartilhado de providers salvo: ${providers.length} provedores');
+      print(
+        '✅ Cache compartilhado de providers salvo: ${providers.length} provedores',
+      );
     } catch (e) {
       print('❌ Erro ao salvar cache compartilhado de providers: $e');
     }
   }
-  
+
   Future<DateTime?> getLastSyncTime() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -43,7 +45,7 @@ class ProvidersLocalDaoShared {
       return null;
     }
   }
-  
+
   Future<void> _updateLastSync() async {
     try {
       final prefs = await SharedPreferences.getInstance();

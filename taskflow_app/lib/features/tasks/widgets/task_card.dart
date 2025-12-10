@@ -43,7 +43,8 @@ class TaskCard extends StatelessWidget {
                       ? const Color(0xFFFBBF24) // AMBER no dark mode
                       : Theme.of(context).primaryColor, // AZUL no light mode
                   checkColor: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.black // Check preto no dark mode para contraste
+                      ? Colors
+                            .black // Check preto no dark mode para contraste
                       : Colors.white, // Check branco no light mode
                 ),
                 Expanded(
@@ -122,9 +123,14 @@ class TaskCard extends StatelessWidget {
               children: [
                 // Chip de Prioridade
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: _getPriorityColor(task.priority).withValues(alpha: 0.2),
+                    color: _getPriorityColor(
+                      task.priority,
+                    ).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _getPriorityColor(task.priority),
@@ -181,7 +187,7 @@ class TaskCard extends StatelessWidget {
   Color _getDueDateColor(DateTime dueDate) {
     final now = DateTime.now();
     final difference = dueDate.difference(now).inDays;
-    
+
     if (difference < 0) {
       return Colors.red; // Vencida
     } else if (difference == 0) {
@@ -196,7 +202,7 @@ class TaskCard extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = date.difference(now).inDays;
-    
+
     if (difference < 0) {
       return 'Vencida';
     } else if (difference == 0) {
@@ -216,19 +222,12 @@ class TaskCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.grey.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.grey,
-            width: 1,
-          ),
+          border: Border.all(color: Colors.grey, width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.label_off_outlined,
-              size: 14,
-              color: Colors.grey[600],
-            ),
+            Icon(Icons.label_off_outlined, size: 14, color: Colors.grey[600]),
             const SizedBox(width: 4),
             Text(
               'Sem Categoria',
@@ -254,19 +253,12 @@ class TaskCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.grey.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.grey,
-            width: 1,
-          ),
+          border: Border.all(color: Colors.grey, width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.label_off_outlined,
-              size: 14,
-              color: Colors.grey[600],
-            ),
+            Icon(Icons.label_off_outlined, size: 14, color: Colors.grey[600]),
             const SizedBox(width: 4),
             Text(
               'Sem Categoria',
@@ -284,25 +276,18 @@ class TaskCard extends StatelessWidget {
     // Exibir categoria encontrada
     final categoryColor = _hexToColor(category.color);
     final categoryIcon = _getIconData(category.icon);
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: categoryColor.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: categoryColor,
-          width: 1,
-        ),
+        border: Border.all(color: categoryColor, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            categoryIcon,
-            size: 14,
-            color: categoryColor,
-          ),
+          Icon(categoryIcon, size: 14, color: categoryColor),
           const SizedBox(width: 4),
           Text(
             category.name,
@@ -332,7 +317,7 @@ class TaskCard extends StatelessWidget {
   /// Converte nome do ícone para IconData
   IconData _getIconData(String? iconName) {
     if (iconName == null) return Icons.label;
-    
+
     // Mapeamento de nomes de ícones comuns
     final iconMap = {
       'work': Icons.work,
@@ -347,7 +332,7 @@ class TaskCard extends StatelessWidget {
       'directions_car': Icons.directions_car,
       'label': Icons.label,
     };
-    
+
     return iconMap[iconName] ?? Icons.label;
   }
 }

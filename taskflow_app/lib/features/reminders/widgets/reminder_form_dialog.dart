@@ -5,7 +5,7 @@ import '../../../features/app/domain/entities/reminder.dart';
 import '../../tasks/domain/entities/task.dart';
 
 /// ReminderFormDialog - Diálogo para criar/editar lembretes
-/// 
+///
 /// Permite configurar:
 /// - Data e hora do lembrete
 /// - Tipo (uma vez, diário, semanal, mensal)
@@ -14,11 +14,7 @@ class ReminderFormDialog extends StatefulWidget {
   final Task task;
   final Reminder? reminder;
 
-  const ReminderFormDialog({
-    super.key,
-    required this.task,
-    this.reminder,
-  });
+  const ReminderFormDialog({super.key, required this.task, this.reminder});
 
   @override
   State<ReminderFormDialog> createState() => _ReminderFormDialogState();
@@ -34,7 +30,7 @@ class _ReminderFormDialogState extends State<ReminderFormDialog> {
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.reminder != null) {
       _selectedDate = widget.reminder!.reminderDate;
       _selectedTime = TimeOfDay.fromDateTime(widget.reminder!.reminderDate);
@@ -48,7 +44,13 @@ class _ReminderFormDialogState extends State<ReminderFormDialog> {
       } else {
         // Ou amanhã às 9h se não houver prazo
         final tomorrow = DateTime.now().add(const Duration(days: 1));
-        _selectedDate = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
+        _selectedDate = DateTime(
+          tomorrow.year,
+          tomorrow.month,
+          tomorrow.day,
+          9,
+          0,
+        );
         _selectedTime = const TimeOfDay(hour: 9, minute: 0);
       }
       _selectedType = ReminderType.once;
@@ -103,9 +105,9 @@ class _ReminderFormDialogState extends State<ReminderFormDialog> {
             // Seleção de data
             Text(
               'Data e Hora',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Row(
@@ -133,9 +135,9 @@ class _ReminderFormDialogState extends State<ReminderFormDialog> {
             // Tipo de lembrete
             Text(
               'Repetir',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -160,9 +162,9 @@ class _ReminderFormDialogState extends State<ReminderFormDialog> {
             // Mensagem personalizada
             Text(
               'Mensagem Personalizada (opcional)',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -300,8 +302,18 @@ class _ReminderFormDialogState extends State<ReminderFormDialog> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }

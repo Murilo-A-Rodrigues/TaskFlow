@@ -3,7 +3,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 
 /// NotificationHelper - Configuração e gerenciamento de notificações locais
-/// 
+///
 /// Responsável por:
 /// - Inicializar plugin de notificações
 /// - Agendar notificações
@@ -14,7 +14,8 @@ class NotificationHelper {
   factory NotificationHelper() => _instance;
   NotificationHelper._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   /// Inicializa o sistema de notificações
@@ -26,7 +27,9 @@ class NotificationHelper {
     tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
 
     // Configuração para Android
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
 
     // Configuração para iOS
     const iosSettings = DarwinInitializationSettings(
@@ -60,24 +63,29 @@ class NotificationHelper {
   /// Solicita permissão para notificações (iOS e Android 13+)
   Future<bool> requestPermission() async {
     // Android 13+ precisa solicitar permissão em runtime
-    final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
     if (androidPlugin != null) {
       print('🔔 Solicitando permissão de notificação (Android)...');
       final granted = await androidPlugin.requestNotificationsPermission();
       print('🔔 Permissão concedida: $granted');
-      
+
       // Solicita permissão para alarmes exatos (Android 12+)
-      final exactAlarmGranted = await androidPlugin.requestExactAlarmsPermission();
+      final exactAlarmGranted = await androidPlugin
+          .requestExactAlarmsPermission();
       print('⏰ Permissão para alarmes exatos: $exactAlarmGranted');
-      
+
       return granted ?? false;
     }
-    
+
     // iOS
-    final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final iosPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
 
     if (iosPlugin != null) {
       print('🔔 Solicitando permissão de notificação (iOS)...');
@@ -107,7 +115,7 @@ class NotificationHelper {
     }
 
     final tzScheduledDate = tz.TZDateTime.from(scheduledDate, tz.local);
-    
+
     print('📅 Agendando notificação:');
     print('   ID: $id');
     print('   Horário solicitado: $scheduledDate');
@@ -140,10 +148,7 @@ class NotificationHelper {
                 'Concluir',
                 showsUserInterface: true,
               ),
-              AndroidNotificationAction(
-                'snooze',
-                'Adiar 15min',
-              ),
+              AndroidNotificationAction('snooze', 'Adiar 15min'),
             ],
           ),
           iOS: DarwinNotificationDetails(
@@ -157,9 +162,9 @@ class NotificationHelper {
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
-      
+
       print('✅ Notificação agendada com sucesso!');
-      
+
       // Verifica se foi realmente agendada
       final pending = await _notifications.pendingNotificationRequests();
       print('📋 Total de notificações pendentes: ${pending.length}');

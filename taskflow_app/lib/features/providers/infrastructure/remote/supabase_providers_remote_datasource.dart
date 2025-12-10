@@ -10,7 +10,7 @@ class SupabaseProvidersRemoteDatasource implements ProvidersRemoteApi {
   final SupabaseClient client;
 
   SupabaseProvidersRemoteDatasource({SupabaseClient? client})
-      : client = client ?? SupabaseService.client;
+    : client = client ?? SupabaseService.client;
 
   @override
   Future<RemotePage<ProviderDto>> fetchProviders({
@@ -20,8 +20,10 @@ class SupabaseProvidersRemoteDatasource implements ProvidersRemoteApi {
   }) async {
     try {
       if (kDebugMode) {
-        print('[SupabaseProvidersRemote] fetchProviders: '
-            'since=$since, cursor=$cursor, limit=$limit');
+        print(
+          '[SupabaseProvidersRemote] fetchProviders: '
+          'since=$since, cursor=$cursor, limit=$limit',
+        );
       }
 
       // Inicia query na tabela providers
@@ -46,13 +48,17 @@ class SupabaseProvidersRemoteDatasource implements ProvidersRemoteApi {
         }).toList();
 
         if (kDebugMode) {
-          print('[SupabaseProvidersRemote] Filtrados ${filteredResponse.length} '
-              'de ${response.length} items após $since');
+          print(
+            '[SupabaseProvidersRemote] Filtrados ${filteredResponse.length} '
+            'de ${response.length} items após $since',
+          );
         }
       }
 
       if (kDebugMode) {
-        print('[SupabaseProvidersRemote] Recebidos ${filteredResponse.length} registros');
+        print(
+          '[SupabaseProvidersRemote] Recebidos ${filteredResponse.length} registros',
+        );
       }
 
       // Converte resposta para DTOs
@@ -63,7 +69,9 @@ class SupabaseProvidersRemoteDatasource implements ProvidersRemoteApi {
           providers.add(dto);
         } catch (e) {
           if (kDebugMode) {
-            print('[SupabaseProvidersRemote] Erro ao converter registro: $e\nRow: $row');
+            print(
+              '[SupabaseProvidersRemote] Erro ao converter registro: $e\nRow: $row',
+            );
           }
         }
       }
@@ -71,13 +79,14 @@ class SupabaseProvidersRemoteDatasource implements ProvidersRemoteApi {
       // Determina se há mais páginas
       final hasMore = providers.length == limit;
       final nextCursor = hasMore
-          ? PageCursor(offset: offset + limit, limit: limit, value: offset + limit)
+          ? PageCursor(
+              offset: offset + limit,
+              limit: limit,
+              value: offset + limit,
+            )
           : null;
 
-      return RemotePage(
-        data: providers,
-        nextCursor: nextCursor,
-      );
+      return RemotePage(data: providers, nextCursor: nextCursor);
     } catch (e, stack) {
       if (kDebugMode) {
         print('[SupabaseProvidersRemote] Erro ao buscar providers: $e');
@@ -98,18 +107,19 @@ class SupabaseProvidersRemoteDatasource implements ProvidersRemoteApi {
       }
 
       if (kDebugMode) {
-        print('[SupabaseProvidersRemote] Enviando ${dtos.length} providers para upsert');
+        print(
+          '[SupabaseProvidersRemote] Enviando ${dtos.length} providers para upsert',
+        );
       }
 
       final rows = dtos.map((dto) => dto.toMap()).toList();
 
-      await client.from(_tableName).upsert(
-            rows,
-            onConflict: 'id',
-          );
+      await client.from(_tableName).upsert(rows, onConflict: 'id');
 
       if (kDebugMode) {
-        print('[SupabaseProvidersRemote] Upsert concluído: ${dtos.length} providers');
+        print(
+          '[SupabaseProvidersRemote] Upsert concluído: ${dtos.length} providers',
+        );
       }
     } catch (e, stack) {
       if (kDebugMode) {

@@ -43,9 +43,7 @@ class ProviderMapper {
 
   /// Cria Entity com timestamp atualizado
   static Provider withUpdatedTimestamp(Provider entity) {
-    return entity.copyWith(
-      updatedAt: DateTime.now(),
-    );
+    return entity.copyWith(updatedAt: DateTime.now());
   }
 
   /// Converte Map para Entity (usando DTO como intermediário)

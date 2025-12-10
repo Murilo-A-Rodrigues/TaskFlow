@@ -5,7 +5,7 @@ import '../../app/infrastructure/local/category_local_dto_shared_prefs.dart';
 import '../../app/infrastructure/mappers/category_mapper.dart';
 
 /// CategoryService - Gerencia categorias do sistema
-/// 
+///
 /// Responsabilidades:
 /// - CRUD de categorias
 /// - Hierarquia de categorias (parent/child)
@@ -13,7 +13,7 @@ import '../../app/infrastructure/mappers/category_mapper.dart';
 /// - Notificação de mudanças para UI
 class CategoryService extends ChangeNotifier {
   final CategoryLocalDtoSharedPrefs _localDao;
-  
+
   final List<Category> _categories = [];
   bool _isInitialized = false;
 
@@ -27,22 +27,24 @@ class CategoryService extends ChangeNotifier {
 
     try {
       print('🏷️ Inicializando CategoryService...');
-      
+
       final dtos = await _localDao.listAll();
       _categories.clear();
-      
+
       for (final dto in dtos) {
         _categories.add(CategoryMapper.toEntity(dto));
       }
-      
-      print('📋 CategoryService inicializado com ${_categories.length} categorias');
+
+      print(
+        '📋 CategoryService inicializado com ${_categories.length} categorias',
+      );
       _isInitialized = true;
-      
+
       // Se não houver categorias, criar categorias padrão
       if (_categories.isEmpty) {
         await _createDefaultCategories();
       }
-      
+
       notifyListeners();
     } catch (e) {
       print('❌ Erro ao inicializar CategoryService: $e');
@@ -54,7 +56,7 @@ class CategoryService extends ChangeNotifier {
   /// Cria categorias padrão na primeira utilização
   Future<void> _createDefaultCategories() async {
     print('🎨 Criando categorias padrão...');
-    
+
     final defaultCategories = [
       Category(
         id: 'cat-work',
@@ -106,7 +108,7 @@ class CategoryService extends ChangeNotifier {
     for (final category in defaultCategories) {
       await addCategory(category);
     }
-    
+
     print('✅ ${defaultCategories.length} categorias padrão criadas');
   }
 
@@ -136,15 +138,15 @@ class CategoryService extends ChangeNotifier {
   Future<void> addCategory(Category category) async {
     try {
       print('➕ Adicionando categoria: ${category.name}');
-      
+
       // Adiciona à lista local
       _categories.add(category);
       notifyListeners();
-      
+
       // Persiste no cache local
       final allDtos = _categories.map((c) => CategoryMapper.toDto(c)).toList();
       await _localDao.upsertAll(allDtos);
-      
+
       print('✅ Categoria adicionada com sucesso');
     } catch (e) {
       print('❌ Erro ao adicionar categoria: $e');
@@ -158,20 +160,20 @@ class CategoryService extends ChangeNotifier {
   Future<void> updateCategory(Category updatedCategory) async {
     try {
       print('✏️ Atualizando categoria: ${updatedCategory.name}');
-      
+
       final index = _categories.indexWhere((c) => c.id == updatedCategory.id);
       if (index == -1) {
         throw Exception('Categoria não encontrada');
       }
-      
+
       // Atualiza na lista local
       _categories[index] = updatedCategory;
       notifyListeners();
-      
+
       // Persiste no cache local
       final allDtos = _categories.map((c) => CategoryMapper.toDto(c)).toList();
       await _localDao.upsertAll(allDtos);
-      
+
       print('✅ Categoria atualizada com sucesso');
     } catch (e) {
       print('❌ Erro ao atualizar categoria: $e');
@@ -184,15 +186,15 @@ class CategoryService extends ChangeNotifier {
   Future<void> deleteCategory(String categoryId) async {
     try {
       print('🗑️ Removendo categoria: $categoryId');
-      
+
       // Remove da lista local
       _categories.removeWhere((c) => c.id == categoryId);
-      
+
       // Persiste a remoção no cache local
       await _localDao.delete(categoryId);
-      
+
       notifyListeners();
-      
+
       print('✅ Categoria removida com sucesso');
     } catch (e) {
       print('❌ Erro ao remover categoria: $e');
@@ -206,11 +208,11 @@ class CategoryService extends ChangeNotifier {
     try {
       final dtos = await _localDao.listAll();
       _categories.clear();
-      
+
       for (final dto in dtos) {
         _categories.add(CategoryMapper.toEntity(dto));
       }
-      
+
       notifyListeners();
     } catch (e) {
       print('❌ Erro ao recarregar categorias: $e');
@@ -221,11 +223,11 @@ class CategoryService extends ChangeNotifier {
   Future<void> clearAllCategories() async {
     try {
       print('🧹 Limpando todas as categorias...');
-      
+
       _categories.clear();
       await _localDao.clear();
       notifyListeners();
-      
+
       print('✅ Categorias limpas com sucesso');
     } catch (e) {
       print('❌ Erro ao limpar categorias: $e');

@@ -39,10 +39,10 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
 
   Future<void> _loadContent() async {
     try {
-      final fileName = widget.policyType == 'privacy' 
+      final fileName = widget.policyType == 'privacy'
           ? 'assets/docs/privacy_policy.md'
           : 'assets/docs/terms_of_service.md';
-      
+
       final content = await rootBundle.loadString(fileName);
       setState(() {
         _content = content;
@@ -60,9 +60,11 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
     _scrollController.addListener(() {
       final maxScroll = _scrollController.position.maxScrollExtent;
       final currentScroll = _scrollController.position.pixels;
-      
+
       setState(() {
-        _scrollProgress = maxScroll > 0 ? (currentScroll / maxScroll).clamp(0.0, 1.0) : 0.0;
+        _scrollProgress = maxScroll > 0
+            ? (currentScroll / maxScroll).clamp(0.0, 1.0)
+            : 0.0;
       });
 
       if (_scrollProgress >= 0.95 && !_hasReachedEnd) {
@@ -82,13 +84,16 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
   }
 
   String get _title {
-    return widget.policyType == 'privacy' 
-        ? 'Política de Privacidade' 
+    return widget.policyType == 'privacy'
+        ? 'Política de Privacidade'
         : 'Termos de Uso';
   }
 
   void _scrollUp() {
-    final double newPosition = (_scrollController.offset - 300).clamp(0.0, _scrollController.position.maxScrollExtent);
+    final double newPosition = (_scrollController.offset - 300).clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
     _scrollController.animateTo(
       newPosition,
       duration: const Duration(milliseconds: 300),
@@ -97,7 +102,10 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
   }
 
   void _scrollDown() {
-    final double newPosition = (_scrollController.offset + 300).clamp(0.0, _scrollController.position.maxScrollExtent);
+    final double newPosition = (_scrollController.offset + 300).clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
     _scrollController.animateTo(
       newPosition,
       duration: const Duration(milliseconds: 300),
@@ -108,10 +116,7 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_title),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: Text(_title), elevation: 0),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -123,13 +128,17 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
                       padding: const EdgeInsets.all(16),
                       color: Colors.grey.shade50,
                       child: Text(
-                        _hasReachedEnd 
+                        _hasReachedEnd
                             ? '✓ Leitura completa - Você pode marcar como lido'
                             : 'Progresso da leitura: ${(_scrollProgress * 100).toInt()}%',
                         style: TextStyle(
                           fontSize: 14,
-                          color: _hasReachedEnd ? Colors.green.shade700 : Colors.grey.shade600,
-                          fontWeight: _hasReachedEnd ? FontWeight.w600 : FontWeight.normal,
+                          color: _hasReachedEnd
+                              ? Colors.green.shade700
+                              : Colors.grey.shade600,
+                          fontWeight: _hasReachedEnd
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -147,8 +156,8 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
                       child: ElevatedButton(
                         onPressed: _canMarkAsRead ? _markAsRead : null,
                         child: Text(
-                          _canMarkAsRead 
-                              ? 'Marcar como Lido ✓' 
+                          _canMarkAsRead
+                              ? 'Marcar como Lido ✓'
                               : 'Leia até o final para continuar',
                         ),
                       ),
@@ -163,7 +172,9 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
                     child: FloatingActionButton.small(
                       heroTag: "scroll_up",
                       onPressed: _scrollUp,
-                      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.9),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.9),
                       foregroundColor: Colors.white,
                       child: const Icon(Icons.keyboard_arrow_up),
                     ),
@@ -176,7 +187,9 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
                     child: FloatingActionButton.small(
                       heroTag: "scroll_down",
                       onPressed: _scrollDown,
-                      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.9),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.9),
                       foregroundColor: Colors.white,
                       child: const Icon(Icons.keyboard_arrow_down),
                     ),

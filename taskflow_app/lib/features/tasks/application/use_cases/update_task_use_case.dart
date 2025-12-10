@@ -8,7 +8,7 @@ class UpdateTaskUseCase {
   UpdateTaskUseCase(this.repository);
 
   /// Executa a atualização de uma tarefa
-  /// 
+  ///
   /// Valida os dados e delega ao repositório
   Future<Task> execute(Task task) async {
     // Validações de negócio
@@ -21,9 +21,7 @@ class UpdateTaskUseCase {
     }
 
     // Atualiza o timestamp
-    final updatedTask = task.copyWith(
-      updatedAt: DateTime.now(),
-    );
+    final updatedTask = task.copyWith(updatedAt: DateTime.now());
 
     // Delega ao repositório
     return await repository.updateTask(updatedTask);

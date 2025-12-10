@@ -1,7 +1,7 @@
 import 'package:uuid/uuid.dart';
 
 /// Category Entity - Representação interna rica e validada da categoria
-/// 
+///
 /// Esta classe representa uma categoria no domínio da aplicação TaskFlow.
 /// Contém tipos fortes, validações e invariantes de domínio para hierarquia.
 /// Segue o padrão Entity do documento "Modelo DTO e Mapeamento".
@@ -9,14 +9,16 @@ class Category {
   final String id;
   final String name;
   final String? description;
-  final String userId;            // FK para User - categorias são por usuário
-  final String? parentId;         // FK para Category - hierarquia opcional
-  final String color;            // Cor em hex (obrigatória para UI)
-  final String? icon;            // Ícone opcional (nome do ícone)
-  final int sortOrder;           // Ordem de exibição
+  final String userId; // FK para User - categorias são por usuário
+  final String? parentId; // FK para Category - hierarquia opcional
+  final String color; // Cor em hex (obrigatória para UI)
+  final String? icon; // Ícone opcional (nome do ícone)
+  final int sortOrder; // Ordem de exibição
   final bool isActive;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isDeleted; // Soft delete flag
+  final DateTime? deletedAt; // Timestamp de quando foi deletado
 
   Category({
     String? id,
@@ -30,14 +32,16 @@ class Category {
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? const Uuid().v4(),
-        name = _validateName(name),
-        userId = _validateUserId(userId),
-        color = _validateColor(color ?? '#2196F3'),
-        sortOrder = sortOrder ?? 0,
-        isActive = isActive ?? true,
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now() {
+    this.isDeleted = false,
+    this.deletedAt,
+  }) : id = id ?? const Uuid().v4(),
+       name = _validateName(name),
+       userId = _validateUserId(userId),
+       color = _validateColor(color ?? '#2196F3'),
+       sortOrder = sortOrder ?? 0,
+       isActive = isActive ?? true,
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now() {
     _validateHierarchy();
   }
 
@@ -67,16 +71,20 @@ class Category {
   /// Validação de cor - deve ser hex válido
   static String _validateColor(String color) {
     final trimmedColor = color.trim();
-    
+
     // Adiciona # se não tiver
-    final hexColor = trimmedColor.startsWith('#') ? trimmedColor : '#$trimmedColor';
-    
+    final hexColor = trimmedColor.startsWith('#')
+        ? trimmedColor
+        : '#$trimmedColor';
+
     // Valida formato hex
     final hexRegex = RegExp(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$');
     if (!hexRegex.hasMatch(hexColor)) {
-      throw ArgumentError('Cor deve estar em formato hex válido (#RRGGBB ou #RGB)');
+      throw ArgumentError(
+        'Cor deve estar em formato hex válido (#RRGGBB ou #RGB)',
+      );
     }
-    
+
     return hexColor.toUpperCase();
   }
 
@@ -93,7 +101,7 @@ class Category {
   bool get hasParent => parentId != null;
   bool get hasDescription => description != null && description!.isNotEmpty;
   bool get hasIcon => icon != null && icon!.isNotEmpty;
-  
+
   /// Helpers para cor
   String get colorWithoutHash => color.replaceFirst('#', '');
   int get colorValue => int.parse(colorWithoutHash, radix: 16);
@@ -112,34 +120,21 @@ class Category {
     if (newParentId == id) {
       throw ArgumentError('Categoria não pode ser movida para si mesma');
     }
-    
-    return copyWith(
-      parentId: newParentId,
-      updatedAt: DateTime.now(),
-    );
+
+    return copyWith(parentId: newParentId, updatedAt: DateTime.now());
   }
 
   Category updateOrder(int newOrder) {
-    return copyWith(
-      sortOrder: newOrder,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(sortOrder: newOrder, updatedAt: DateTime.now());
   }
 
-  Category updateAppearance({
-    String? color,
-    String? icon,
-  }) {
-    return copyWith(
-      color: color,
-      icon: icon,
-      updatedAt: DateTime.now(),
-    );
+  Category updateAppearance({String? color, String? icon}) {
+    return copyWith(color: color, icon: icon, updatedAt: DateTime.now());
   }
 
   /// Validação de profundidade de hierarquia (deve ser implementada no service)
   static const int maxDepth = 5;
-  
+
   /// Copy with para imutabilidade
   Category copyWith({
     String? name,
@@ -151,6 +146,8 @@ class Category {
     int? sortOrder,
     bool? isActive,
     DateTime? updatedAt,
+    bool? isDeleted,
+    DateTime? deletedAt,
   }) {
     return Category(
       id: id,
@@ -164,6 +161,8 @@ class Category {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 

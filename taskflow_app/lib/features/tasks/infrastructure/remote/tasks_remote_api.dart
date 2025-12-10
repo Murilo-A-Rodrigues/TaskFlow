@@ -1,21 +1,21 @@
 import '../dtos/task_dto.dart';
 
 /// Interface para API remota de Tasks
-/// 
+///
 /// Define o contrato para comunicação com o backend (Supabase).
 /// Implementações concretas devem lidar com autenticação, paginação,
 /// tratamento de erros e conversão de dados.
 abstract class TasksRemoteApi {
   /// Busca tarefas do servidor com filtro opcional de data
-  /// 
+  ///
   /// Parâmetros:
   /// - [since]: timestamp opcional para sincronização incremental.
   ///   Se fornecido, retorna apenas tarefas com updated_at >= since.
   /// - [cursor]: cursor de paginação para continuar de onde parou
   /// - [limit]: quantidade máxima de registros por página (padrão 100)
-  /// 
+  ///
   /// Retorna uma página de resultados com cursor para próxima página.
-  /// 
+  ///
   /// Boas práticas:
   /// - Sempre ordene por updated_at para sincronização consistente
   /// - Use paginação para evitar timeouts em grandes volumes
@@ -27,11 +27,11 @@ abstract class TasksRemoteApi {
   });
 
   /// Envia tarefas para o servidor (create/update em lote)
-  /// 
+  ///
   /// Realiza upsert (insert or update) de múltiplas tarefas.
-  /// 
+  ///
   /// Retorna quantidade de registros processados pelo servidor.
-  /// 
+  ///
   /// Boas práticas:
   /// - Use upsert para evitar erros de duplicação
   /// - Envie em lotes de até 500 registros para melhor performance
@@ -43,21 +43,18 @@ abstract class TasksRemoteApi {
 class RemotePage<T> {
   /// Itens desta página
   final List<T> items;
-  
+
   /// Cursor para buscar a próxima página (null se for a última)
   final PageCursor? next;
 
-  const RemotePage({
-    required this.items,
-    this.next,
-  });
+  const RemotePage({required this.items, this.next});
 
   /// Verifica se há mais páginas disponíveis
   bool get hasMore => next != null;
 }
 
 /// Cursor para paginação
-/// 
+///
 /// Pode ser baseado em offset, timestamp ou outro identificador
 /// dependendo da implementação do backend.
 class PageCursor {

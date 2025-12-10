@@ -5,7 +5,7 @@ import '../../categories/application/category_service.dart';
 import '../domain/entities/task_priority.dart';
 
 /// ActiveFiltersChip - Widget que exibe os filtros ativos como chips removíveis
-/// 
+///
 /// Mostra chips para cada tipo de filtro ativo e permite removê-los individualmente
 class ActiveFiltersChip extends StatelessWidget {
   const ActiveFiltersChip({super.key});

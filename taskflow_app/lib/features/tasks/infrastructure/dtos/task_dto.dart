@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 /// TaskDto - Data Transfer Object que espelha a tabela tasks do Supabase
-/// 
+///
 /// Esta classe representa os dados como eles são transferidos de e para
 /// o Supabase/rede. Os nomes dos campos seguem snake_case (igual ao banco)
 /// e os tipos são primitivos para facilitar serialização.
@@ -10,12 +10,14 @@ class TaskDto {
   final String id;
   final String title;
   final String? description;
-  final bool is_completed;        // snake_case igual ao banco
-  final String created_at;        // ISO8601 String para o fio
-  final String? due_date;         // ISO8601 String ou null
-  final int priority;             // número para o banco
-  final String updated_at;        // ISO8601 String para sincronização
-  final String? category_id;      // FK para categories table
+  final bool is_completed; // snake_case igual ao banco
+  final String created_at; // ISO8601 String para o fio
+  final String? due_date; // ISO8601 String ou null
+  final int priority; // número para o banco
+  final String updated_at; // ISO8601 String para sincronização
+  final String? category_id; // FK para categories table
+  final bool is_deleted; // Soft delete flag
+  final String? deleted_at; // ISO8601 String ou null
 
   TaskDto({
     required this.id,
@@ -27,6 +29,8 @@ class TaskDto {
     required this.priority,
     required this.updated_at,
     this.category_id,
+    this.is_deleted = false,
+    this.deleted_at,
   });
 
   /// Factory para criar TaskDto a partir de Map (vindo do Supabase)
@@ -41,6 +45,8 @@ class TaskDto {
       priority: (map['priority'] as num).toInt(),
       updated_at: map['updated_at'] as String,
       category_id: map['category_id'] as String?,
+      is_deleted: (map['is_deleted'] as bool?) ?? false,
+      deleted_at: map['deleted_at'] as String?,
     );
   }
 
@@ -56,13 +62,16 @@ class TaskDto {
       'priority': priority,
       'updated_at': updated_at,
       'category_id': category_id,
+      'is_deleted': is_deleted,
+      'deleted_at': deleted_at,
     };
   }
 
   /// Factory para criar TaskDto a partir de JSON string
   factory TaskDto.fromJson(String jsonString) {
-    final Map<String, dynamic> json = 
-        Map<String, dynamic>.from(jsonDecode(jsonString));
+    final Map<String, dynamic> json = Map<String, dynamic>.from(
+      jsonDecode(jsonString),
+    );
     return TaskDto.fromMap(json);
   }
 
@@ -82,6 +91,8 @@ class TaskDto {
     int? priority,
     String? updated_at,
     String? category_id,
+    bool? is_deleted,
+    String? deleted_at,
   }) {
     return TaskDto(
       id: id ?? this.id,
@@ -93,6 +104,8 @@ class TaskDto {
       priority: priority ?? this.priority,
       updated_at: updated_at ?? this.updated_at,
       category_id: category_id ?? this.category_id,
+      is_deleted: is_deleted ?? this.is_deleted,
+      deleted_at: deleted_at ?? this.deleted_at,
     );
   }
 
@@ -100,15 +113,15 @@ class TaskDto {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is TaskDto &&
-           other.id == id &&
-           other.title == title &&
-           other.description == description &&
-           other.is_completed == is_completed &&
-           other.created_at == created_at &&
-           other.due_date == due_date &&
-           other.priority == priority &&
-           other.updated_at == updated_at &&
-           other.category_id == category_id;
+        other.id == id &&
+        other.title == title &&
+        other.description == description &&
+        other.is_completed == is_completed &&
+        other.created_at == created_at &&
+        other.due_date == due_date &&
+        other.priority == priority &&
+        other.updated_at == updated_at &&
+        other.category_id == category_id;
   }
 
   @override

@@ -17,7 +17,7 @@ class HomeDrawer extends StatelessWidget {
     final prefsService = context.watch<PreferencesService>();
     final userName = prefsService.userName;
     final userPhotoPath = prefsService.userPhotoPath;
-    
+
     // Debug log para rastrear o caminho da foto
     print('🖼️ HomeDrawer - userPhotoPath: $userPhotoPath');
 
@@ -49,7 +49,9 @@ class HomeDrawer extends StatelessWidget {
                     Center(
                       child: Consumer<PreferencesService>(
                         builder: (context, prefs, child) {
-                          print('🔄 Consumer rebuilding UserAvatar with path: ${prefs.userPhotoPath}');
+                          print(
+                            '🔄 Consumer rebuilding UserAvatar with path: ${prefs.userPhotoPath}',
+                          );
                           return UserAvatar(
                             photoPath: prefs.userPhotoPath,
                             userName: prefs.userName,
@@ -75,7 +77,9 @@ class HomeDrawer extends StatelessWidget {
                     const SizedBox(height: 2),
                     // Texto de instrução
                     Text(
-                      userPhotoPath != null ? 'Toque para alterar foto' : 'Toque para adicionar foto',
+                      userPhotoPath != null
+                          ? 'Toque para alterar foto'
+                          : 'Toque para adicionar foto',
                       style: const TextStyle(
                         fontSize: 11,
                         color: Colors.white70,
@@ -104,17 +108,19 @@ class HomeDrawer extends StatelessWidget {
             builder: (context, themeController, child) {
               final isDark = themeController.isDarkMode;
               final isSystem = themeController.isSystemMode;
-              
+
               return SwitchListTile.adaptive(
-                secondary: Icon(
-                  isDark ? Icons.dark_mode : Icons.light_mode,
-                ),
+                secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
                 title: const Text('Tema escuro'),
                 subtitle: Text(
-                  isSystem ? 'Seguindo o sistema' : (isDark ? 'Ativado' : 'Desativado'),
+                  isSystem
+                      ? 'Seguindo o sistema'
+                      : (isDark ? 'Ativado' : 'Desativado'),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
                 value: isDark,
@@ -134,9 +140,12 @@ class HomeDrawer extends StatelessWidget {
           Consumer<ThemeController>(
             builder: (context, themeController, child) {
               if (themeController.isSystemMode) return const SizedBox.shrink();
-              
+
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 child: TextButton.icon(
                   onPressed: () {
                     themeController.setThemeMode(ThemeMode.system);
@@ -146,9 +155,7 @@ class HomeDrawer extends StatelessWidget {
                     'Seguir tema do sistema',
                     style: TextStyle(fontSize: 12),
                   ),
-                  style: TextButton.styleFrom(
-                    alignment: Alignment.centerLeft,
-                  ),
+                  style: TextButton.styleFrom(alignment: Alignment.centerLeft),
                 ),
               );
             },
@@ -190,10 +197,7 @@ class HomeDrawer extends StatelessWidget {
                 padding: EdgeInsets.all(16.0),
                 child: Text(
                   'Gerenciar Foto de Perfil',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               ListTile(
@@ -218,7 +222,10 @@ class HomeDrawer extends StatelessWidget {
             if (hasPhoto)
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Remover Foto', style: TextStyle(color: Colors.red)),
+                title: const Text(
+                  'Remover Foto',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onTap: () => _removePhoto(context),
               ),
             const SizedBox(height: 8),
@@ -230,21 +237,24 @@ class HomeDrawer extends StatelessWidget {
 
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
     Navigator.of(context).pop();
-    
+
     try {
       print('📸 Iniciando seleção de imagem...');
-      
+
       // SOLUÇÃO: Obter a referência do Provider ANTES da seleção de imagem
       print('🚀 PASSO 1: Obtendo PreferencesService ANTES da seleção...');
-      final prefsService = Provider.of<PreferencesService>(context, listen: false);
+      final prefsService = Provider.of<PreferencesService>(
+        context,
+        listen: false,
+      );
       print('✅ PreferencesService obtido ANTES da seleção');
-      
+
       print('🚀 PASSO 2: Iniciando seleção e processamento...');
       final photoService = PhotoService();
       final compressedPath = await photoService.pickCompressAndSave(source);
-      
+
       print('📦 Caminho da foto processada: $compressedPath');
-      
+
       // Agora usar a referência já obtida, não o contexto
       try {
         print('🚀 PASSO 3: Verificando caminho...');
@@ -253,43 +263,43 @@ class HomeDrawer extends StatelessWidget {
           return;
         }
         print('✅ Caminho válido: $compressedPath');
-        
-        print('🚀 PASSO 4: Salvando caminho (usando referência obtida antes)...');
+
+        print(
+          '🚀 PASSO 4: Salvando caminho (usando referência obtida antes)...',
+        );
         await prefsService.setUserPhotoPath(compressedPath);
         print('✅ Caminho salvo no PreferencesService');
-        
+
         print('🚀 PASSO 5: Verificando salvamento...');
         final savedPath = prefsService.userPhotoPath;
         print('🔍 Verificação: caminho recuperado = $savedPath');
-        
+
         if (savedPath == compressedPath) {
           print('🎉 SUCESSO TOTAL! Foto salva e verificada');
         } else {
           print('⚠️ ATENÇÃO: Caminho salvo difere do esperado');
         }
-        
       } catch (stepError, stepStack) {
         print('💥 ERRO em um dos passos: $stepError');
         print('📋 Stack trace do passo: $stepStack');
       }
-      
+
       // Mostrar mensagem de sucesso se tudo funcionou
       if (compressedPath != null && context.mounted) {
         print('🎉 Mostrando mensagem de sucesso...');
-        
+
         // Pequeno delay para garantir que o SharedPreferences foi atualizado
         await Future.delayed(const Duration(milliseconds: 100));
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Foto atualizada com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
-        
+
         print('✅ Mensagem de sucesso exibida');
       }
-      
     } catch (e) {
       print('💥 Erro inesperado ao processar foto: $e');
       if (context.mounted) {
@@ -305,7 +315,7 @@ class HomeDrawer extends StatelessWidget {
 
   void _removePhoto(BuildContext context) {
     Navigator.of(context).pop();
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -320,10 +330,10 @@ class HomeDrawer extends StatelessWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              
+
               final prefsService = context.read<PreferencesService>();
               await prefsService.setUserPhotoPath(null);
-              
+
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Foto removida com sucesso!')),
@@ -402,7 +412,9 @@ class HomeDrawer extends StatelessWidget {
                 if (context.mounted) {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Nome atualizado com sucesso!')),
+                    const SnackBar(
+                      content: Text('Nome atualizado com sucesso!'),
+                    ),
                   );
                 }
               }

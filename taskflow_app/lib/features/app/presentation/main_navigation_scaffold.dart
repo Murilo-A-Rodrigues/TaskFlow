@@ -4,7 +4,7 @@ import '../../home/pages/home_screen.dart';
 import '../../settings/pages/settings_screen.dart';
 
 /// Scaffold principal com navegação inferior
-/// 
+///
 /// Gerencia navegação entre:
 /// - Home (estatísticas e visão geral)
 /// - Tarefas (lista completa com estado vazio)
@@ -29,10 +29,7 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {

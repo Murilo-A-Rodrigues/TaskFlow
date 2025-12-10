@@ -4,10 +4,10 @@ import '../dtos/user_dto.dart';
 import 'user_local_dto.dart';
 
 /// Implementação de UserLocalDto usando SharedPreferences
-/// 
+///
 /// Persiste DTOs de usuários em formato JSON no SharedPreferences.
 /// Suporta operações de upsert, listagem, busca por id e limpeza.
-/// 
+///
 /// Tratamento de erros:
 /// - Em caso de dados corrompidos, limpa o cache e retorna valores padrão
 /// - Logs de erro são impressos para diagnóstico
@@ -16,18 +16,17 @@ class UserLocalDtoSharedPrefs implements UserLocalDto {
   static const String _cacheKey = 'users_cache_v1';
 
   /// Getter privado para obter instância do SharedPreferences
-  Future<SharedPreferences> get _prefs async => 
-      SharedPreferences.getInstance();
+  Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
   @override
   Future<void> upsertAll(List<UserDto> dtos) async {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       // Map para indexar por id e facilitar upsert
       final Map<String, Map<String, dynamic>> current = {};
-      
+
       // Carrega dados existentes se houver
       if (raw != null && raw.isNotEmpty) {
         try {
@@ -50,8 +49,10 @@ class UserLocalDtoSharedPrefs implements UserLocalDto {
       // Salva lista atualizada
       final merged = current.values.toList();
       await prefs.setString(_cacheKey, jsonEncode(merged));
-      
-      print('✅ Cache de usuários atualizado: ${dtos.length} registro(s), total: ${merged.length}');
+
+      print(
+        '✅ Cache de usuários atualizado: ${dtos.length} registro(s), total: ${merged.length}',
+      );
     } catch (e) {
       print('❌ Erro ao fazer upsert de usuários: $e');
       rethrow;
@@ -63,7 +64,7 @@ class UserLocalDtoSharedPrefs implements UserLocalDto {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       // Retorna lista vazia se não houver dados
       if (raw == null || raw.isEmpty) {
         return [];
@@ -72,12 +73,13 @@ class UserLocalDtoSharedPrefs implements UserLocalDto {
       // Decodifica e converte para DTOs
       final List<dynamic> jsonList = jsonDecode(raw) as List<dynamic>;
       final users = jsonList
-          .map((json) => UserDto.fromMap(Map<String, dynamic>.from(json as Map)))
+          .map(
+            (json) => UserDto.fromMap(Map<String, dynamic>.from(json as Map)),
+          )
           .toList();
-      
+
       print('📋 Cache de usuários carregado: ${users.length} registro(s)');
       return users;
-      
     } catch (e) {
       print('❌ Erro ao listar usuários do cache: $e');
       // Em caso de erro, limpa cache corrompido e retorna vazio
@@ -91,7 +93,7 @@ class UserLocalDtoSharedPrefs implements UserLocalDto {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       if (raw == null || raw.isEmpty) {
         return null;
       }
@@ -104,10 +106,9 @@ class UserLocalDtoSharedPrefs implements UserLocalDto {
           return UserDto.fromMap(m);
         }
       }
-      
+
       // Não encontrado
       return null;
-      
     } catch (e) {
       print('❌ Erro ao buscar usuário por id ($id): $e');
       return null;

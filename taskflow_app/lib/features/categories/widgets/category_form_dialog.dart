@@ -5,7 +5,7 @@ import '../../categories/application/category_service.dart';
 import '../../../features/app/domain/entities/category.dart';
 
 /// CategoryFormDialog - Diálogo para criar/editar categorias
-/// 
+///
 /// Permite configurar:
 /// - Nome da categoria
 /// - Descrição (opcional)
@@ -14,10 +14,7 @@ import '../../../features/app/domain/entities/category.dart';
 class CategoryFormDialog extends StatefulWidget {
   final Category? category;
 
-  const CategoryFormDialog({
-    super.key,
-    this.category,
-  });
+  const CategoryFormDialog({super.key, this.category});
 
   @override
   State<CategoryFormDialog> createState() => _CategoryFormDialogState();
@@ -27,7 +24,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
-  
+
   late String _selectedColor;
   late String _selectedIcon;
   bool _isLoading = false;
@@ -64,7 +61,9 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
-    _descriptionController = TextEditingController(text: widget.category?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.category?.description ?? '',
+    );
     _selectedColor = widget.category?.color ?? _availableColors[0];
     _selectedIcon = widget.category?.icon ?? 'category';
   }
@@ -131,9 +130,9 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
               // Seleção de cor
               Text(
                 'Cor',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -156,9 +155,9 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
               // Seleção de ícone
               Text(
                 'Ícone',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -211,12 +210,60 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
 
     try {
       final categoryService = context.read<CategoryService>();
-      
+
+      // Verificar se já existe categoria com mesma cor e ícone
+      final isDuplicate = categoryService.categories.any((cat) {
+        return cat.id != widget.category?.id &&
+            cat.color == _selectedColor &&
+            cat.icon == _selectedIcon;
+      });
+
+      if (isDuplicate) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          
+          // Mostra AlertDialog para mensagem de erro
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Combinação Duplicada',
+                      overflow: TextOverflow.visible,
+                    ),
+                  ),
+                ],
+              ),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 300),
+                child: const Text(
+                  'Já existe uma categoria com esta cor e ícone.\n\nPor favor, escolha uma combinação diferente.',
+                  style: TextStyle(fontSize: 15),
+                ),
+              ),
+              actions: [
+                FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Entendi'),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
       final category = Category(
         id: widget.category?.id ?? const Uuid().v4(),
         name: _nameController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         color: _selectedColor,
         icon: _selectedIcon,
@@ -312,12 +359,7 @@ class _ColorOption extends StatelessWidget {
                 ]
               : null,
         ),
-        child: isSelected
-            ? const Icon(
-                Icons.check,
-                color: Colors.white,
-              )
-            : null,
+        child: isSelected ? const Icon(Icons.check, color: Colors.white) : null,
       ),
     );
   }

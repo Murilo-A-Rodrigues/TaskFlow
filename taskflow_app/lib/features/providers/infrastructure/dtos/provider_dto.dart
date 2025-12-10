@@ -29,7 +29,7 @@ class ProviderDto {
       address: map['address']?.toString(),
       is_active: map['is_active'] ?? true,
       created_at: DateTime.parse(map['created_at']),
-      updated_at: map['updated_at'] != null 
+      updated_at: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'])
           : null,
     );

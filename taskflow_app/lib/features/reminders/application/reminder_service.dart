@@ -8,7 +8,7 @@ import '../../tasks/domain/entities/task.dart';
 import '../../../services/notifications/notification_helper.dart';
 
 /// ReminderService - Gerencia lembretes de tarefas
-/// 
+///
 /// Responsabilidades:
 /// - CRUD de lembretes
 /// - Agendamento de notificações
@@ -16,7 +16,7 @@ import '../../../services/notifications/notification_helper.dart';
 /// - Gerenciamento de lembretes recorrentes
 class ReminderService extends ChangeNotifier {
   static const String _cacheKey = 'reminders_cache_v1';
-  
+
   final NotificationHelper _notificationHelper;
   final List<Reminder> _reminders = [];
   bool _isInitialized = false;
@@ -28,11 +28,11 @@ class ReminderService extends ChangeNotifier {
   // Getters
   List<Reminder> get reminders => List.unmodifiable(_reminders);
   bool get isInitialized => _isInitialized;
-  
+
   /// Aguarda até que o serviço seja inicializado
   Future<void> waitForInitialization() async {
     if (_isInitialized) return;
-    
+
     // Aguarda até 5 segundos pela inicialização
     int attempts = 0;
     while (!_isInitialized && attempts < 50) {
@@ -45,7 +45,7 @@ class ReminderService extends ChangeNotifier {
   Future<void> _initializeReminders() async {
     try {
       print('🔔 Inicializando ReminderService...');
-      
+
       // Inicializa notificações
       await _notificationHelper.initialize();
       await _notificationHelper.requestPermission();
@@ -62,7 +62,9 @@ class ReminderService extends ChangeNotifier {
         );
       }
 
-      print('✅ ReminderService inicializado com ${_reminders.length} lembretes');
+      print(
+        '✅ ReminderService inicializado com ${_reminders.length} lembretes',
+      );
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
@@ -96,16 +98,18 @@ class ReminderService extends ChangeNotifier {
       // Agenda notificação
       print('📅 Agendando notificação para: ${reminder.reminderDate}');
       print('⏰ Tempo atual: ${DateTime.now()}');
-      print('⏱️ Diferença: ${reminder.reminderDate.difference(DateTime.now())}');
-      
+      print(
+        '⏱️ Diferença: ${reminder.reminderDate.difference(DateTime.now())}',
+      );
+
       await _scheduleNotification(reminder, task);
 
       print('✅ Lembrete criado: ${reminder.id}');
       print('📱 ID da notificação: ${_getNotificationId(reminder.id)}');
-      
+
       // Debug: Lista todas as notificações pendentes
       await debugPendingNotifications();
-      
+
       notifyListeners();
       return reminder;
     } catch (e) {
@@ -123,7 +127,9 @@ class ReminderService extends ChangeNotifier {
       }
 
       // Cancela notificação antiga
-      await _notificationHelper.cancelNotification(_getNotificationId(updatedReminder.id));
+      await _notificationHelper.cancelNotification(
+        _getNotificationId(updatedReminder.id),
+      );
 
       // Atualiza na lista
       _reminders[index] = updatedReminder;
@@ -146,7 +152,9 @@ class ReminderService extends ChangeNotifier {
   Future<void> deleteReminder(String reminderId) async {
     try {
       // Cancela notificação
-      await _notificationHelper.cancelNotification(_getNotificationId(reminderId));
+      await _notificationHelper.cancelNotification(
+        _getNotificationId(reminderId),
+      );
 
       // Remove da lista
       _reminders.removeWhere((r) => r.id == reminderId);
@@ -163,10 +171,14 @@ class ReminderService extends ChangeNotifier {
   /// Remove todos os lembretes de uma tarefa
   Future<void> deleteRemindersByTask(String taskId) async {
     try {
-      final taskReminders = _reminders.where((r) => r.taskId == taskId).toList();
-      
+      final taskReminders = _reminders
+          .where((r) => r.taskId == taskId)
+          .toList();
+
       for (final reminder in taskReminders) {
-        await _notificationHelper.cancelNotification(_getNotificationId(reminder.id));
+        await _notificationHelper.cancelNotification(
+          _getNotificationId(reminder.id),
+        );
       }
 
       _reminders.removeWhere((r) => r.taskId == taskId);
@@ -188,17 +200,21 @@ class ReminderService extends ChangeNotifier {
 
       final reminder = _reminders[index];
       final updated = reminder.copyWith(isActive: !reminder.isActive);
-      
+
       _reminders[index] = updated;
       await _saveToCache();
 
       if (updated.isActive) {
         await _scheduleNotification(updated, task);
       } else {
-        await _notificationHelper.cancelNotification(_getNotificationId(reminderId));
+        await _notificationHelper.cancelNotification(
+          _getNotificationId(reminderId),
+        );
       }
 
-      print('✅ Lembrete ${updated.isActive ? "ativado" : "desativado"}: $reminderId');
+      print(
+        '✅ Lembrete ${updated.isActive ? "ativado" : "desativado"}: $reminderId',
+      );
       notifyListeners();
     } catch (e) {
       print('❌ Erro ao alternar lembrete: $e');

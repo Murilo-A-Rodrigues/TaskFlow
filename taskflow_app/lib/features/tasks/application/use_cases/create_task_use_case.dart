@@ -8,7 +8,7 @@ class CreateTaskUseCase {
   CreateTaskUseCase(this.repository);
 
   /// Executa a criação de uma tarefa
-  /// 
+  ///
   /// Valida os dados e delega ao repositório
   Future<Task> execute(Task task) async {
     // Validações de negócio

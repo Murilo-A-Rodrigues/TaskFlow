@@ -4,10 +4,10 @@ import '../dtos/task_dto.dart';
 import 'task_local_dto.dart';
 
 /// Implementação de TaskLocalDto usando SharedPreferences
-/// 
+///
 /// Persiste DTOs de tarefas em formato JSON no SharedPreferences.
 /// Suporta operações de upsert, listagem, busca por id e limpeza.
-/// 
+///
 /// Tratamento de erros:
 /// - Em caso de dados corrompidos, limpa o cache e retorna valores padrão
 /// - Logs de erro são impressos para diagnóstico
@@ -16,18 +16,17 @@ class TaskLocalDtoSharedPrefs implements TaskLocalDto {
   static const String _cacheKey = 'tasks_cache_v1';
 
   /// Getter privado para obter instância do SharedPreferences
-  Future<SharedPreferences> get _prefs async => 
-      SharedPreferences.getInstance();
+  Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
   @override
   Future<void> upsertAll(List<TaskDto> dtos) async {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       // Map para indexar por id e facilitar upsert
       final Map<String, Map<String, dynamic>> current = {};
-      
+
       // Carrega dados existentes se houver
       if (raw != null && raw.isNotEmpty) {
         try {
@@ -50,8 +49,10 @@ class TaskLocalDtoSharedPrefs implements TaskLocalDto {
       // Salva lista atualizada
       final merged = current.values.toList();
       await prefs.setString(_cacheKey, jsonEncode(merged));
-      
-      print('✅ Cache de tarefas atualizado: ${dtos.length} registro(s), total: ${merged.length}');
+
+      print(
+        '✅ Cache de tarefas atualizado: ${dtos.length} registro(s), total: ${merged.length}',
+      );
     } catch (e) {
       print('❌ Erro ao fazer upsert de tarefas: $e');
       rethrow;
@@ -63,7 +64,7 @@ class TaskLocalDtoSharedPrefs implements TaskLocalDto {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       // Retorna lista vazia se não houver dados
       if (raw == null || raw.isEmpty) {
         return [];
@@ -72,12 +73,13 @@ class TaskLocalDtoSharedPrefs implements TaskLocalDto {
       // Decodifica e converte para DTOs
       final List<dynamic> jsonList = jsonDecode(raw) as List<dynamic>;
       final tasks = jsonList
-          .map((json) => TaskDto.fromMap(Map<String, dynamic>.from(json as Map)))
+          .map(
+            (json) => TaskDto.fromMap(Map<String, dynamic>.from(json as Map)),
+          )
           .toList();
-      
+
       print('📋 Cache de tarefas carregado: ${tasks.length} registro(s)');
       return tasks;
-      
     } catch (e) {
       print('❌ Erro ao listar tarefas do cache: $e');
       // Em caso de erro, limpa cache corrompido e retorna vazio
@@ -91,7 +93,7 @@ class TaskLocalDtoSharedPrefs implements TaskLocalDto {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       if (raw == null || raw.isEmpty) {
         return null;
       }
@@ -104,10 +106,9 @@ class TaskLocalDtoSharedPrefs implements TaskLocalDto {
           return TaskDto.fromMap(m);
         }
       }
-      
+
       // Não encontrado
       return null;
-      
     } catch (e) {
       print('❌ Erro ao buscar tarefa por id ($id): $e');
       return null;

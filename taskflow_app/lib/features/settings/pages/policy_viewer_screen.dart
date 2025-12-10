@@ -41,10 +41,10 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
 
   Future<void> _loadContent() async {
     try {
-      final fileName = widget.policyType == 'privacy' 
+      final fileName = widget.policyType == 'privacy'
           ? 'assets/docs/privacy_policy.md'
           : 'assets/docs/terms_of_service.md';
-      
+
       final content = await rootBundle.loadString(fileName);
       setState(() {
         _content = content;
@@ -62,11 +62,15 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
     _scrollController.addListener(() {
       final maxScroll = _scrollController.position.maxScrollExtent;
       final currentScroll = _scrollController.position.pixels;
-      
+
       setState(() {
-        _scrollProgress = maxScroll > 0 ? (currentScroll / maxScroll).clamp(0.0, 1.0) : 0.0;
+        _scrollProgress = maxScroll > 0
+            ? (currentScroll / maxScroll).clamp(0.0, 1.0)
+            : 0.0;
         _canScrollUp = currentScroll > 50; // Pode subir se desceu mais de 50px
-        _canScrollDown = currentScroll < (maxScroll - 50); // Pode descer se não está quase no fim
+        _canScrollDown =
+            currentScroll <
+            (maxScroll - 50); // Pode descer se não está quase no fim
       });
 
       // Considera que chegou ao fim quando scroll >= 95%
@@ -103,8 +107,8 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
   }
 
   String get _title {
-    return widget.policyType == 'privacy' 
-        ? 'Política de Privacidade' 
+    return widget.policyType == 'privacy'
+        ? 'Política de Privacidade'
         : 'Termos de Uso';
   }
 
@@ -119,15 +123,15 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
           preferredSize: const Size.fromHeight(4.0),
           child: Container(
             height: 4.0,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-            ),
+            decoration: BoxDecoration(color: Colors.grey.shade300),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
               widthFactor: _scrollProgress,
               child: Container(
                 decoration: BoxDecoration(
-                  color: _hasReachedEnd ? Colors.green : Theme.of(context).primaryColor,
+                  color: _hasReachedEnd
+                      ? Colors.green
+                      : Theme.of(context).primaryColor,
                 ),
               ),
             ),
@@ -143,54 +147,58 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
                     // Indicador de progresso textual
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       color: Colors.grey.shade50,
                       child: Text(
-                        _hasReachedEnd 
+                        _hasReachedEnd
                             ? '✓ Leitura completa - Você pode marcar como lido'
                             : 'Progresso da leitura: ${(_scrollProgress * 100).toInt()}%',
                         style: TextStyle(
                           fontSize: 14,
-                          color: _hasReachedEnd ? Colors.green.shade700 : Colors.grey.shade600,
-                          fontWeight: _hasReachedEnd ? FontWeight.w600 : FontWeight.normal,
+                          color: _hasReachedEnd
+                              ? Colors.green.shade700
+                              : Colors.grey.shade600,
+                          fontWeight: _hasReachedEnd
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    
+
                     // Conteúdo do documento
                     Expanded(
                       child: Markdown(
                         controller: _scrollController,
                         data: _content,
                         selectable: true,
-                    styleSheet: MarkdownStyleSheet(
-                      h1: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                      h2: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                      h3: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                      p: const TextStyle(
-                        fontSize: 16,
-                        height: 1.6,
-                      ),
-                      listBullet: TextStyle(
-                        color: Theme.of(context).primaryColor,
+                        styleSheet: MarkdownStyleSheet(
+                          h1: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          h2: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          h3: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                          p: const TextStyle(fontSize: 16, height: 1.6),
+                          listBullet: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                
+
                     // Botão "Marcar como lido"
                     Container(
                       width: double.infinity,
@@ -212,25 +220,27 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          backgroundColor: _canMarkAsRead 
-                              ? Theme.of(context).primaryColor 
+                          backgroundColor: _canMarkAsRead
+                              ? Theme.of(context).primaryColor
                               : Colors.grey.shade300,
                         ),
                         child: Text(
-                          _canMarkAsRead 
-                              ? 'Marcar como Lido ✓' 
+                          _canMarkAsRead
+                              ? 'Marcar como Lido ✓'
                               : 'Leia até o final para continuar',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: _canMarkAsRead ? Colors.white : Colors.grey.shade600,
+                            color: _canMarkAsRead
+                                ? Colors.white
+                                : Colors.grey.shade600,
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                
+
                 // Seta para subir (canto superior direito)
                 if (_canScrollUp)
                   Positioned(
@@ -238,12 +248,14 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
                     right: 16,
                     child: FloatingActionButton.small(
                       onPressed: _scrollToTop,
-                      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.9),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.9),
                       foregroundColor: Colors.white,
                       child: const Icon(Icons.keyboard_arrow_up, size: 24),
                     ),
                   ),
-                
+
                 // Seta para descer (canto inferior direito)
                 if (_canScrollDown)
                   Positioned(
@@ -251,7 +263,9 @@ class _PolicyViewerScreenState extends State<PolicyViewerScreen> {
                     right: 16,
                     child: FloatingActionButton.small(
                       onPressed: _scrollToBottom,
-                      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.9),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.9),
                       foregroundColor: Colors.white,
                       child: const Icon(Icons.keyboard_arrow_down, size: 24),
                     ),

@@ -3,17 +3,17 @@ import '../../../tasks/domain/entities/task_priority.dart';
 import '../dtos/task_dto.dart';
 
 /// TaskMapper - Conversor centralizado entre TaskDto e Task Entity
-/// 
+///
 /// Esta classe é responsável por traduzir entre o formato de transporte (DTO)
 /// e o formato interno da aplicação (Entity). Centraliza todas as regras de
 /// conversão em um único local, facilitando manutenção e testes.
 /// Segue o padrão Mapper do documento "Modelo DTO e Mapeamento".
 class TaskMapper {
   /// Converte TaskDto (formato de rede/banco) para Task Entity (formato interno)
-  /// 
+  ///
   /// Aplica conversões como:
   /// - String ISO8601 -> DateTime
-  /// - snake_case -> camelCase  
+  /// - snake_case -> camelCase
   /// - int -> TaskPriority enum
   /// - Validações defensivas
   static Task toEntity(TaskDto dto) {
@@ -23,9 +23,7 @@ class TaskMapper {
       description: dto.description,
       isCompleted: dto.is_completed,
       createdAt: DateTime.parse(dto.created_at),
-      dueDate: dto.due_date != null 
-          ? DateTime.tryParse(dto.due_date!) 
-          : null,
+      dueDate: dto.due_date != null ? DateTime.tryParse(dto.due_date!) : null,
       priority: TaskPriorityHelper.fromValue(dto.priority),
       updatedAt: DateTime.parse(dto.updated_at),
       categoryId: dto.category_id,
@@ -33,7 +31,7 @@ class TaskMapper {
   }
 
   /// Converte Task Entity (formato interno) para TaskDto (formato de rede/banco)
-  /// 
+  ///
   /// Aplica conversões inversas como:
   /// - DateTime -> String ISO8601
   /// - camelCase -> snake_case
@@ -42,9 +40,7 @@ class TaskMapper {
     return TaskDto(
       id: entity.id,
       title: entity.title,
-      description: entity.description.isNotEmpty 
-          ? entity.description 
-          : null,
+      description: entity.description.isNotEmpty ? entity.description : null,
       is_completed: entity.isCompleted,
       created_at: entity.createdAt.toIso8601String(),
       due_date: entity.dueDate?.toIso8601String(),
@@ -65,7 +61,7 @@ class TaskMapper {
   }
 
   /// Converte Map (vindo diretamente do Supabase) para Task Entity
-  /// 
+  ///
   /// Útil para quando recebemos dados diretamente do Supabase
   /// sem passar pelo TaskDto primeiro
   static Task fromMap(Map<String, dynamic> map) {
@@ -74,7 +70,7 @@ class TaskMapper {
   }
 
   /// Converte Task Entity para Map (para enviar ao Supabase)
-  /// 
+  ///
   /// Útil para quando queremos enviar dados diretamente ao Supabase
   /// sem criar TaskDto primeiro
   static Map<String, dynamic> toMap(Task entity) {
@@ -93,15 +89,15 @@ class TaskMapper {
   }
 
   /// Atualiza um TaskDto existente com dados de uma Task Entity
-  /// 
+  ///
   /// Útil para operações de update onde queremos manter alguns
   /// campos do DTO original e atualizar outros com dados da Entity
   static TaskDto updateDtoFromEntity(TaskDto originalDto, Task updatedEntity) {
     return TaskDto(
       id: updatedEntity.id,
       title: updatedEntity.title,
-      description: updatedEntity.description.isNotEmpty 
-          ? updatedEntity.description 
+      description: updatedEntity.description.isNotEmpty
+          ? updatedEntity.description
           : null,
       is_completed: updatedEntity.isCompleted,
       created_at: originalDto.created_at, // Mantém data original de criação
@@ -113,8 +109,6 @@ class TaskMapper {
 
   /// Cria uma Task Entity com timestamp atualizado para sincronização
   static Task withUpdatedTimestamp(Task entity) {
-    return entity.copyWith(
-      updatedAt: DateTime.now(),
-    );
+    return entity.copyWith(updatedAt: DateTime.now());
   }
 }

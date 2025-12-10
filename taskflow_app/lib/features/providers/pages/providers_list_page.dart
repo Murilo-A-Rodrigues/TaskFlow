@@ -8,13 +8,13 @@ import '../infrastructure/repositories/providers_repository_impl.dart';
 import '../../../services/core/supabase_service.dart';
 
 /// Página de listagem de provedores
-/// 
+///
 /// Implementa os Prompts 16, 17 e 18:
 /// - Sincronização offline-first com Supabase
 /// - Push-then-Pull sync automático
 /// - Uso de Entity (domínio) ao invés de DTO na UI
 /// - Indicador visual durante sincronização
-/// 
+///
 /// Também implementa:
 /// - Prompt 08: Listagem de provedores
 /// - Prompt 09: Diálogo de ações (Editar/Remover/Fechar)
@@ -35,13 +35,15 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
   @override
   void initState() {
     super.initState();
-    
+
     // Inicializa repositório com padrão offline-first
     _repository = ProvidersRepositoryImpl(
-      remoteApi: SupabaseProvidersRemoteDatasource(client: SupabaseService.client),
+      remoteApi: SupabaseProvidersRemoteDatasource(
+        client: SupabaseService.client,
+      ),
       localDao: ProvidersLocalDao(),
     );
-    
+
     // Carrega dados e sincroniza (Prompt 18: two-way sync)
     _loadAndSync();
   }
@@ -55,7 +57,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
       // 1. Carrega do cache primeiro (render rápido)
       await _repository.loadFromCache();
       final cachedProviders = await _repository.listAll();
-      
+
       if (mounted) {
         setState(() => _providers = cachedProviders);
       }
@@ -65,20 +67,22 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
 
       // 3. Recarrega após sync
       final updatedProviders = await _repository.listAll();
-      
+
       if (mounted) {
         setState(() => _providers = updatedProviders);
       }
 
       if (kDebugMode) {
-        print('[ProvidersListPage] Sincronização concluída: $syncedCount items');
+        print(
+          '[ProvidersListPage] Sincronização concluída: $syncedCount items',
+        );
       }
     } catch (e, stack) {
       if (kDebugMode) {
         print('[ProvidersListPage] Erro na sincronização: $e');
         print(stack);
       }
-      
+
       // Em caso de erro, tenta carregar do cache
       if (mounted) {
         try {
@@ -97,7 +101,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
     try {
       await _repository.createProvider(provider);
       await _loadAndSync();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Fornecedor adicionado com sucesso')),
@@ -116,7 +120,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
     try {
       await _repository.updateProvider(provider);
       await _loadAndSync();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Fornecedor atualizado com sucesso')),
@@ -136,7 +140,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
       await _repository.deleteProvider(provider.id);
 
       await _loadAndSync();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Fornecedor removido com sucesso')),
@@ -209,10 +213,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
   }
 
   Future<void> _showAddDialog() async {
-    await showProviderFormDialog(
-      context: context,
-      onSave: _addProvider,
-    );
+    await showProviderFormDialog(context: context, onSave: _addProvider);
   }
 
   Future<void> _showEditDialog(Provider provider) async {
@@ -262,14 +263,16 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                           const SizedBox(height: 16),
                           Text(
                             'Nenhum fornecedor cadastrado',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Adicione seu primeiro fornecedor',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                           ),
@@ -284,57 +287,60 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                 itemCount: _providers.length,
                 itemBuilder: (context, index) {
                   final provider = _providers[index];
-                  
+
                   // Prompt 11: Dismissible para remoção por swipe
                   return Dismissible(
                     key: Key(provider.id),
-                        direction: DismissDirection.endToStart,
-                        confirmDismiss: (direction) async {
-                          return await showDialog<bool>(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Remover fornecedor?'),
-                              content: Text('Deseja remover ${provider.name}?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(false),
-                                  child: const Text('Não'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(true),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.red,
-                                  ),
-                                  child: const Text('Sim'),
-                                ),
-                              ],
+                    direction: DismissDirection.endToStart,
+                    confirmDismiss: (direction) async {
+                      return await showDialog<bool>(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Remover fornecedor?'),
+                          content: Text('Deseja remover ${provider.name}?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Não'),
                             ),
-                          );
-                        },
-                        onDismissed: (direction) {
-                          _deleteProvider(provider);
-                        },
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 16),
-                          child: const Icon(
-                            Icons.delete,
-                            color: Colors.white,
-                            size: 32,
-                          ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                              child: const Text('Sim'),
+                            ),
+                          ],
                         ),
+                      );
+                    },
+                    onDismissed: (direction) {
+                      _deleteProvider(provider);
+                    },
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 16),
+                      child: const Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
                     child: Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: provider.isActive 
-                              ? Colors.blue 
+                          backgroundColor: provider.isActive
+                              ? Colors.blue
                               : Colors.grey,
                           child: Text(
-                            provider.name.isNotEmpty 
-                                ? provider.name[0].toUpperCase() 
+                            provider.name.isNotEmpty
+                                ? provider.name[0].toUpperCase()
                                 : 'F',
                             style: const TextStyle(color: Colors.white),
                           ),
@@ -344,14 +350,15 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(provider.email),
-                            if (provider.phone != null && provider.phone!.isNotEmpty)
+                            if (provider.phone != null &&
+                                provider.phone!.isNotEmpty)
                               Text(
                                 provider.phone!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
                               ),
-                            ),
                           ],
                         ),
                         // Prompt 10: Ícone de edição

@@ -7,13 +7,13 @@ import '../mappers/task_mapper.dart';
 import '../remote/tasks_remote_api.dart';
 
 /// Implementação concreta do repositório de Tasks
-/// 
+///
 /// Esta classe orquestra o fluxo de dados entre cache local (DAO) e
 /// servidor remoto (Supabase). Implementa o padrão offline-first:
 /// - Cache local é sempre a fonte da verdade para a UI
 /// - Sincronização remota acontece em background
 /// - Conversões DTO ↔ Entity são feitas nas fronteiras
-/// 
+///
 /// ⚠️ Dicas práticas para evitar erros comuns:
 /// - Sempre verifique se o widget está mounted antes de chamar setState
 /// - Adicione prints/logs (usando kDebugMode) nos métodos de sync, cache e conversão
@@ -23,10 +23,7 @@ class TasksRepositoryImpl implements TasksRepository {
   final TasksRemoteApi remoteApi;
   final TasksLocalDaoSharedPrefs localDao;
 
-  TasksRepositoryImpl({
-    required this.remoteApi,
-    required this.localDao,
-  });
+  TasksRepositoryImpl({required this.remoteApi, required this.localDao});
 
   @override
   Future<List<Task>> loadFromCache() async {
@@ -38,11 +35,16 @@ class TasksRepositoryImpl implements TasksRepository {
       // Lê DTOs do cache
       final dtos = await localDao.listAll();
 
-      // Converte DTOs para Entities
-      final entities = dtos.map((dto) => TaskMapper.toEntity(dto)).toList();
+      // Converte DTOs para Entities e filtra deletados (soft delete)
+      final entities = dtos
+          .where((dto) => !dto.is_deleted) // Filtra deletados
+          .map((dto) => TaskMapper.toEntity(dto))
+          .toList();
 
       if (kDebugMode) {
-        print('TasksRepositoryImpl.loadFromCache: ${entities.length} tarefas carregadas');
+        print(
+          'TasksRepositoryImpl.loadFromCache: ${entities.length} tarefas carregadas (excluindo deletadas)',
+        );
       }
 
       return entities;
@@ -69,14 +71,18 @@ class TasksRepositoryImpl implements TasksRepository {
         if (localDtos.isNotEmpty) {
           pushed = await remoteApi.upsertTasks(localDtos);
           if (kDebugMode) {
-            print('TasksRepositoryImpl.syncFromServer: '
-                'pushed $pushed de ${localDtos.length} items to remote');
+            print(
+              'TasksRepositoryImpl.syncFromServer: '
+              'pushed $pushed de ${localDtos.length} items to remote',
+            );
           }
         }
       } catch (e) {
         // Falha no push não impede o pull
         if (kDebugMode) {
-          print('TasksRepositoryImpl.syncFromServer: push failed (non-blocking): $e');
+          print(
+            'TasksRepositoryImpl.syncFromServer: push failed (non-blocking): $e',
+          );
         }
       }
 
@@ -87,14 +93,13 @@ class TasksRepositoryImpl implements TasksRepository {
       }
 
       // Busca mudanças desde lastSync (ou tudo se for primeira vez)
-      final page = await remoteApi.fetchTasks(
-        since: lastSync,
-        limit: 500,
-      );
+      final page = await remoteApi.fetchTasks(since: lastSync, limit: 500);
 
       if (kDebugMode) {
-        print('TasksRepositoryImpl.syncFromServer: '
-            'recebidos ${page.items.length} items from remote');
+        print(
+          'TasksRepositoryImpl.syncFromServer: '
+          'recebidos ${page.items.length} items from remote',
+        );
       }
 
       // 3. Aplica mudanças no cache local
@@ -113,8 +118,10 @@ class TasksRepositoryImpl implements TasksRepository {
           }
         } catch (e) {
           if (kDebugMode) {
-            print('TasksRepositoryImpl.syncFromServer: '
-                'erro ao parsear updated_at, usando DateTime.now()');
+            print(
+              'TasksRepositoryImpl.syncFromServer: '
+              'erro ao parsear updated_at, usando DateTime.now()',
+            );
           }
         }
 
@@ -122,8 +129,10 @@ class TasksRepositoryImpl implements TasksRepository {
         await localDao.setLastSync(newLastSync);
 
         if (kDebugMode) {
-          print('TasksRepositoryImpl.syncFromServer: '
-              'aplicados ${page.items.length} registros, novo lastSync = $newLastSync');
+          print(
+            'TasksRepositoryImpl.syncFromServer: '
+            'aplicados ${page.items.length} registros, novo lastSync = $newLastSync',
+          );
         }
       }
 
@@ -147,22 +156,24 @@ class TasksRepositoryImpl implements TasksRepository {
   Future<List<Task>> listFeatured() async {
     // Carrega todas e filtra as de alta prioridade ou com due date próxima
     final all = await loadFromCache();
-    
+
     final now = DateTime.now();
     final featured = all.where((task) {
       // Considera featured: alta prioridade OU prazo nos próximos 3 dias
       if (task.priority.value >= 2) return true; // high priority
-      
+
       if (task.dueDate != null) {
         final daysUntilDue = task.dueDate!.difference(now).inDays;
         if (daysUntilDue >= 0 && daysUntilDue <= 3) return true;
       }
-      
+
       return false;
     }).toList();
 
     if (kDebugMode) {
-      print('TasksRepositoryImpl.listFeatured: ${featured.length} de ${all.length}');
+      print(
+        'TasksRepositoryImpl.listFeatured: ${featured.length} de ${all.length}',
+      );
     }
 
     return featured;
@@ -173,7 +184,7 @@ class TasksRepositoryImpl implements TasksRepository {
     try {
       final dto = await localDao.getById(id);
       if (dto == null) return null;
-      
+
       return TaskMapper.toEntity(dto);
     } catch (e) {
       if (kDebugMode) {
@@ -201,8 +212,10 @@ class TasksRepositoryImpl implements TasksRepository {
         await remoteApi.upsertTasks([dto]);
       } catch (e) {
         if (kDebugMode) {
-          print('TasksRepositoryImpl.createTask: '
-              'falha ao enviar para servidor (ficará no cache): $e');
+          print(
+            'TasksRepositoryImpl.createTask: '
+            'falha ao enviar para servidor (ficará no cache): $e',
+          );
         }
         // Não falha a operação; será sincronizado depois
       }
@@ -236,8 +249,10 @@ class TasksRepositoryImpl implements TasksRepository {
         await remoteApi.upsertTasks([dto]);
       } catch (e) {
         if (kDebugMode) {
-          print('TasksRepositoryImpl.updateTask: '
-              'falha ao enviar para servidor (ficará no cache): $e');
+          print(
+            'TasksRepositoryImpl.updateTask: '
+            'falha ao enviar para servidor (ficará no cache): $e',
+          );
         }
       }
 
@@ -255,18 +270,41 @@ class TasksRepositoryImpl implements TasksRepository {
   Future<void> deleteTask(String taskId) async {
     try {
       if (kDebugMode) {
-        print('TasksRepositoryImpl.deleteTask: $taskId');
+        print('TasksRepositoryImpl.deleteTask (SOFT DELETE): $taskId');
       }
 
-      // Remove do cache local
-      await localDao.delete(taskId);
+      // Busca a task atual
+      final tasks = await localDao.listAll();
+      final taskDto = tasks.firstWhere((t) => t.id == taskId);
 
-      // Tenta remover do servidor
-      // Nota: Supabase upsert não faz DELETE, precisaria de endpoint específico
-      // ou soft delete (is_deleted flag). Por enquanto apenas remove local.
+      // Marca como deletada (soft delete)
+      final deletedTask = taskDto.copyWith(
+        is_deleted: true,
+        deleted_at: DateTime.now().toIso8601String(),
+        updated_at: DateTime.now().toIso8601String(),
+      );
+
+      // Atualiza localmente
+      await localDao.upsert(deletedTask);
+
+      // Tenta sincronizar com servidor (soft delete)
+      try {
+        await remoteApi.upsertTasks([deletedTask]);
+        if (kDebugMode) {
+          print(
+            'TasksRepositoryImpl.deleteTask: soft delete sincronizado com servidor',
+          );
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print(
+            'TasksRepositoryImpl.deleteTask: erro ao sincronizar com servidor, mantido local: $e',
+          );
+        }
+      }
 
       if (kDebugMode) {
-        print('TasksRepositoryImpl.deleteTask: removido localmente (soft delete)');
+        print('TasksRepositoryImpl.deleteTask: soft delete aplicado');
       }
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -312,7 +350,9 @@ class TasksRepositoryImpl implements TasksRepository {
       final synced = await syncFromServer();
 
       if (kDebugMode) {
-        print('TasksRepositoryImpl.forceSyncAll: $synced tarefas sincronizadas');
+        print(
+          'TasksRepositoryImpl.forceSyncAll: $synced tarefas sincronizadas',
+        );
       }
     } catch (e, stackTrace) {
       if (kDebugMode) {

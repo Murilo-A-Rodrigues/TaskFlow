@@ -6,13 +6,13 @@ import '../local/reminders_local_dao.dart';
 import '../remote/reminders_remote_api.dart';
 
 /// Implementação concreta do repositório de Reminders
-/// 
+///
 /// Esta classe orquestra o fluxo de dados entre cache local (DAO) e
 /// servidor remoto (Supabase). Implementa o padrão offline-first:
 /// - Cache local é sempre a fonte da verdade para a UI
 /// - Sincronização remota acontece em background
 /// - Conversões DTO ↔ Entity são feitas nas fronteiras
-/// 
+///
 /// ⚠️ Dicas práticas para evitar erros comuns:
 /// - Sempre verifique se o widget está mounted antes de chamar setState
 /// - Adicione prints/logs (usando kDebugMode) nos métodos de sync, cache e conversão
@@ -22,16 +22,15 @@ class RemindersRepositoryImpl implements RemindersRepository {
   final RemindersRemoteApi remoteApi;
   final RemindersLocalDaoSharedPrefs localDao;
 
-  RemindersRepositoryImpl({
-    required this.remoteApi,
-    required this.localDao,
-  });
+  RemindersRepositoryImpl({required this.remoteApi, required this.localDao});
 
   @override
   Future<List<Reminder>> loadFromCache() async {
     try {
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.loadFromCache: carregando do cache local');
+        print(
+          'RemindersRepositoryImpl.loadFromCache: carregando do cache local',
+        );
       }
 
       // Lê DTOs do cache
@@ -41,7 +40,9 @@ class RemindersRepositoryImpl implements RemindersRepository {
       final entities = dtos.map((dto) => ReminderMapper.toEntity(dto)).toList();
 
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.loadFromCache: ${entities.length} lembretes carregados');
+        print(
+          'RemindersRepositoryImpl.loadFromCache: ${entities.length} lembretes carregados',
+        );
       }
 
       return entities;
@@ -58,7 +59,9 @@ class RemindersRepositoryImpl implements RemindersRepository {
   Future<int> syncFromServer() async {
     try {
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.syncFromServer: iniciando sincronização');
+        print(
+          'RemindersRepositoryImpl.syncFromServer: iniciando sincronização',
+        );
       }
 
       // 1. PUSH: Envia cache local para servidor (best-effort)
@@ -68,14 +71,18 @@ class RemindersRepositoryImpl implements RemindersRepository {
         if (localDtos.isNotEmpty) {
           pushed = await remoteApi.upsertReminders(localDtos);
           if (kDebugMode) {
-            print('RemindersRepositoryImpl.syncFromServer: '
-                'pushed $pushed de ${localDtos.length} items to remote');
+            print(
+              'RemindersRepositoryImpl.syncFromServer: '
+              'pushed $pushed de ${localDtos.length} items to remote',
+            );
           }
         }
       } catch (e) {
         // Falha no push não impede o pull
         if (kDebugMode) {
-          print('RemindersRepositoryImpl.syncFromServer: push failed (non-blocking): $e');
+          print(
+            'RemindersRepositoryImpl.syncFromServer: push failed (non-blocking): $e',
+          );
         }
       }
 
@@ -86,14 +93,13 @@ class RemindersRepositoryImpl implements RemindersRepository {
       }
 
       // Busca mudanças desde lastSync (ou tudo se for primeira vez)
-      final page = await remoteApi.fetchReminders(
-        since: lastSync,
-        limit: 500,
-      );
+      final page = await remoteApi.fetchReminders(since: lastSync, limit: 500);
 
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.syncFromServer: '
-            'recebidos ${page.items.length} items from remote');
+        print(
+          'RemindersRepositoryImpl.syncFromServer: '
+          'recebidos ${page.items.length} items from remote',
+        );
       }
 
       // 3. Aplica mudanças no cache local
@@ -112,8 +118,10 @@ class RemindersRepositoryImpl implements RemindersRepository {
           }
         } catch (e) {
           if (kDebugMode) {
-            print('RemindersRepositoryImpl.syncFromServer: '
-                'erro ao parsear created_at, usando DateTime.now()');
+            print(
+              'RemindersRepositoryImpl.syncFromServer: '
+              'erro ao parsear created_at, usando DateTime.now()',
+            );
           }
         }
 
@@ -121,8 +129,10 @@ class RemindersRepositoryImpl implements RemindersRepository {
         await localDao.setLastSync(newLastSync);
 
         if (kDebugMode) {
-          print('RemindersRepositoryImpl.syncFromServer: '
-              'aplicados ${page.items.length} registros, novo lastSync = $newLastSync');
+          print(
+            'RemindersRepositoryImpl.syncFromServer: '
+            'aplicados ${page.items.length} registros, novo lastSync = $newLastSync',
+          );
         }
       }
 
@@ -156,7 +166,9 @@ class RemindersRepositoryImpl implements RemindersRepository {
       final entities = dtos.map((dto) => ReminderMapper.toEntity(dto)).toList();
 
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.listActive: ${entities.length} lembretes ativos');
+        print(
+          'RemindersRepositoryImpl.listActive: ${entities.length} lembretes ativos',
+        );
       }
 
       return entities;
@@ -183,7 +195,9 @@ class RemindersRepositoryImpl implements RemindersRepository {
       final entities = dtos.map((dto) => ReminderMapper.toEntity(dto)).toList();
 
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.listByTaskId: ${entities.length} lembretes encontrados');
+        print(
+          'RemindersRepositoryImpl.listByTaskId: ${entities.length} lembretes encontrados',
+        );
       }
 
       return entities;
@@ -201,7 +215,7 @@ class RemindersRepositoryImpl implements RemindersRepository {
     try {
       final dto = await localDao.getById(id);
       if (dto == null) return null;
-      
+
       return ReminderMapper.toEntity(dto);
     } catch (e) {
       if (kDebugMode) {
@@ -215,7 +229,9 @@ class RemindersRepositoryImpl implements RemindersRepository {
   Future<Reminder> createReminder(Reminder reminder) async {
     try {
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.createReminder: taskId=${reminder.taskId}');
+        print(
+          'RemindersRepositoryImpl.createReminder: taskId=${reminder.taskId}',
+        );
       }
 
       // Converte Entity para DTO
@@ -229,8 +245,10 @@ class RemindersRepositoryImpl implements RemindersRepository {
         await remoteApi.upsertReminders([dto]);
       } catch (e) {
         if (kDebugMode) {
-          print('RemindersRepositoryImpl.createReminder: '
-              'falha ao enviar para servidor (ficará no cache): $e');
+          print(
+            'RemindersRepositoryImpl.createReminder: '
+            'falha ao enviar para servidor (ficará no cache): $e',
+          );
         }
         // Não falha a operação; será sincronizado depois
       }
@@ -263,8 +281,10 @@ class RemindersRepositoryImpl implements RemindersRepository {
         await remoteApi.upsertReminders([dto]);
       } catch (e) {
         if (kDebugMode) {
-          print('RemindersRepositoryImpl.updateReminder: '
-              'falha ao enviar para servidor (ficará no cache): $e');
+          print(
+            'RemindersRepositoryImpl.updateReminder: '
+            'falha ao enviar para servidor (ficará no cache): $e',
+          );
         }
       }
 
@@ -292,9 +312,11 @@ class RemindersRepositoryImpl implements RemindersRepository {
       // - Soft delete (is_active = false)
       // - Hard delete via API específica
       // - Sincronização de deleções em lote
-      
+
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.deleteReminder: removido do cache local');
+        print(
+          'RemindersRepositoryImpl.deleteReminder: removido do cache local',
+        );
       }
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -309,7 +331,9 @@ class RemindersRepositoryImpl implements RemindersRepository {
   Future<void> clearAllReminders() async {
     try {
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.clearAllReminders: limpando cache completo');
+        print(
+          'RemindersRepositoryImpl.clearAllReminders: limpando cache completo',
+        );
       }
 
       await localDao.clear();
@@ -330,7 +354,9 @@ class RemindersRepositoryImpl implements RemindersRepository {
   Future<int> forceSyncAll() async {
     try {
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.forceSyncAll: forçando sincronização completa');
+        print(
+          'RemindersRepositoryImpl.forceSyncAll: forçando sincronização completa',
+        );
       }
 
       // Busca todos os lembretes do servidor (ignora lastSync)
@@ -339,8 +365,10 @@ class RemindersRepositoryImpl implements RemindersRepository {
       );
 
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.forceSyncAll: '
-            'recebidos ${page.items.length} items from remote');
+        print(
+          'RemindersRepositoryImpl.forceSyncAll: '
+          'recebidos ${page.items.length} items from remote',
+        );
       }
 
       // Limpa cache local
@@ -355,8 +383,10 @@ class RemindersRepositoryImpl implements RemindersRepository {
       }
 
       if (kDebugMode) {
-        print('RemindersRepositoryImpl.forceSyncAll: '
-            'sincronizados ${page.items.length} lembretes');
+        print(
+          'RemindersRepositoryImpl.forceSyncAll: '
+          'sincronizados ${page.items.length} lembretes',
+        );
       }
 
       return page.items.length;

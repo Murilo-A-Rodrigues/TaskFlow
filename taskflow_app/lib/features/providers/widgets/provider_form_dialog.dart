@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../domain/entities/provider.dart';
 
 /// Diálogo de formulário para criar/editar fornecedores
-/// 
+///
 /// Implementa Prompt 17: UI usa Entity (domínio) ao invés de DTO
 /// Também implementa padrão do Prompt 10 (edição)
 Future<void> showProviderFormDialog({
@@ -14,10 +14,8 @@ Future<void> showProviderFormDialog({
   return showDialog(
     context: context,
     barrierDismissible: false, // Conforme especificação dos prompts
-    builder: (context) => _ProviderFormDialog(
-      provider: provider,
-      onSave: onSave,
-    ),
+    builder: (context) =>
+        _ProviderFormDialog(provider: provider, onSave: onSave),
   );
 }
 
@@ -25,10 +23,7 @@ class _ProviderFormDialog extends StatefulWidget {
   final Provider? provider;
   final Future<void> Function(Provider) onSave;
 
-  const _ProviderFormDialog({
-    this.provider,
-    required this.onSave,
-  });
+  const _ProviderFormDialog({this.provider, required this.onSave});
 
   @override
   State<_ProviderFormDialog> createState() => _ProviderFormDialogState();
@@ -47,9 +42,15 @@ class _ProviderFormDialogState extends State<_ProviderFormDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.provider?.name ?? '');
-    _emailController = TextEditingController(text: widget.provider?.email ?? '');
-    _phoneController = TextEditingController(text: widget.provider?.phone ?? '');
-    _addressController = TextEditingController(text: widget.provider?.address ?? '');
+    _emailController = TextEditingController(
+      text: widget.provider?.email ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.provider?.phone ?? '',
+    );
+    _addressController = TextEditingController(
+      text: widget.provider?.address ?? '',
+    );
     _isActive = widget.provider?.isActive ?? true;
   }
 
@@ -77,11 +78,11 @@ class _ProviderFormDialogState extends State<_ProviderFormDialog> {
         id: widget.provider?.id ?? const Uuid().v4(),
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
-        phone: _phoneController.text.trim().isEmpty 
-            ? null 
+        phone: _phoneController.text.trim().isEmpty
+            ? null
             : _phoneController.text.trim(),
-        address: _addressController.text.trim().isEmpty 
-            ? null 
+        address: _addressController.text.trim().isEmpty
+            ? null
             : _addressController.text.trim(),
         isActive: _isActive,
         createdAt: widget.provider?.createdAt ?? now,
@@ -147,7 +148,9 @@ class _ProviderFormDialogState extends State<_ProviderFormDialog> {
                   if (value == null || value.trim().isEmpty) {
                     return 'E-mail é obrigatório';
                   }
-                  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  final emailRegex = RegExp(
+                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                  );
                   if (!emailRegex.hasMatch(value.trim())) {
                     return 'E-mail inválido';
                   }

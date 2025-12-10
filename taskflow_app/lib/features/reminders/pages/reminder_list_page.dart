@@ -11,13 +11,13 @@ import '../infrastructure/remote/supabase_reminders_remote_datasource.dart';
 import '../infrastructure/repositories/reminders_repository_impl.dart';
 
 /// ReminderListPage - Tela de listagem de lembretes
-/// 
+///
 /// Implementa os Prompts 16, 17 e 18:
 /// - Sincronização offline-first com Supabase
 /// - Push-then-Pull sync automático
 /// - Uso de Entity (domínio) ao invés de DTO na UI
 /// - Indicador visual durante sincronização
-/// 
+///
 /// Exibe todos os lembretes agrupados por tarefa
 /// Permite editar, excluir e ativar/desativar lembretes
 class ReminderListPage extends StatefulWidget {
@@ -34,13 +34,15 @@ class _ReminderListPageState extends State<ReminderListPage> {
   @override
   void initState() {
     super.initState();
-    
+
     // Inicializa repositório com padrão offline-first
     _repository = RemindersRepositoryImpl(
-      remoteApi: SupabaseRemindersRemoteDatasource(client: SupabaseService.client),
+      remoteApi: SupabaseRemindersRemoteDatasource(
+        client: SupabaseService.client,
+      ),
       localDao: RemindersLocalDaoSharedPrefs(),
     );
-    
+
     // Carrega dados e sincroniza (Prompt 18: two-way sync)
     _loadAndSync();
   }
@@ -116,14 +118,16 @@ class _ReminderListPageState extends State<ReminderListPage> {
                           const SizedBox(height: 16),
                           Text(
                             'Nenhum lembrete criado',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Crie lembretes para suas tarefas importantes',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                           ),
@@ -138,7 +142,9 @@ class _ReminderListPageState extends State<ReminderListPage> {
             // Agrupa lembretes por tarefa
             final remindersByTask = <String, List<Reminder>>{};
             for (final reminder in reminders) {
-              remindersByTask.putIfAbsent(reminder.taskId, () => []).add(reminder);
+              remindersByTask
+                  .putIfAbsent(reminder.taskId, () => [])
+                  .add(reminder);
             }
 
             return ListView.builder(
@@ -148,7 +154,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
               itemBuilder: (context, index) {
                 final taskId = remindersByTask.keys.elementAt(index);
                 final taskReminders = remindersByTask[taskId]!;
-                
+
                 // Busca tarefa na lista
                 final task = taskService.tasks.cast<dynamic>().firstWhere(
                   (t) => t.id == taskId,
@@ -160,10 +166,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
                   return const SizedBox.shrink();
                 }
 
-                return _TaskReminderGroup(
-                  task: task,
-                  reminders: taskReminders,
-                );
+                return _TaskReminderGroup(task: task, reminders: taskReminders);
               },
             );
           },
@@ -178,10 +181,7 @@ class _TaskReminderGroup extends StatelessWidget {
   final dynamic task;
   final List<Reminder> reminders;
 
-  const _TaskReminderGroup({
-    required this.task,
-    required this.reminders,
-  });
+  const _TaskReminderGroup({required this.task, required this.reminders});
 
   @override
   Widget build(BuildContext context) {
@@ -242,10 +242,9 @@ class _TaskReminderGroup extends StatelessWidget {
           ),
 
           // Lista de lembretes
-          ...reminders.map((reminder) => _ReminderTile(
-                reminder: reminder,
-                task: task,
-              )),
+          ...reminders.map(
+            (reminder) => _ReminderTile(reminder: reminder, task: task),
+          ),
         ],
       ),
     );
@@ -261,10 +260,7 @@ class _ReminderTile extends StatelessWidget {
   final Reminder reminder;
   final dynamic task;
 
-  const _ReminderTile({
-    required this.reminder,
-    required this.task,
-  });
+  const _ReminderTile({required this.reminder, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -283,7 +279,9 @@ class _ReminderTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: reminder.isActive ? null : Theme.of(context).colorScheme.outline,
+          color: reminder.isActive
+              ? null
+              : Theme.of(context).colorScheme.outline,
         ),
       ),
       subtitle: Column(
@@ -308,10 +306,7 @@ class _ReminderTile extends StatelessWidget {
               if (!reminder.isActive) ...[
                 const SizedBox(width: 8),
                 const Chip(
-                  label: Text(
-                    'Inativo',
-                    style: TextStyle(fontSize: 10),
-                  ),
+                  label: Text('Inativo', style: TextStyle(fontSize: 10)),
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
                 ),
@@ -328,7 +323,9 @@ class _ReminderTile extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  reminder.isActive ? Icons.notifications_off : Icons.notifications_active,
+                  reminder.isActive
+                      ? Icons.notifications_off
+                      : Icons.notifications_active,
                 ),
                 const SizedBox(width: 12),
                 Text(reminder.isActive ? 'Desativar' : 'Ativar'),
@@ -338,11 +335,7 @@ class _ReminderTile extends StatelessWidget {
           const PopupMenuItem(
             value: 'edit',
             child: Row(
-              children: [
-                Icon(Icons.edit),
-                SizedBox(width: 12),
-                Text('Editar'),
-              ],
+              children: [Icon(Icons.edit), SizedBox(width: 12), Text('Editar')],
             ),
           ),
           const PopupMenuItem(
@@ -372,10 +365,8 @@ class _ReminderTile extends StatelessWidget {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => ReminderFormDialog(
-            task: task,
-            reminder: reminder,
-          ),
+          builder: (context) =>
+              ReminderFormDialog(task: task, reminder: reminder),
         );
         break;
 
@@ -407,9 +398,7 @@ class _ReminderTile extends StatelessWidget {
                     );
                   }
                 },
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.red,
-                ),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text('Excluir'),
               ),
             ],

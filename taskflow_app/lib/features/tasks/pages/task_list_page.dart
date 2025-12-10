@@ -10,7 +10,7 @@ import '../infrastructure/remote/supabase_tasks_remote_datasource.dart';
 import '../infrastructure/repositories/tasks_repository_impl.dart';
 
 /// Página de listagem de tarefas com estado vazio acolhedor
-/// 
+///
 /// Implementa os Prompts 04, 16, 17 e 18:
 /// - Estado vazio com ilustração e mensagem
 /// - FAB com microanimação
@@ -18,7 +18,7 @@ import '../infrastructure/repositories/tasks_repository_impl.dart';
 /// - Push-then-Pull sync automático
 /// - Uso de Entity (domínio) ao invés de DTO na UI
 /// - Indicador visual durante sincronização
-/// 
+///
 /// ⚠️ Boas práticas implementadas:
 /// - Sempre verifica 'mounted' antes de setState
 /// - Carrega cache primeiro para UI responsiva
@@ -47,7 +47,7 @@ class _TaskListPageState extends State<TaskListPage> {
   }
 
   /// Carrega tarefas seguindo o padrão offline-first (Prompts 16, 17, 18)
-  /// 
+  ///
   /// Fluxo:
   /// 1. Carrega do cache local rapidamente (UI responsiva)
   /// 2. Dispara sincronização em background
@@ -65,16 +65,15 @@ class _TaskListPageState extends State<TaskListPage> {
       // Cria repositório para sincronização
       final dao = TasksLocalDaoSharedPrefs();
       final remote = SupabaseTasksRemoteDatasource();
-      final repo = TasksRepositoryImpl(
-        remoteApi: remote,
-        localDao: dao,
-      );
+      final repo = TasksRepositoryImpl(remoteApi: remote, localDao: dao);
 
       // Executa sincronização bidirecional (push then pull)
       final changed = await repo.syncFromServer();
 
       if (kDebugMode) {
-        print('TaskListPage._loadTasks: sync completed, $changed items changed');
+        print(
+          'TaskListPage._loadTasks: sync completed, $changed items changed',
+        );
       }
 
       // Recarrega tasks via TaskService após sync
@@ -96,7 +95,7 @@ class _TaskListPageState extends State<TaskListPage> {
       if (kDebugMode) {
         print('TaskListPage._loadTasks ERROR: $e');
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -124,68 +123,64 @@ class _TaskListPageState extends State<TaskListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Minhas Tarefas'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Minhas Tarefas'), centerTitle: true),
       body: Column(
         children: [
           // Indicador de sincronização no topo (Prompt 18)
-          if (_isSyncing)
-            const LinearProgressIndicator(minHeight: 3),
+          if (_isSyncing) const LinearProgressIndicator(minHeight: 3),
           // Conteúdo principal
           Expanded(
             child: Stack(
               children: [
                 Consumer<TaskService>(
-            builder: (context, taskService, child) {
-              final tasks = taskService.tasks;
+                  builder: (context, taskService, child) {
+                    final tasks = taskService.tasks;
 
-              if (tasks.isEmpty) {
-                return RefreshIndicator(
-                  onRefresh: () => _refreshTasks(),
-                  child: _buildEmptyState(),
-                );
-              }
+                    if (tasks.isEmpty) {
+                      return RefreshIndicator(
+                        onRefresh: () => _refreshTasks(),
+                        child: _buildEmptyState(),
+                      );
+                    }
 
-              return RefreshIndicator(
-                onRefresh: () => _refreshTasks(),
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(
-                    top: 16,
-                    left: 8,
-                    right: 8,
-                    bottom: 80, // Espaço para FAB
-                  ),
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return Dismissible(
-                      key: Key(task.id),
-                      direction: DismissDirection.endToStart,
-                      confirmDismiss: (direction) => _confirmDelete(task),
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        color: Colors.red,
-                        child: const Icon(
-                          Icons.delete,
-                          color: Colors.white,
-                          size: 32,
+                    return RefreshIndicator(
+                      onRefresh: () => _refreshTasks(),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(
+                          top: 16,
+                          left: 8,
+                          right: 8,
+                          bottom: 80, // Espaço para FAB
                         ),
-                      ),
-                      child: TaskCard(
-                        task: task,
-                        onToggle: () => _toggleTask(task.id),
-                        onEdit: () => _editTask(task),
-                        onDelete: () => _deleteTask(task),
+                        itemCount: tasks.length,
+                        itemBuilder: (context, index) {
+                          final task = tasks[index];
+                          return Dismissible(
+                            key: Key(task.id),
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (direction) => _confirmDelete(task),
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              color: Colors.red,
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                            child: TaskCard(
+                              task: task,
+                              onToggle: () => _toggleTask(task.id),
+                              onEdit: () => _editTask(task),
+                              onDelete: () => _deleteTask(task),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
                 ),
-              );
-            },
-          ),
               ],
             ),
           ),
@@ -215,98 +210,101 @@ class _TaskListPageState extends State<TaskListPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-            // Caixa de diálogo com dica
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-                border: Border.all(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
-                  width: 2,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Ícone
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.lightbulb_outline,
-                      size: 40,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Título
-                  Text(
-                    'Comece sua jornada!',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
+                    // Caixa de diálogo com dica
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.2),
+                          width: 2,
                         ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Ícone
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.lightbulb_outline,
+                              size: 40,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
 
-                  // Mensagem
-                  Text(
-                    'Você ainda não tem nenhuma tarefa cadastrada.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[700],
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  Text(
-                    'Toque no botão laranja abaixo para criar sua primeira tarefa e começar a organizar seu dia!',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
+                          // Título
+                          Text(
+                            'Comece sua jornada!',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
 
-                  // Ícone de seta apontando para baixo
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: 10.0),
-                    duration: const Duration(milliseconds: 800),
-                    curve: Curves.easeInOut,
-                    builder: (context, value, child) {
-                      return Transform.translate(
-                        offset: Offset(0, value),
-                        child: child,
-                      );
-                    },
-                    onEnd: () {
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
-                    child: Icon(
-                      Icons.arrow_downward,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.tertiary,
+                          // Mensagem
+                          Text(
+                            'Você ainda não tem nenhuma tarefa cadastrada.',
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: Colors.grey[700]),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+
+                          Text(
+                            'Toque no botão laranja abaixo para criar sua primeira tarefa e começar a organizar seu dia!',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[600]),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Ícone de seta apontando para baixo
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 10.0),
+                            duration: const Duration(milliseconds: 800),
+                            curve: Curves.easeInOut,
+                            builder: (context, value, child) {
+                              return Transform.translate(
+                                offset: Offset(0, value),
+                                child: child,
+                              );
+                            },
+                            onEnd: () {
+                              if (mounted) {
+                                setState(() {});
+                              }
+                            },
+                            child: Icon(
+                              Icons.arrow_downward,
+                              size: 32,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
                   ],
                 ),
               ),
@@ -330,7 +328,7 @@ class _TaskListPageState extends State<TaskListPage> {
   }
 
   /// Pull-to-refresh: executa sincronização completa (Prompt 16, 18)
-  /// 
+  ///
   /// Chamado quando usuário arrasta a lista para baixo.
   /// Sincroniza com servidor e atualiza a UI.
   Future<void> _refreshTasks() async {
@@ -410,7 +408,9 @@ class _TaskListPageState extends State<TaskListPage> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Tarefa "${task.title}" excluída com sucesso'),
+                    content: Text(
+                      'Tarefa "${task.title}" excluída com sucesso',
+                    ),
                     backgroundColor: Colors.green,
                     duration: const Duration(seconds: 2),
                   ),
@@ -466,4 +466,3 @@ class _TaskListPageState extends State<TaskListPage> {
 // - supabase_init_debug_prompt.md: problemas de inicialização
 // - supabase_rls_remediation.md: erros de permissão RLS
 */
-

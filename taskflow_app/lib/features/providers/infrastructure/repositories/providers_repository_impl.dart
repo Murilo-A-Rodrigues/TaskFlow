@@ -7,7 +7,7 @@ import '../mappers/provider_mapper.dart';
 import '../remote/providers_remote_api.dart';
 
 /// Implementação concreta do repositório de Providers (Prompt 15)
-/// 
+///
 /// Esta classe orquestra o fluxo de dados entre cache local (DAO) e
 /// servidor remoto (Supabase). Implementa o padrão offline-first:
 /// - Cache local é sempre a fonte da verdade para a UI
@@ -20,8 +20,8 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
   ProvidersRepositoryImpl({
     required ProvidersRemoteApi remoteApi,
     required ProvidersLocalDao localDao,
-  })  : _remoteApi = remoteApi,
-        _localDao = localDao;
+  }) : _remoteApi = remoteApi,
+       _localDao = localDao;
 
   @override
   Future<void> loadFromCache() async {
@@ -33,7 +33,9 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
       final dtos = await _localDao.listAll();
 
       if (kDebugMode) {
-        print('[ProvidersRepository] ${dtos.length} providers carregados do cache');
+        print(
+          '[ProvidersRepository] ${dtos.length} providers carregados do cache',
+        );
       }
     } catch (e, stack) {
       if (kDebugMode) {
@@ -48,18 +50,24 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
   Future<int> syncFromServer() async {
     try {
       if (kDebugMode) {
-        print('[ProvidersRepository] ========== INICIANDO SINCRONIZAÇÃO ==========');
+        print(
+          '[ProvidersRepository] ========== INICIANDO SINCRONIZAÇÃO ==========',
+        );
       }
 
       // ===== FASE 1: PUSH (Enviar mudanças locais) =====
       if (kDebugMode) {
-        print('[ProvidersRepository] FASE 1: Enviando mudanças locais para servidor');
+        print(
+          '[ProvidersRepository] FASE 1: Enviando mudanças locais para servidor',
+        );
       }
 
       final localProviders = await _localDao.listAll();
       if (localProviders.isNotEmpty) {
         if (kDebugMode) {
-          print('[ProvidersRepository] Enviando ${localProviders.length} providers locais');
+          print(
+            '[ProvidersRepository] Enviando ${localProviders.length} providers locais',
+          );
         }
 
         try {
@@ -70,7 +78,9 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
           }
         } catch (e) {
           if (kDebugMode) {
-            print('[ProvidersRepository] Erro no push (continuando com pull): $e');
+            print(
+              '[ProvidersRepository] Erro no push (continuando com pull): $e',
+            );
           }
         }
       } else {
@@ -81,7 +91,9 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
 
       // ===== FASE 2: PULL (Buscar atualizações do servidor) =====
       if (kDebugMode) {
-        print('[ProvidersRepository] FASE 2: Buscando atualizações do servidor');
+        print(
+          '[ProvidersRepository] FASE 2: Buscando atualizações do servidor',
+        );
       }
 
       // Busca timestamp da última sincronização para sync incremental
@@ -115,12 +127,16 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
         cursor = page.nextCursor;
 
         if (kDebugMode) {
-          print('[ProvidersRepository] Página $pageCount: ${page.data.length} providers');
+          print(
+            '[ProvidersRepository] Página $pageCount: ${page.data.length} providers',
+          );
         }
       } while (cursor != null);
 
       if (kDebugMode) {
-        print('[ProvidersRepository] Total de providers remotos: ${allRemoteProviders.length}');
+        print(
+          '[ProvidersRepository] Total de providers remotos: ${allRemoteProviders.length}',
+        );
       }
 
       // Atualiza cache local com dados do servidor
@@ -128,7 +144,9 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
         // Em sync incremental, precisamos mesclar com dados locais
         if (lastSync != null) {
           if (kDebugMode) {
-            print('[ProvidersRepository] Mesclando dados remotos com cache local');
+            print(
+              '[ProvidersRepository] Mesclando dados remotos com cache local',
+            );
           }
 
           final localDtos = await _localDao.listAll();
@@ -143,7 +161,9 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
         } else {
           // Full sync: substitui todo o cache
           if (kDebugMode) {
-            print('[ProvidersRepository] Substituindo cache local completamente');
+            print(
+              '[ProvidersRepository] Substituindo cache local completamente',
+            );
           }
           await _localDao.upsertAll(allRemoteProviders);
         }
@@ -154,8 +174,12 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
       await _localDao.setLastSync(now);
 
       if (kDebugMode) {
-        print('[ProvidersRepository] Timestamp de sincronização atualizado: $now');
-        print('[ProvidersRepository] ========== SINCRONIZAÇÃO CONCLUÍDA ==========');
+        print(
+          '[ProvidersRepository] Timestamp de sincronização atualizado: $now',
+        );
+        print(
+          '[ProvidersRepository] ========== SINCRONIZAÇÃO CONCLUÍDA ==========',
+        );
       }
 
       return allRemoteProviders.length;
@@ -226,7 +250,9 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
       } catch (e) {
         if (kDebugMode) {
           print('[ProvidersRepository] Erro ao enviar ao servidor: $e');
-          print('[ProvidersRepository] Dados salvos localmente, serão sincronizados depois');
+          print(
+            '[ProvidersRepository] Dados salvos localmente, serão sincronizados depois',
+          );
         }
       }
 
@@ -260,7 +286,9 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
       } catch (e) {
         if (kDebugMode) {
           print('[ProvidersRepository] Erro ao enviar ao servidor: $e');
-          print('[ProvidersRepository] Dados salvos localmente, serão sincronizados depois');
+          print(
+            '[ProvidersRepository] Dados salvos localmente, serão sincronizados depois',
+          );
         }
       }
 
@@ -284,7 +312,7 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
       // Remove do cache local
       final all = await _localDao.listAll();
       final remaining = all.where((dto) => dto.id != id).toList();
-      
+
       // Limpa e salva de volta sem o deletado
       await _localDao.clear();
       if (remaining.isNotEmpty) {

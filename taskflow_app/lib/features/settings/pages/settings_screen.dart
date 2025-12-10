@@ -11,7 +11,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  
   void _showRevokeConsentDialog() {
     showDialog(
       context: context,
@@ -64,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // Restaura o consentimento
               await prefsService.grantConsent();
               await prefsService.setOnboardingCompleted(true);
-              
+
               scaffoldMessenger.showSnackBar(
                 const SnackBar(
                   content: Text('Consentimento restaurado'),
@@ -83,10 +82,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         // Se ainda estiver mounted e o consentimento foi revogado, redireciona
         if (mounted && !prefsService.hasValidConsent) {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/splash',
-            (route) => false,
-          );
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/splash', (route) => false);
         }
       }
     } catch (e) {
@@ -104,9 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Configurações'),
-      ),
+      appBar: AppBar(title: const Text('Configurações')),
       body: Consumer<PreferencesService>(
         builder: (context, prefsService, child) {
           return ListView(
@@ -116,21 +112,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: EdgeInsets.all(16),
                 child: Text(
                   'Privacidade e Dados',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
 
               // Status do consentimento
               ListTile(
                 leading: Icon(
-                  prefsService.hasValidConsent 
-                      ? Icons.check_circle 
+                  prefsService.hasValidConsent
+                      ? Icons.check_circle
                       : Icons.warning,
-                  color: prefsService.hasValidConsent 
-                      ? Colors.green 
+                  color: prefsService.hasValidConsent
+                      ? Colors.green
                       : Colors.orange,
                 ),
                 title: const Text('Status do Consentimento'),
@@ -173,10 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   'Organização',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
 
@@ -204,19 +194,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // Revogar consentimento
               ListTile(
-                leading: const Icon(
-                  Icons.cancel,
-                  color: Colors.red,
-                ),
+                leading: const Icon(Icons.cancel, color: Colors.red),
                 title: const Text(
                   'Revogar Consentimento',
                   style: TextStyle(color: Colors.red),
                 ),
-                subtitle: const Text(
-                  'Retirar permissão para uso de dados',
-                ),
-                onTap: prefsService.hasValidConsent 
-                    ? _showRevokeConsentDialog 
+                subtitle: const Text('Retirar permissão para uso de dados'),
+                onTap: prefsService.hasValidConsent
+                    ? _showRevokeConsentDialog
                     : null,
               ),
 
@@ -227,10 +212,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: EdgeInsets.all(16),
                 child: Text(
                   'Informações',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
 
@@ -258,11 +240,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leading: Icon(Icons.bug_report, color: Colors.orange),
                 title: Text(
                   'Debug',
-                  style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 subtitle: Text('Ferramentas de desenvolvimento'),
               ),
-              
+
               ListTile(
                 leading: const Icon(Icons.refresh, color: Colors.red),
                 title: const Text('Limpar Dados'),
@@ -271,7 +256,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _showResetDialog();
                 },
               ),
-              
+
               ListTile(
                 leading: const Icon(Icons.school, color: Colors.blue),
                 title: const Text('Resetar Tutorial'),
@@ -279,11 +264,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () async {
                   final prefsService = context.read<PreferencesService>();
                   await prefsService.setFirstTimeUser(true);
-                  
+
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Tutorial resetado! Vá para a aba Tarefas'),
+                        content: Text(
+                          'Tutorial resetado! Vá para a aba Tarefas',
+                        ),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -299,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showConsentDetailsDialog() {
     final prefsService = context.read<PreferencesService>();
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -309,11 +296,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailRow('Status:', prefsService.hasValidConsent ? 'Ativo' : 'Inativo'),
-            _buildDetailRow('Versão das Políticas:', prefsService.policyVersion),
-            _buildDetailRow('Data de Aceite:', _formatDate(prefsService.acceptedAt)),
-            _buildDetailRow('Política de Privacidade:', prefsService.isPrivacyPolicyAccepted ? 'Aceita' : 'Não aceita'),
-            _buildDetailRow('Termos de Uso:', prefsService.isTermsAccepted ? 'Aceitos' : 'Não aceitos'),
+            _buildDetailRow(
+              'Status:',
+              prefsService.hasValidConsent ? 'Ativo' : 'Inativo',
+            ),
+            _buildDetailRow(
+              'Versão das Políticas:',
+              prefsService.policyVersion,
+            ),
+            _buildDetailRow(
+              'Data de Aceite:',
+              _formatDate(prefsService.acceptedAt),
+            ),
+            _buildDetailRow(
+              'Política de Privacidade:',
+              prefsService.isPrivacyPolicyAccepted ? 'Aceita' : 'Não aceita',
+            ),
+            _buildDetailRow(
+              'Termos de Uso:',
+              prefsService.isTermsAccepted ? 'Aceitos' : 'Não aceitos',
+            ),
           ],
         ),
         actions: [
@@ -339,9 +341,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-          Expanded(
-            child: Text(value.isEmpty ? 'N/A' : value),
-          ),
+          Expanded(child: Text(value.isEmpty ? 'N/A' : value)),
         ],
       ),
     );
@@ -359,11 +359,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           color: Theme.of(context).primaryColor,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(
-          Icons.task_alt,
-          color: Colors.white,
-          size: 30,
-        ),
+        child: const Icon(Icons.task_alt, color: Colors.white, size: 30),
       ),
       children: [
         const Text(
@@ -376,7 +372,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _formatDate(String isoDate) {
     if (isoDate.isEmpty) return 'N/A';
-    
+
     try {
       final date = DateTime.parse(isoDate);
       return '${date.day}/${date.month}/${date.year} às ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
@@ -429,10 +425,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final prefsService = context.read<PreferencesService>();
       final taskService = context.read<TaskService>();
-      
+
       // Limpa todas as tarefas
       await taskService.clearAllTasks();
-      
+
       // Limpa todas as preferências
       await prefsService.clearAllPreferences();
 
@@ -448,10 +444,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Aguarda um pouco e então navega para o splash
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/splash',
-            (route) => false,
-          );
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/splash', (route) => false);
         }
       }
     } catch (e) {

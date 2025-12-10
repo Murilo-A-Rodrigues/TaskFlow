@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 /// CommentDto - Data Transfer Object que espelha a tabela comments do Supabase
-/// 
+///
 /// Esta classe representa os dados como eles são transferidos de e para
 /// o Supabase/rede. Os nomes dos campos seguem snake_case (igual ao banco)
 /// e os tipos são primitivos para facilitar serialização.
@@ -9,14 +9,14 @@ import 'dart:convert';
 class CommentDto {
   final String id;
   final String content;
-  final String task_id;            // FK para tasks table
-  final String author_id;          // FK para users table
-  final String? parent_id;         // FK para comments table (self-reference)
-  final bool is_edited;           // snake_case igual ao banco
-  final String? edited_at;         // ISO8601 String ou null
-  final bool is_deleted;          // snake_case igual ao banco
-  final String created_at;         // ISO8601 String para o fio
-  final String updated_at;         // ISO8601 String para sincronização
+  final String task_id; // FK para tasks table
+  final String author_id; // FK para users table
+  final String? parent_id; // FK para comments table (self-reference)
+  final bool is_edited; // snake_case igual ao banco
+  final String? edited_at; // ISO8601 String ou null
+  final bool is_deleted; // snake_case igual ao banco
+  final String created_at; // ISO8601 String para o fio
+  final String updated_at; // ISO8601 String para sincronização
 
   CommentDto({
     required this.id,

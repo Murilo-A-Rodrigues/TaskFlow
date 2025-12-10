@@ -48,7 +48,7 @@ class TaskListWidget extends StatelessWidget {
         final double iconSize = availableHeight > 150 ? 36 : 24;
         final double fontSize = availableHeight > 150 ? 14 : 12;
         final double smallFontSize = availableHeight > 150 ? 12 : 10;
-        
+
         return Center(
           child: Padding(
             padding: const EdgeInsets.all(8.0),

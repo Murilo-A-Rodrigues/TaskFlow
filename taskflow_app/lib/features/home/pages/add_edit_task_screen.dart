@@ -5,10 +5,7 @@ import '../../tasks/domain/entities/task_priority.dart';
 class AddEditTaskScreen extends StatefulWidget {
   final Task? task;
 
-  const AddEditTaskScreen({
-    super.key,
-    this.task,
-  });
+  const AddEditTaskScreen({super.key, this.task});
 
   @override
   State<AddEditTaskScreen> createState() => _AddEditTaskScreenState();
@@ -61,12 +58,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.task == null ? 'Nova Tarefa' : 'Editar Tarefa'),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text('Salvar'),
-          ),
-        ],
+        actions: [TextButton(onPressed: _save, child: const Text('Salvar'))],
       ),
       body: Form(
         key: _formKey,
@@ -118,7 +110,9 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
               const SizedBox(height: 16),
               ListTile(
                 title: const Text('Data de Vencimento'),
-                subtitle: Text(_dueDate?.toString().split(' ')[0] ?? 'Não definida'),
+                subtitle: Text(
+                  _dueDate?.toString().split(' ')[0] ?? 'Não definida',
+                ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () async {
                   final date = await showDatePicker(

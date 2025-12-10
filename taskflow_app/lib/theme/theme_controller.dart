@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../services/storage/preferences_service.dart';
 
 /// Gerencia o ThemeMode atual e notifica ouvintes quando ele muda.
-/// 
+///
 /// Suporta três modos:
 /// - ThemeMode.system: Segue o tema do sistema operacional
 /// - ThemeMode.light: Sempre claro
 /// - ThemeMode.dark: Sempre escuro
-/// 
+///
 /// Persiste a preferência via PreferencesService.
 class ThemeController extends ChangeNotifier {
   final PreferencesService _preferencesService;
@@ -31,7 +31,7 @@ class ThemeController extends ChangeNotifier {
   /// Carrega o tema salvo das preferências
   Future<void> loadTheme() async {
     if (_isInitialized) return;
-    
+
     final savedMode = _preferencesService.themeMode;
     _mode = _stringToThemeMode(savedMode);
     _isInitialized = true;
@@ -41,7 +41,7 @@ class ThemeController extends ChangeNotifier {
   /// Define um novo modo de tema e salva nas preferências
   Future<void> setThemeMode(ThemeMode newMode) async {
     if (_mode == newMode) return;
-    
+
     _mode = newMode;
     await _preferencesService.setThemeMode(_themeModeToString(newMode));
     notifyListeners();

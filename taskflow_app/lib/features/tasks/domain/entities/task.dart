@@ -1,7 +1,7 @@
 import 'task_priority.dart';
 
 /// Task Entity - Modelo interno limpo e validado para uso no aplicativo
-/// 
+///
 /// Esta é a representação "ideal" da tarefa dentro da aplicação.
 /// Contém tipos fortes, validações e conveniências para a UI.
 /// Segue o padrão Entity do documento "Modelo DTO e Mapeamento".
@@ -15,6 +15,8 @@ class Task {
   final TaskPriority priority;
   final DateTime updatedAt;
   final String? categoryId;
+  final bool isDeleted; // Soft delete flag
+  final DateTime? deletedAt; // Timestamp de quando foi deletado
 
   Task({
     required this.id,
@@ -26,12 +28,14 @@ class Task {
     TaskPriority? priority,
     required this.updatedAt,
     this.categoryId,
+    this.isDeleted = false,
+    this.deletedAt,
   }) : description = description?.trim() ?? '',
        priority = priority ?? TaskPriority.medium;
 
   /// Conveniência para a UI - texto formatado pronto para uso
   String get statusText => isCompleted ? 'Concluída' : 'Pendente';
-  
+
   /// Conveniência para a UI - ícone baseado na prioridade
   String get priorityIcon {
     switch (priority) {
@@ -43,7 +47,7 @@ class Task {
         return '🔴';
     }
   }
-  
+
   /// Conveniência para a UI - cor da prioridade
   String get priorityColorHex {
     switch (priority) {
@@ -59,19 +63,19 @@ class Task {
   /// Conveniência para a UI - descrição formatada
   String get subtitle {
     final parts = <String>[];
-    
+
     if (description.isNotEmpty && description.length > 30) {
       parts.add('${description.substring(0, 30)}...');
     } else if (description.isNotEmpty) {
       parts.add(description);
     }
-    
+
     parts.add(priorityIcon);
-    
+
     if (dueDate != null) {
       final now = DateTime.now();
       final difference = dueDate!.difference(now).inDays;
-      
+
       if (difference < 0) {
         parts.add('Atrasada ${(-difference)} dia(s)');
       } else if (difference == 0) {
@@ -82,7 +86,7 @@ class Task {
         parts.add('Vence em $difference dias');
       }
     }
-    
+
     return parts.join(' • ');
   }
 
@@ -97,8 +101,8 @@ class Task {
     if (dueDate == null) return false;
     final now = DateTime.now();
     return dueDate!.year == now.year &&
-           dueDate!.month == now.month &&
-           dueDate!.day == now.day;
+        dueDate!.month == now.month &&
+        dueDate!.day == now.day;
   }
 
   /// Cria uma cópia com valores opcionalmente modificados
@@ -112,6 +116,8 @@ class Task {
     TaskPriority? priority,
     DateTime? updatedAt,
     String? categoryId,
+    bool? isDeleted,
+    DateTime? deletedAt,
   }) {
     return Task(
       id: id ?? this.id,
@@ -123,6 +129,8 @@ class Task {
       priority: priority ?? this.priority,
       categoryId: categoryId ?? this.categoryId,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
@@ -130,14 +138,14 @@ class Task {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is Task &&
-           other.id == id &&
-           other.title == title &&
-           other.description == description &&
-           other.isCompleted == isCompleted &&
-           other.createdAt == createdAt &&
-           other.dueDate == dueDate &&
-           other.priority == priority &&
-           other.updatedAt == updatedAt;
+        other.id == id &&
+        other.title == title &&
+        other.description == description &&
+        other.isCompleted == isCompleted &&
+        other.createdAt == createdAt &&
+        other.dueDate == dueDate &&
+        other.priority == priority &&
+        other.updatedAt == updatedAt;
   }
 
   @override

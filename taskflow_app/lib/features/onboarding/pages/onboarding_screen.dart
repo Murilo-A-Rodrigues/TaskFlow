@@ -16,29 +16,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingPage(
       title: 'Bem-vindo ao TaskFlow',
       subtitle: 'Benefício central: to-dos com priorização simples',
-      description: 'Organize suas tarefas de forma inteligente com nosso sistema de priorização visual. Foque no que realmente importa.',
+      description:
+          'Organize suas tarefas de forma inteligente com nosso sistema de priorização visual. Foque no que realmente importa.',
       icon: Icons.task_alt,
       color: const Color(0xFF4F46E5), // Indigo primário
     ),
     OnboardingPage(
       title: 'Como Funciona',
       subtitle: 'Gestão de tarefas e foco',
-      description: 'Crie tarefas, defina prioridades, estabeleça prazos e acompanhe seu progresso. Simples assim!',
+      description:
+          'Crie tarefas, defina prioridades, estabeleça prazos e acompanhe seu progresso. Simples assim!',
       icon: Icons.psychology,
       color: const Color(0xFF475569), // Gray secundário
     ),
     OnboardingPage(
       title: 'Pronto para Começar!',
       subtitle: 'Protegemos seus dados com transparência',
-      description: 'Antes de começar, precisamos que você leia e concorde com nossa política de privacidade e termos de uso. Sua privacidade é nossa prioridade.',
+      description:
+          'Antes de começar, precisamos que você leia e concorde com nossa política de privacidade e termos de uso. Sua privacidade é nossa prioridade.',
       icon: Icons.rocket_launch,
       color: const Color(0xFFF59E0B), // Amber acento
     ),
   ];
-
-
-
-
 
   void _nextPage() {
     if (_currentPage < _totalPages - 1) {
@@ -102,28 +101,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               )
             else
               const SizedBox(height: 56), // Espaço equivalente ao botão
-
-                // Page content
-                Expanded(
-                  child: GestureDetector(
-                    onHorizontalDragEnd: (details) {
-                      if (details.primaryVelocity! > 0) {
-                        _previousPage();
-                      } else if (details.primaryVelocity! < 0) {
-                        _nextPage();
-                      }
-                    },
-                    child: IndexedStack(
-                      index: _currentPage,
-                      children: [
-                        _buildPageContent(0),
-                        _buildPageContent(1),
-                        _buildPageContent(2),
-                      ],
-                    ),
-                  ),
+            // Page content
+            Expanded(
+              child: GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  if (details.primaryVelocity! > 0) {
+                    _previousPage();
+                  } else if (details.primaryVelocity! < 0) {
+                    _nextPage();
+                  }
+                },
+                child: IndexedStack(
+                  index: _currentPage,
+                  children: [
+                    _buildPageContent(0),
+                    _buildPageContent(1),
+                    _buildPageContent(2),
+                  ],
                 ),
-                
+              ),
+            ),
+
             // Dots indicator (ocultos na última página conforme RF-1)
             if (_currentPage < _totalPages - 1)
               Padding(
@@ -144,7 +142,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               )
             else
               const SizedBox(height: 48), // Espaço equivalente aos dots
-
             // Navigation buttons
             Padding(
               padding: const EdgeInsets.all(24),
@@ -161,7 +158,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             child: TextButton(
                               onPressed: _previousPage,
                               style: TextButton.styleFrom(
-                                minimumSize: const Size(48, 48), // Target mínimo
+                                minimumSize: const Size(
+                                  48,
+                                  48,
+                                ), // Target mínimo
                               ),
                               child: const Text('Voltar'),
                             ),
@@ -174,13 +174,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Botão Avançar
                   Semantics(
                     button: true,
-                    hint: _currentPage == _totalPages - 1 
-                        ? 'Continuar para as políticas' 
+                    hint: _currentPage == _totalPages - 1
+                        ? 'Continuar para as políticas'
                         : 'Avançar para próxima página',
                     child: ElevatedButton(
                       onPressed: _nextPage,
                       style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(48, 48), // Target mínimo RNF A11Y
+                        minimumSize: const Size(
+                          48,
+                          48,
+                        ), // Target mínimo RNF A11Y
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 12,
@@ -190,7 +193,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentPage == _totalPages - 1 ? 'Continuar' : 'Avançar',
+                        _currentPage == _totalPages - 1
+                            ? 'Continuar'
+                            : 'Avançar',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -209,8 +214,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildPageContent(int index) {
     final page = _pages[index];
-    print('🏗️ Construindo página $index: ${page.title} - Ícone: ${page.icon} - Cor: ${page.color}');
-    
+    print(
+      '🏗️ Construindo página $index: ${page.title} - Ícone: ${page.icon} - Cor: ${page.color}',
+    );
+
     return Container(
       key: ValueKey('page_$index'),
       child: Padding(
@@ -225,11 +232,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 color: page.color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(100),
               ),
-              child: Icon(
-                page.icon,
-                size: 120,
-                color: page.color,
-              ),
+              child: Icon(page.icon, size: 120, color: page.color),
             ),
             const SizedBox(height: 40),
             Text(
@@ -262,12 +265,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
-
-
-
-
-
-
 }
 
 class OnboardingPage {

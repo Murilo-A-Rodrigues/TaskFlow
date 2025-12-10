@@ -5,10 +5,7 @@ class RemotePage<T> {
   final List<T> data;
   final PageCursor? nextCursor;
 
-  const RemotePage({
-    required this.data,
-    this.nextCursor,
-  });
+  const RemotePage({required this.data, this.nextCursor});
 }
 
 /// Cursor para controle de paginação
@@ -17,11 +14,7 @@ class PageCursor {
   final int limit;
   final dynamic value;
 
-  const PageCursor({
-    required this.offset,
-    required this.limit,
-    this.value,
-  });
+  const PageCursor({required this.offset, required this.limit, this.value});
 }
 
 /// Interface da API remota para provedores (Prompt 15)

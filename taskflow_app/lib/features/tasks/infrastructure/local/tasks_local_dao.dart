@@ -3,11 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../dtos/task_dto.dart';
 
 /// DAO Local para Tasks usando SharedPreferences
-/// 
+///
 /// Este Data Access Object (DAO) gerencia a persistência local de tarefas
 /// usando SharedPreferences. Armazena TaskDto em formato JSON para
 /// serialização eficiente.
-/// 
+///
 /// ⚠️ Dicas práticas para evitar erros comuns:
 /// - SharedPreferences é ideal para caches pequenos/médios (< 1000 registros)
 /// - Para volumes maiores, considere usar SQLite (sqflite)
@@ -17,14 +17,14 @@ import '../dtos/task_dto.dart';
 class TasksLocalDaoSharedPrefs {
   // Chave para armazenar a lista de tarefas no SharedPreferences
   static const String _cacheKey = 'taskflow_tasks_cache_v1';
-  
+
   // Chave para armazenar o timestamp da última sincronização
   static const String _lastSyncKey = 'taskflow_tasks_last_sync_v1';
 
   /// Lista todas as tarefas armazenadas no cache local
-  /// 
+  ///
   /// Retorna lista vazia se não houver cache ou em caso de erro.
-  /// 
+  ///
   /// Boas práticas:
   /// - Este método é rápido e síncrono internamente (lê de memória)
   /// - Sempre retorna uma lista (nunca null) para facilitar uso na UI
@@ -33,7 +33,7 @@ class TasksLocalDaoSharedPrefs {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = prefs.getString(_cacheKey);
-      
+
       if (jsonString == null || jsonString.isEmpty) {
         return [];
       }
@@ -42,27 +42,27 @@ class TasksLocalDaoSharedPrefs {
       final List<TaskDto> tasks = jsonList
           .map((jsonItem) => TaskDto.fromMap(jsonItem as Map<String, dynamic>))
           .toList();
-      
+
       return tasks;
     } catch (e) {
       // Log do erro para debug
       print('TasksLocalDao.listAll ERROR: $e');
-      
+
       // Em caso de cache corrompido, limpa para evitar erros futuros
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove(_cacheKey);
       } catch (_) {}
-      
+
       return [];
     }
   }
 
   /// Insere ou atualiza múltiplas tarefas no cache (upsert em lote)
-  /// 
+  ///
   /// Mescla as tarefas fornecidas com o cache existente, substituindo
   /// tarefas com mesmo ID e adicionando novas.
-  /// 
+  ///
   /// Boas práticas:
   /// - Use este método para aplicar mudanças de sincronização
   /// - Mantém tarefas locais que não estão no lote (merge inteligente)
@@ -71,22 +71,24 @@ class TasksLocalDaoSharedPrefs {
     try {
       // Carrega cache existente
       final existing = await listAll();
-      
+
       // Cria mapa para merge eficiente por ID
       final Map<String, TaskDto> taskMap = {
-        for (var task in existing) task.id: task
+        for (var task in existing) task.id: task,
       };
-      
+
       // Adiciona/atualiza tarefas do lote
       for (var task in tasks) {
         taskMap[task.id] = task;
       }
-      
+
       // Converte de volta para lista e salva
       final updatedList = taskMap.values.toList();
       await _saveAll(updatedList);
-      
-      print('TasksLocalDao.upsertAll: ${tasks.length} tasks upserted, total: ${updatedList.length}');
+
+      print(
+        'TasksLocalDao.upsertAll: ${tasks.length} tasks upserted, total: ${updatedList.length}',
+      );
     } catch (e) {
       print('TasksLocalDao.upsertAll ERROR: $e');
       rethrow;
@@ -94,16 +96,16 @@ class TasksLocalDaoSharedPrefs {
   }
 
   /// Insere ou atualiza uma única tarefa no cache
-  /// 
+  ///
   /// Conveniência para operações de create/update individuais.
   Future<void> upsert(TaskDto task) async {
     await upsertAll([task]);
   }
 
   /// Remove uma tarefa do cache por ID
-  /// 
+  ///
   /// Remove permanentemente a tarefa do cache local.
-  /// 
+  ///
   /// Boas práticas:
   /// - Considere implementar soft delete para permitir "desfazer"
   /// - Retorna silenciosamente se a tarefa não existir
@@ -112,8 +114,10 @@ class TasksLocalDaoSharedPrefs {
       final existing = await listAll();
       final updated = existing.where((task) => task.id != taskId).toList();
       await _saveAll(updated);
-      
-      print('TasksLocalDao.delete: removed task $taskId, remaining: ${updated.length}');
+
+      print(
+        'TasksLocalDao.delete: removed task $taskId, remaining: ${updated.length}',
+      );
     } catch (e) {
       print('TasksLocalDao.delete ERROR: $e');
       rethrow;
@@ -121,7 +125,7 @@ class TasksLocalDaoSharedPrefs {
   }
 
   /// Busca uma tarefa específica por ID
-  /// 
+  ///
   /// Retorna null se a tarefa não for encontrada.
   Future<TaskDto?> getById(String id) async {
     try {
@@ -137,7 +141,7 @@ class TasksLocalDaoSharedPrefs {
   }
 
   /// Limpa todo o cache de tarefas
-  /// 
+  ///
   /// ⚠️ ATENÇÃO: Esta operação é destrutiva e remove todos os dados locais.
   /// Use apenas para logout, reset ou casos específicos.
   Future<void> clear() async {
@@ -152,18 +156,18 @@ class TasksLocalDaoSharedPrefs {
   }
 
   /// Obtém o timestamp da última sincronização bem-sucedida
-  /// 
+  ///
   /// Retorna null se nunca houve sincronização.
   /// Este valor é usado para sincronização incremental.
   Future<DateTime?> getLastSync() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final syncString = prefs.getString(_lastSyncKey);
-      
+
       if (syncString == null) {
         return null;
       }
-      
+
       return DateTime.tryParse(syncString);
     } catch (e) {
       print('TasksLocalDao.getLastSync ERROR: $e');
@@ -172,7 +176,7 @@ class TasksLocalDaoSharedPrefs {
   }
 
   /// Atualiza o timestamp da última sincronização
-  /// 
+  ///
   /// Deve ser chamado após uma sincronização bem-sucedida.
   /// Use o maior updated_at dos registros sincronizados ou DateTime.now().
   Future<void> setLastSync(DateTime timestamp) async {

@@ -15,7 +15,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   TaskPriority _selectedPriority = TaskPriority.medium;
   DateTime? _selectedDueDate;
 
@@ -40,17 +40,14 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.task != null;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditing ? 'Editar Tarefa' : 'Nova Tarefa'),
         actions: [
           TextButton(
             onPressed: _saveTask,
-            child: const Text(
-              'Salvar',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Salvar', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -129,7 +126,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                         ? '${_selectedDueDate!.day}/${_selectedDueDate!.month}/${_selectedDueDate!.year}'
                         : 'Selecionar data',
                     style: TextStyle(
-                      color: _selectedDueDate != null 
+                      color: _selectedDueDate != null
                           ? Theme.of(context).textTheme.bodyLarge?.color
                           : Theme.of(context).hintColor,
                     ),
@@ -175,7 +172,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       setState(() {
         _selectedDueDate = date;
@@ -195,7 +192,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
         updatedAt: DateTime.now(),
         isCompleted: widget.task?.isCompleted ?? false,
       );
-      
+
       Navigator.of(context).pop(task);
     }
   }

@@ -10,59 +10,59 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
     _navigateToNextScreen();
   }
-  
+
   void _setupAnimations() {
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-    ));
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.5, curve: Curves.elasticOut),
-    ));
-    
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.elasticOut),
+      ),
+    );
+
     _controller.forward();
   }
-  
+
   Future<void> _navigateToNextScreen() async {
     // Aguarda pelo menos 2.5 segundos para mostrar o splash
     await Future.delayed(const Duration(milliseconds: 2500));
-    
+
     if (!mounted) return;
-    
+
     final prefsService = context.read<PreferencesService>();
-    
+
     // Debug: mostra o estado atual das preferências
     prefsService.debugPrintState();
-    
+
     // Decide a rota baseada nas flags/versão de aceite (RF-5)
     String nextRoute;
-    
-    if (!prefsService.hasValidConsent || 
-        prefsService.policiesVersionAccepted != PreferencesService.currentPolicyVersion) {
+
+    if (!prefsService.hasValidConsent ||
+        prefsService.policiesVersionAccepted !=
+            PreferencesService.currentPolicyVersion) {
       // Usuário precisa ver onboarding ou reaceitar políticas
       if (prefsService.isFirstTimeUser) {
         nextRoute = '/onboarding';
@@ -75,16 +75,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     } else {
       nextRoute = '/home';
     }
-    
+
     Navigator.of(context).pushReplacementNamed(nextRoute);
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,12 +115,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           ),
                         ],
                       ),
-                      child: const TaskFlowIcon(
-                        size: 220,
-                      ),
+                      child: const TaskFlowIcon(size: 220),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Nome do app
                     const Text(
                       'TaskFlow',
@@ -131,9 +129,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         letterSpacing: 1.2,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Slogan
                     Text(
                       'Organize sua vida com simplicidade',
@@ -143,9 +141,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         fontWeight: FontWeight.w300,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 60),
-                    
+
                     // Loading indicator
                     SizedBox(
                       width: 40,

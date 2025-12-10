@@ -4,10 +4,10 @@ import '../dtos/project_dto.dart';
 import 'project_local_dto.dart';
 
 /// Implementação de ProjectLocalDto usando SharedPreferences
-/// 
+///
 /// Persiste DTOs de projetos em formato JSON no SharedPreferences.
 /// Suporta operações de upsert, listagem, busca por id e limpeza.
-/// 
+///
 /// Tratamento de erros:
 /// - Em caso de dados corrompidos, limpa o cache e retorna valores padrão
 /// - Logs de erro são impressos para diagnóstico
@@ -16,18 +16,17 @@ class ProjectLocalDtoSharedPrefs implements ProjectLocalDto {
   static const String _cacheKey = 'projects_cache_v1';
 
   /// Getter privado para obter instância do SharedPreferences
-  Future<SharedPreferences> get _prefs async => 
-      SharedPreferences.getInstance();
+  Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
   @override
   Future<void> upsertAll(List<ProjectDto> dtos) async {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       // Map para indexar por id e facilitar upsert
       final Map<String, Map<String, dynamic>> current = {};
-      
+
       // Carrega dados existentes se houver
       if (raw != null && raw.isNotEmpty) {
         try {
@@ -50,8 +49,10 @@ class ProjectLocalDtoSharedPrefs implements ProjectLocalDto {
       // Salva lista atualizada
       final merged = current.values.toList();
       await prefs.setString(_cacheKey, jsonEncode(merged));
-      
-      print('✅ Cache de projetos atualizado: ${dtos.length} registro(s), total: ${merged.length}');
+
+      print(
+        '✅ Cache de projetos atualizado: ${dtos.length} registro(s), total: ${merged.length}',
+      );
     } catch (e) {
       print('❌ Erro ao fazer upsert de projetos: $e');
       rethrow;
@@ -63,7 +64,7 @@ class ProjectLocalDtoSharedPrefs implements ProjectLocalDto {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       // Retorna lista vazia se não houver dados
       if (raw == null || raw.isEmpty) {
         return [];
@@ -72,12 +73,14 @@ class ProjectLocalDtoSharedPrefs implements ProjectLocalDto {
       // Decodifica e converte para DTOs
       final List<dynamic> jsonList = jsonDecode(raw) as List<dynamic>;
       final projects = jsonList
-          .map((json) => ProjectDto.fromMap(Map<String, dynamic>.from(json as Map)))
+          .map(
+            (json) =>
+                ProjectDto.fromMap(Map<String, dynamic>.from(json as Map)),
+          )
           .toList();
-      
+
       print('📋 Cache de projetos carregado: ${projects.length} registro(s)');
       return projects;
-      
     } catch (e) {
       print('❌ Erro ao listar projetos do cache: $e');
       // Em caso de erro, limpa cache corrompido e retorna vazio
@@ -91,7 +94,7 @@ class ProjectLocalDtoSharedPrefs implements ProjectLocalDto {
     try {
       final prefs = await _prefs;
       final raw = prefs.getString(_cacheKey);
-      
+
       if (raw == null || raw.isEmpty) {
         return null;
       }
@@ -104,10 +107,9 @@ class ProjectLocalDtoSharedPrefs implements ProjectLocalDto {
           return ProjectDto.fromMap(m);
         }
       }
-      
+
       // Não encontrado
       return null;
-      
     } catch (e) {
       print('❌ Erro ao buscar projeto por id ($id): $e');
       return null;

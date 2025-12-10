@@ -5,11 +5,11 @@ import '../dtos/task_dto.dart';
 import 'tasks_remote_api.dart';
 
 /// Implementação Supabase do datasource remoto de Tasks
-/// 
+///
 /// Esta classe comunica com a tabela 'tasks' no Supabase para buscar
 /// e enviar tarefas. Implementa paginação, sincronização incremental
 /// e tratamento robusto de erros.
-/// 
+///
 /// ⚠️ Dicas práticas para evitar erros comuns:
 /// - Garanta que o DTO e o Mapper aceitam múltiplos formatos vindos do backend
 ///   (ex: id como int/string, datas como DateTime/String)
@@ -24,7 +24,7 @@ class SupabaseTasksRemoteDatasource implements TasksRemoteApi {
 
   /// Construtor com client opcional (fallback para SupabaseService global)
   SupabaseTasksRemoteDatasource({SupabaseClient? client})
-      : client = client ?? SupabaseService.client;
+    : client = client ?? SupabaseService.client;
 
   @override
   Future<RemotePage<TaskDto>> fetchTasks({
@@ -34,8 +34,10 @@ class SupabaseTasksRemoteDatasource implements TasksRemoteApi {
   }) async {
     try {
       if (kDebugMode) {
-        print('SupabaseTasksRemoteDatasource.fetchTasks: '
-            'since=$since, cursor=$cursor, limit=$limit');
+        print(
+          'SupabaseTasksRemoteDatasource.fetchTasks: '
+          'since=$since, cursor=$cursor, limit=$limit',
+        );
       }
 
       // Inicia query na tabela tasks
@@ -60,14 +62,18 @@ class SupabaseTasksRemoteDatasource implements TasksRemoteApi {
         }).toList();
 
         if (kDebugMode) {
-          print('SupabaseTasksRemoteDatasource.fetchTasks: '
-              'Filtrados ${filteredResponse.length} de ${response.length} items após $since');
+          print(
+            'SupabaseTasksRemoteDatasource.fetchTasks: '
+            'Filtrados ${filteredResponse.length} de ${response.length} items após $since',
+          );
         }
       }
 
       if (kDebugMode) {
-        print('SupabaseTasksRemoteDatasource.fetchTasks: '
-            'recebidos ${filteredResponse.length} registros');
+        print(
+          'SupabaseTasksRemoteDatasource.fetchTasks: '
+          'recebidos ${filteredResponse.length} registros',
+        );
       }
 
       // Converte resposta para DTOs
@@ -79,8 +85,10 @@ class SupabaseTasksRemoteDatasource implements TasksRemoteApi {
         } catch (e) {
           // Log de erro de conversão mas continua processando outros registros
           if (kDebugMode) {
-            print('SupabaseTasksRemoteDatasource.fetchTasks: '
-                'erro ao converter registro: $e\nRow: $row');
+            print(
+              'SupabaseTasksRemoteDatasource.fetchTasks: '
+              'erro ao converter registro: $e\nRow: $row',
+            );
           }
         }
       }
@@ -89,10 +97,7 @@ class SupabaseTasksRemoteDatasource implements TasksRemoteApi {
       final hasMore = response.length == limit;
       final nextCursor = hasMore ? PageCursor(offset + limit) : null;
 
-      return RemotePage<TaskDto>(
-        items: tasks,
-        next: nextCursor,
-      );
+      return RemotePage<TaskDto>(items: tasks, next: nextCursor);
     } catch (e, stackTrace) {
       // Log do erro mas retorna página vazia para não quebrar o fluxo
       if (kDebugMode) {
@@ -112,8 +117,10 @@ class SupabaseTasksRemoteDatasource implements TasksRemoteApi {
 
     try {
       if (kDebugMode) {
-        print('SupabaseTasksRemoteDatasource.upsertTasks: '
-            'sending ${tasks.length} items');
+        print(
+          'SupabaseTasksRemoteDatasource.upsertTasks: '
+          'sending ${tasks.length} items',
+        );
       }
 
       // Converte DTOs para Maps
@@ -122,14 +129,13 @@ class SupabaseTasksRemoteDatasource implements TasksRemoteApi {
           .toList();
 
       // Realiza upsert no Supabase
-      final response = await client
-          .from('tasks')
-          .upsert(maps)
-          .select();
+      final response = await client.from('tasks').upsert(maps).select();
 
       if (kDebugMode) {
-        print('SupabaseTasksRemoteDatasource.upsertTasks: '
-            'response length: ${response.length}');
+        print(
+          'SupabaseTasksRemoteDatasource.upsertTasks: '
+          'response length: ${response.length}',
+        );
       }
 
       return response.length;

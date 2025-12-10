@@ -2,17 +2,17 @@ import '../../domain/entities/reminder.dart';
 import '../dtos/reminder_dto.dart';
 
 /// ReminderMapper - Conversor centralizado entre ReminderDto e Reminder Entity
-/// 
+///
 /// Esta classe é responsável por traduzir entre o formato de transporte (DTO)
 /// e o formato interno da aplicação (Entity). Centraliza todas as regras de
 /// conversão em um único local, facilitando manutenção e testes.
 /// Segue o padrão Mapper do documento "Modelo DTO e Mapeamento".
 class ReminderMapper {
   /// Converte ReminderDto (formato de rede/banco) para Reminder Entity (formato interno)
-  /// 
+  ///
   /// Aplica conversões como:
   /// - String ISO8601 -> DateTime
-  /// - snake_case -> camelCase  
+  /// - snake_case -> camelCase
   /// - String -> ReminderType enum
   /// - Validações defensivas
   static Reminder toEntity(ReminderDto dto) {
@@ -28,7 +28,7 @@ class ReminderMapper {
   }
 
   /// Converte Reminder Entity (formato interno) para ReminderDto (formato de rede/banco)
-  /// 
+  ///
   /// Aplica conversões inversas como:
   /// - DateTime -> String ISO8601
   /// - camelCase -> snake_case
@@ -56,7 +56,7 @@ class ReminderMapper {
   }
 
   /// Converte Map (vindo diretamente do Supabase) para Reminder Entity
-  /// 
+  ///
   /// Útil para quando recebemos dados diretamente do Supabase
   /// sem passar pelo ReminderDto primeiro
   static Reminder fromMap(Map<String, dynamic> map) {
@@ -65,7 +65,7 @@ class ReminderMapper {
   }
 
   /// Converte Reminder Entity para Map (para enviar ao Supabase)
-  /// 
+  ///
   /// Útil para quando queremos enviar dados diretamente ao Supabase
   /// sem criar ReminderDto primeiro
   static Map<String, dynamic> toMap(Reminder entity) {
@@ -84,11 +84,11 @@ class ReminderMapper {
   }
 
   /// Atualiza um ReminderDto existente com dados de uma Reminder Entity
-  /// 
+  ///
   /// Útil para operações de update onde queremos manter alguns
   /// campos do DTO original e atualizar outros com dados da Entity
   static ReminderDto updateDtoFromEntity(
-    ReminderDto originalDto, 
+    ReminderDto originalDto,
     Reminder updatedEntity,
   ) {
     return ReminderDto(
@@ -103,7 +103,7 @@ class ReminderMapper {
   }
 
   /// Helper privado: converte String para ReminderType enum
-  /// 
+  ///
   /// Faz parsing defensivo do tipo de lembrete vindo do backend.
   /// Se o valor não for reconhecido, retorna ReminderType.once como padrão.
   static ReminderType _stringToReminderType(String typeString) {

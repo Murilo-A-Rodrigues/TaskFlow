@@ -4,7 +4,7 @@ import '../../../app/infrastructure/dtos/category_dto.dart';
 import 'categories_remote_api.dart';
 
 /// Implementação do datasource remoto usando Supabase
-/// 
+///
 /// Responsável por toda comunicação com o backend Supabase para operações
 /// de sincronização de categorias
 class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
@@ -16,7 +16,7 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
   SupabaseCategoriesRemoteDatasource(this._client);
 
   /// Busca categorias do Supabase com paginação e sincronização incremental
-  /// 
+  ///
   /// Suporta:
   /// - Paginação usando offset/limit
   /// - Sincronização incremental usando timestamp 'since'
@@ -29,7 +29,9 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
     try {
       if (kDebugMode) {
         print('[SupabaseCategoriesRemote] Iniciando fetch de categorias');
-        print('[SupabaseCategoriesRemote] Cursor: offset=${cursor?.offset ?? 0}, limit=${cursor?.limit ?? 100}');
+        print(
+          '[SupabaseCategoriesRemote] Cursor: offset=${cursor?.offset ?? 0}, limit=${cursor?.limit ?? 100}',
+        );
         if (since != null) {
           print('[SupabaseCategoriesRemote] Since: $since (sync incremental)');
         }
@@ -58,13 +60,19 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
         }).toList();
 
         if (kDebugMode) {
-          print('[SupabaseCategoriesRemote] Aplicando filtro: updated_at >= ${since.toIso8601String()}');
-          print('[SupabaseCategoriesRemote] Filtrados ${filteredResponse.length} de ${response.length} items');
+          print(
+            '[SupabaseCategoriesRemote] Aplicando filtro: updated_at >= ${since.toIso8601String()}',
+          );
+          print(
+            '[SupabaseCategoriesRemote] Filtrados ${filteredResponse.length} de ${response.length} items',
+          );
         }
       }
 
       if (kDebugMode) {
-        print('[SupabaseCategoriesRemote] Resposta recebida: ${filteredResponse.length} categorias');
+        print(
+          '[SupabaseCategoriesRemote] Resposta recebida: ${filteredResponse.length} categorias',
+        );
       }
 
       // Converte resposta para DTOs
@@ -80,14 +88,15 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
           : null;
 
       if (kDebugMode) {
-        print('[SupabaseCategoriesRemote] Categorias processadas: ${categories.length}');
-        print('[SupabaseCategoriesRemote] Há mais páginas? ${hasMore ? 'Sim' : 'Não'}');
+        print(
+          '[SupabaseCategoriesRemote] Categorias processadas: ${categories.length}',
+        );
+        print(
+          '[SupabaseCategoriesRemote] Há mais páginas? ${hasMore ? 'Sim' : 'Não'}',
+        );
       }
 
-      return RemotePage(
-        data: categories,
-        nextCursor: nextCursor,
-      );
+      return RemotePage(data: categories, nextCursor: nextCursor);
     } catch (e, stack) {
       if (kDebugMode) {
         print('[SupabaseCategoriesRemote] Erro ao buscar categorias: $e');
@@ -98,21 +107,27 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
   }
 
   /// Envia categorias locais para o Supabase (upsert)
-  /// 
+  ///
   /// Usa a operação upsert do Supabase que:
   /// - Cria novos registros se não existirem
   /// - Atualiza registros existentes (baseado na primary key 'id')
   /// - Retorna os registros após processamento
   @override
-  Future<List<CategoryDto>> upsertCategories(List<CategoryDto> categories) async {
+  Future<List<CategoryDto>> upsertCategories(
+    List<CategoryDto> categories,
+  ) async {
     try {
       if (kDebugMode) {
-        print('[SupabaseCategoriesRemote] Iniciando upsert de ${categories.length} categorias');
+        print(
+          '[SupabaseCategoriesRemote] Iniciando upsert de ${categories.length} categorias',
+        );
       }
 
       if (categories.isEmpty) {
         if (kDebugMode) {
-          print('[SupabaseCategoriesRemote] Lista vazia, nenhuma operação necessária');
+          print(
+            '[SupabaseCategoriesRemote] Lista vazia, nenhuma operação necessária',
+          );
         }
         return [];
       }
@@ -125,14 +140,13 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
       }
 
       // Executa upsert no Supabase
-      final response = await _client
-          .from(_tableName)
-          .upsert(jsonList)
-          .select();
+      final response = await _client.from(_tableName).upsert(jsonList).select();
 
       if (kDebugMode) {
         print('[SupabaseCategoriesRemote] Upsert concluído com sucesso');
-        print('[SupabaseCategoriesRemote] Resposta: ${response.length} categorias retornadas');
+        print(
+          '[SupabaseCategoriesRemote] Resposta: ${response.length} categorias retornadas',
+        );
       }
 
       // Converte resposta de volta para DTOs

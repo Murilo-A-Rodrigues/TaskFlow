@@ -12,20 +12,20 @@ class ProvidersLocalDao {
   Future<void> upsertAll(List<ProviderDto> dtos) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Carrega cache existente
       final existing = await listAll();
       final existingMap = {for (var dto in existing) dto.id: dto};
-      
+
       // Mescla com novos dados
       for (var dto in dtos) {
         existingMap[dto.id] = dto;
       }
-      
+
       // Salva de volta
       final jsonList = existingMap.values.map((dto) => dto.toMap()).toList();
       await prefs.setString(_cacheKey, json.encode(jsonList));
-      
+
       if (kDebugMode) {
         print('[ProvidersLocalDao] upsertAll: ${dtos.length} items salvos');
       }
@@ -43,20 +43,20 @@ class ProvidersLocalDao {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = prefs.getString(_cacheKey);
-      
+
       if (jsonString == null || jsonString.isEmpty) {
         return [];
       }
-      
+
       final List<dynamic> jsonList = json.decode(jsonString);
       final dtos = jsonList
           .map((json) => ProviderDto.fromMap(json as Map<String, dynamic>))
           .toList();
-      
+
       if (kDebugMode) {
         print('[ProvidersLocalDao] listAll: ${dtos.length} items carregados');
       }
-      
+
       return dtos;
     } catch (e, stack) {
       if (kDebugMode) {
@@ -86,7 +86,7 @@ class ProvidersLocalDao {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_cacheKey);
       await prefs.remove(_lastSyncKey);
-      
+
       if (kDebugMode) {
         print('[ProvidersLocalDao] Cache limpo');
       }
@@ -104,9 +104,9 @@ class ProvidersLocalDao {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isoString = prefs.getString(_lastSyncKey);
-      
+
       if (isoString == null) return null;
-      
+
       return DateTime.parse(isoString);
     } catch (e) {
       if (kDebugMode) {
@@ -121,7 +121,7 @@ class ProvidersLocalDao {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_lastSyncKey, timestamp.toIso8601String());
-      
+
       if (kDebugMode) {
         print('[ProvidersLocalDao] lastSync atualizado: $timestamp');
       }

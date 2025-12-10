@@ -3,7 +3,7 @@ import '../domain/entities/task.dart';
 import '../domain/entities/task_priority.dart';
 
 /// TaskFilterService - Serviço para filtrar tarefas
-/// 
+///
 /// Gerencia os filtros ativos e aplica-os à lista de tarefas.
 /// Suporta filtros por:
 /// - Categoria
@@ -21,7 +21,8 @@ class TaskFilterService extends ChangeNotifier {
 
   // Getters
   Set<String> get selectedCategoryIds => Set.unmodifiable(_selectedCategoryIds);
-  Set<TaskPriority> get selectedPriorities => Set.unmodifiable(_selectedPriorities);
+  Set<TaskPriority> get selectedPriorities =>
+      Set.unmodifiable(_selectedPriorities);
   TaskStatusFilter get statusFilter => _statusFilter;
   DateRangeFilter get dateRangeFilter => _dateRangeFilter;
   DateTime? get customStartDate => _customStartDate;
@@ -72,7 +73,11 @@ class TaskFilterService extends ChangeNotifier {
   }
 
   /// Define o filtro de intervalo de datas
-  void setDateRangeFilter(DateRangeFilter filter, {DateTime? start, DateTime? end}) {
+  void setDateRangeFilter(
+    DateRangeFilter filter, {
+    DateTime? start,
+    DateTime? end,
+  }) {
     _dateRangeFilter = filter;
     _customStartDate = start;
     _customEndDate = end;
@@ -118,8 +123,8 @@ class TaskFilterService extends ChangeNotifier {
     // Filtro por categoria
     if (_selectedCategoryIds.isNotEmpty) {
       filtered = filtered.where((task) {
-        return task.categoryId != null && 
-               _selectedCategoryIds.contains(task.categoryId);
+        return task.categoryId != null &&
+            _selectedCategoryIds.contains(task.categoryId);
       }).toList();
     }
 
@@ -151,9 +156,9 @@ class TaskFilterService extends ChangeNotifier {
       case TaskStatusFilter.overdue:
         final now = DateTime.now();
         return tasks.where((task) {
-          return !task.isCompleted && 
-                 task.dueDate != null && 
-                 task.dueDate!.isBefore(now);
+          return !task.isCompleted &&
+              task.dueDate != null &&
+              task.dueDate!.isBefore(now);
         }).toList();
     }
   }
@@ -191,36 +196,20 @@ class TaskFilterService extends ChangeNotifier {
 
     return tasks.where((task) {
       if (task.dueDate == null) return false;
-      return task.dueDate!.isAfter(startDate!) && 
-             task.dueDate!.isBefore(endDate!);
+      return task.dueDate!.isAfter(startDate!) &&
+          task.dueDate!.isBefore(endDate!);
     }).toList();
   }
 }
 
 /// Enum para tipos de filtro
-enum FilterType {
-  category,
-  priority,
-  status,
-  dateRange,
-}
+enum FilterType { category, priority, status, dateRange }
 
 /// Enum para filtros de status
-enum TaskStatusFilter {
-  all,
-  pending,
-  completed,
-  overdue,
-}
+enum TaskStatusFilter { all, pending, completed, overdue }
 
 /// Enum para filtros de intervalo de datas
-enum DateRangeFilter {
-  all,
-  today,
-  thisWeek,
-  thisMonth,
-  custom,
-}
+enum DateRangeFilter { all, today, thisWeek, thisMonth, custom }
 
 /// Extensão para obter labels dos filtros
 extension TaskStatusFilterExtension on TaskStatusFilter {

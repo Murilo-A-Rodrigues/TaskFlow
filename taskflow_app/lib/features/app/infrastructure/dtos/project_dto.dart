@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 /// ProjectDto - Data Transfer Object que espelha a tabela projects do Supabase
-/// 
+///
 /// Esta classe representa os dados como eles são transferidos de e para
 /// o Supabase/rede. Os nomes dos campos seguem snake_case (igual ao banco)
 /// e os tipos são primitivos para facilitar serialização.
@@ -10,15 +10,15 @@ class ProjectDto {
   final String id;
   final String name;
   final String? description;
-  final String owner_id;           // FK para users table
-  final String status;             // String para o banco
-  final String? start_date;        // ISO8601 String ou null
-  final String? end_date;          // ISO8601 String ou null
-  final String? deadline;          // ISO8601 String ou null
-  final String? color;             // Cor em hex
-  final bool is_archived;          // snake_case igual ao banco
-  final String created_at;         // ISO8601 String para o fio
-  final String updated_at;         // ISO8601 String para sincronização
+  final String owner_id; // FK para users table
+  final String status; // String para o banco
+  final String? start_date; // ISO8601 String ou null
+  final String? end_date; // ISO8601 String ou null
+  final String? deadline; // ISO8601 String ou null
+  final String? color; // Cor em hex
+  final bool is_archived; // snake_case igual ao banco
+  final String created_at; // ISO8601 String para o fio
+  final String updated_at; // ISO8601 String para sincronização
 
   ProjectDto({
     required this.id,

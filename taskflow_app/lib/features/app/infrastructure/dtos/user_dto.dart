@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 /// UserDto - Data Transfer Object que espelha a tabela users do Supabase
-/// 
+///
 /// Esta classe representa os dados como eles são transferidos de e para
 /// o Supabase/rede. Os nomes dos campos seguem snake_case (igual ao banco)
 /// e os tipos são primitivos para facilitar serialização.
@@ -11,11 +11,11 @@ class UserDto {
   final String name;
   final String email;
   final String? phone;
-  final String? avatar_url;        // snake_case igual ao banco
-  final bool is_active;           // snake_case igual ao banco
-  final String created_at;        // ISO8601 String para o fio
-  final String updated_at;        // ISO8601 String para sincronização
-  final String? last_login_at;    // ISO8601 String ou null
+  final String? avatar_url; // snake_case igual ao banco
+  final bool is_active; // snake_case igual ao banco
+  final String created_at; // ISO8601 String para o fio
+  final String updated_at; // ISO8601 String para sincronização
+  final String? last_login_at; // ISO8601 String ou null
 
   UserDto({
     required this.id,

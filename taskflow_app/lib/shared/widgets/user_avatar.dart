@@ -23,11 +23,11 @@ class UserAvatar extends StatelessWidget {
   String _getInitials() {
     final parts = userName.trim().split(' ');
     if (parts.isEmpty) return '?';
-    
+
     if (parts.length == 1) {
       return parts[0].isNotEmpty ? parts[0][0].toUpperCase() : '?';
     }
-    
+
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
@@ -36,7 +36,7 @@ class UserAvatar extends StatelessWidget {
     // Verifica se há foto válida
     bool hasPhoto = false;
     FileImage? photoImage;
-    
+
     if (photoPath != null && photoPath!.isNotEmpty) {
       final file = File(photoPath!);
       if (file.existsSync()) {
@@ -49,18 +49,20 @@ class UserAvatar extends StatelessWidget {
     } else {
       print('⚠️ UserAvatar - Caminho de foto é null ou vazio: $photoPath');
     }
-    
+
     // Widget do avatar
     Widget avatarWidget = CircleAvatar(
       radius: radius,
-      backgroundColor: hasPhoto 
-          ? Colors.grey.shade200 
+      backgroundColor: hasPhoto
+          ? Colors.grey.shade200
           : Theme.of(context).colorScheme.primary,
       backgroundImage: photoImage,
-      onBackgroundImageError: hasPhoto ? (exception, stackTrace) {
-        // Se houver erro ao carregar a imagem, mostra as iniciais
-        // Debug: print('Erro ao carregar imagem: $exception');
-      } : null,
+      onBackgroundImageError: hasPhoto
+          ? (exception, stackTrace) {
+              // Se houver erro ao carregar a imagem, mostra as iniciais
+              // Debug: print('Erro ao carregar imagem: $exception');
+            }
+          : null,
       child: hasPhoto
           ? null
           : Text(
@@ -97,7 +99,7 @@ class UserAvatar extends StatelessWidget {
     // Se não há callback de tap, retorna apenas o avatar com semântica
     if (onTap == null) {
       return Semantics(
-        label: hasPhoto 
+        label: hasPhoto
             ? 'Foto de perfil de $userName'
             : 'Avatar com iniciais de $userName',
         child: avatarWidget,
@@ -106,9 +108,9 @@ class UserAvatar extends StatelessWidget {
 
     // Área clicável >= 48dp para acessibilidade
     final tapAreaSize = (radius * 2).clamp(48.0, double.infinity);
-    
+
     return Semantics(
-      label: hasPhoto 
+      label: hasPhoto
           ? 'Foto de perfil de $userName. Toque duplo para editar'
           : 'Avatar com iniciais de $userName. Toque duplo para adicionar foto',
       button: true,
@@ -131,11 +133,7 @@ class PhotoPreview extends StatelessWidget {
   final String imagePath;
   final double size;
 
-  const PhotoPreview({
-    super.key,
-    required this.imagePath,
-    this.size = 200,
-  });
+  const PhotoPreview({super.key, required this.imagePath, this.size = 200});
 
   @override
   Widget build(BuildContext context) {

@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS public.categories (
   icon TEXT NULL,
   sort_order INTEGER NOT NULL DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT true,
+  is_deleted BOOLEAN NOT NULL DEFAULT false,
+  deleted_at TIMESTAMPTZ NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   
@@ -74,6 +76,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
 CREATE INDEX IF NOT EXISTS idx_categories_user_id ON public.categories(user_id);
 CREATE INDEX IF NOT EXISTS idx_categories_parent_id ON public.categories(parent_id);
 CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON public.categories(sort_order);
+CREATE INDEX IF NOT EXISTS idx_categories_is_deleted ON public.categories(is_deleted);
 CREATE INDEX IF NOT EXISTS idx_categories_updated_at ON public.categories(updated_at DESC);
 
 -- ========================================
@@ -87,6 +90,8 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   due_date TIMESTAMPTZ NULL,
   priority INTEGER NOT NULL DEFAULT 2 CHECK (priority IN (1, 2, 3)), -- 1=baixa, 2=média, 3=alta
+  is_deleted BOOLEAN NOT NULL DEFAULT false,
+  deleted_at TIMESTAMPTZ NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   
   -- Relacionamentos opcionais
@@ -100,6 +105,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON public.tasks(project_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_category_id ON public.tasks(category_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON public.tasks(assigned_to);
 CREATE INDEX IF NOT EXISTS idx_tasks_priority ON public.tasks(priority);
+CREATE INDEX IF NOT EXISTS idx_tasks_is_deleted ON public.tasks(is_deleted);
 CREATE INDEX IF NOT EXISTS idx_tasks_updated_at ON public.tasks(updated_at DESC);
 
 -- ========================================

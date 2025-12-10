@@ -7,12 +7,12 @@ import '../local/categories_local_dao.dart';
 import '../remote/categories_remote_api.dart';
 
 /// Implementação concreta do repositório de categorias
-/// 
+///
 /// Esta classe coordena operações entre:
 /// - Cache local (CategoriesLocalDao)
 /// - API remota (CategoriesRemoteApi)
 /// - Conversão entre DTOs e Entities (CategoryMapper)
-/// 
+///
 /// Responsabilidades:
 /// - Gerenciar estratégia de cache (cache-first)
 /// - Sincronizar dados locais com servidor
@@ -25,8 +25,8 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
   CategoriesRepositoryImpl({
     required CategoriesLocalDao localDao,
     required CategoriesRemoteApi remoteApi,
-  })  : _localDao = localDao,
-        _remoteApi = remoteApi;
+  }) : _localDao = localDao,
+       _remoteApi = remoteApi;
 
   /// Carrega categorias do cache local (para render rápido inicial)
   @override
@@ -37,10 +37,15 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
       }
 
       final dtos = await _localDao.listAll();
-      final entities = dtos.map(CategoryMapper.toEntity).toList();
+      final entities = dtos
+          .where((dto) => !dto.is_deleted) // Filtra categorias deletadas
+          .map(CategoryMapper.toEntity)
+          .toList();
 
       if (kDebugMode) {
-        print('[CategoriesRepository] ${entities.length} categorias carregadas do cache');
+        print(
+          '[CategoriesRepository] ${entities.length} categorias carregadas do cache',
+        );
       }
 
       return entities;
@@ -62,10 +67,15 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
       }
 
       final dtos = await _localDao.listAll();
-      final entities = dtos.map(CategoryMapper.toEntity).toList();
+      final entities = dtos
+          .where((dto) => !dto.is_deleted) // Filtra categorias deletadas
+          .map(CategoryMapper.toEntity)
+          .toList();
 
       if (kDebugMode) {
-        print('[CategoriesRepository] ${entities.length} categorias retornadas');
+        print(
+          '[CategoriesRepository] ${entities.length} categorias retornadas',
+        );
       }
 
       return entities;
@@ -79,11 +89,11 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
   }
 
   /// Cria uma nova categoria
-  /// 
+  ///
   /// Fluxo:
   /// 1. Salva no cache local
   /// 2. Retorna entity criada
-  /// 
+  ///
   /// Nota: Sincronização com servidor ocorre via syncFromServer()
   @override
   Future<Category> createCategory(Category category) async {
@@ -97,7 +107,9 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
       await _localDao.upsert(dto);
 
       if (kDebugMode) {
-        print('[CategoriesRepository] Categoria ${category.id} criada com sucesso');
+        print(
+          '[CategoriesRepository] Categoria ${category.id} criada com sucesso',
+        );
       }
 
       return category;
@@ -111,11 +123,11 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
   }
 
   /// Atualiza uma categoria existente
-  /// 
+  ///
   /// Fluxo:
   /// 1. Atualiza no cache local
   /// 2. Retorna entity atualizada
-  /// 
+  ///
   /// Nota: Sincronização com servidor ocorre via syncFromServer()
   @override
   Future<Category> updateCategory(Category category) async {
@@ -129,7 +141,9 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
       await _localDao.upsert(dto);
 
       if (kDebugMode) {
-        print('[CategoriesRepository] Categoria ${category.id} atualizada com sucesso');
+        print(
+          '[CategoriesRepository] Categoria ${category.id} atualizada com sucesso',
+        );
       }
 
       return category;
@@ -142,23 +156,41 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
     }
   }
 
-  /// Remove uma categoria por ID
-  /// 
+  /// Remove uma categoria por ID (soft delete)
+  ///
   /// Fluxo:
-  /// 1. Remove do cache local
-  /// 
-  /// Nota: Sincronização da deleção ocorre via syncFromServer()
+  /// 1. Marca categoria como deletada (is_deleted = true)
+  /// 2. Define timestamp de deleção (deleted_at)
+  /// 3. Atualiza no cache local
+  /// 4. Sincroniza com servidor
+  ///
+  /// Nota: Não remove fisicamente, apenas marca como deletada
   @override
   Future<void> deleteCategory(String id) async {
     try {
       if (kDebugMode) {
-        print('[CategoriesRepository] Deletando categoria: $id');
+        print('[CategoriesRepository] Deletando categoria (soft delete): $id');
       }
 
-      await _localDao.delete(id);
+      // Busca a categoria atual
+      final categories = await _localDao.listAll();
+      final categoryDto = categories.firstWhere((c) => c.id == id);
+
+      // Marca como deletada com timestamp
+      final deletedCategory = categoryDto.copyWith(
+        is_deleted: true,
+        deleted_at: DateTime.now().toIso8601String(),
+        updated_at: DateTime.now().toIso8601String(),
+      );
+
+      // Atualiza no cache local
+      await _localDao.upsert(deletedCategory);
+
+      // Sincroniza com servidor
+      await _remoteApi.upsertCategories([deletedCategory]);
 
       if (kDebugMode) {
-        print('[CategoriesRepository] Categoria $id deletada com sucesso');
+        print('[CategoriesRepository] Categoria $id marcada como deletada');
       }
     } catch (e, stack) {
       if (kDebugMode) {
@@ -175,11 +207,13 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
     try {
       final all = await listAll();
       final active = all.where((c) => c.isActive).toList();
-      
+
       if (kDebugMode) {
-        print('[CategoriesRepository] ${active.length} categorias ativas de ${all.length}');
+        print(
+          '[CategoriesRepository] ${active.length} categorias ativas de ${all.length}',
+        );
       }
-      
+
       return active;
     } catch (e) {
       if (kDebugMode) {
@@ -195,11 +229,11 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
     try {
       final all = await listAll();
       final roots = all.where((c) => c.parentId == null).toList();
-      
+
       if (kDebugMode) {
         print('[CategoriesRepository] ${roots.length} categorias raiz');
       }
-      
+
       return roots;
     } catch (e) {
       if (kDebugMode) {
@@ -215,11 +249,13 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
     try {
       final all = await listAll();
       final subs = all.where((c) => c.parentId == parentId).toList();
-      
+
       if (kDebugMode) {
-        print('[CategoriesRepository] ${subs.length} subcategorias de $parentId');
+        print(
+          '[CategoriesRepository] ${subs.length} subcategorias de $parentId',
+        );
       }
-      
+
       return subs;
     } catch (e) {
       if (kDebugMode) {
@@ -248,7 +284,9 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
       final entity = CategoryMapper.toEntity(dto);
 
       if (kDebugMode) {
-        print('[CategoriesRepository] Categoria $id encontrada: ${entity.name}');
+        print(
+          '[CategoriesRepository] Categoria $id encontrada: ${entity.name}',
+        );
       }
 
       return entity;
@@ -262,22 +300,22 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
   }
 
   /// Sincroniza dados locais com o servidor remoto
-  /// 
+  ///
   /// Estratégia: Push-then-Pull
-  /// 
+  ///
   /// 1. PUSH: Envia mudanças locais para o servidor
   ///    - Busca todas as categorias locais
   ///    - Envia para o servidor (upsert)
-  /// 
+  ///
   /// 2. PULL: Busca atualizações do servidor
   ///    - Usa timestamp da última sync para busca incremental
   ///    - Busca todas as páginas disponíveis
   ///    - Atualiza cache local com dados do servidor
-  /// 
+  ///
   /// Sincroniza dados locais com o servidor remoto
-  /// 
+  ///
   /// Estratégia: Push-then-Pull
-  /// 
+  ///
   /// 1. PUSH: Envia mudanças locais para o servidor
   /// 2. PULL: Busca atualizações do servidor
   /// 3. Atualiza timestamp de última sincronização
@@ -285,18 +323,24 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
   Future<int> syncFromServer() async {
     try {
       if (kDebugMode) {
-        print('[CategoriesRepository] ========== INICIANDO SINCRONIZAÇÃO ==========');
+        print(
+          '[CategoriesRepository] ========== INICIANDO SINCRONIZAÇÃO ==========',
+        );
       }
 
       // ===== FASE 1: PUSH (Enviar mudanças locais) =====
       if (kDebugMode) {
-        print('[CategoriesRepository] FASE 1: Enviando mudanças locais para servidor');
+        print(
+          '[CategoriesRepository] FASE 1: Enviando mudanças locais para servidor',
+        );
       }
 
       final localCategories = await _localDao.listAll();
       if (localCategories.isNotEmpty) {
         if (kDebugMode) {
-          print('[CategoriesRepository] Enviando ${localCategories.length} categorias locais');
+          print(
+            '[CategoriesRepository] Enviando ${localCategories.length} categorias locais',
+          );
         }
 
         await _remoteApi.upsertCategories(localCategories);
@@ -312,7 +356,9 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
 
       // ===== FASE 2: PULL (Buscar atualizações do servidor) =====
       if (kDebugMode) {
-        print('[CategoriesRepository] FASE 2: Buscando atualizações do servidor');
+        print(
+          '[CategoriesRepository] FASE 2: Buscando atualizações do servidor',
+        );
       }
 
       // Busca timestamp da última sincronização para sync incremental
@@ -346,12 +392,16 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
         cursor = page.nextCursor;
 
         if (kDebugMode) {
-          print('[CategoriesRepository] Página $pageCount: ${page.data.length} categorias');
+          print(
+            '[CategoriesRepository] Página $pageCount: ${page.data.length} categorias',
+          );
         }
       } while (cursor != null);
 
       if (kDebugMode) {
-        print('[CategoriesRepository] Total de categorias remotas: ${allRemoteCategories.length}');
+        print(
+          '[CategoriesRepository] Total de categorias remotas: ${allRemoteCategories.length}',
+        );
       }
 
       // Atualiza cache local com dados do servidor
@@ -359,7 +409,9 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
         // Em sync incremental, precisamos mesclar com dados locais
         if (lastSync != null) {
           if (kDebugMode) {
-            print('[CategoriesRepository] Mesclando dados remotos com cache local');
+            print(
+              '[CategoriesRepository] Mesclando dados remotos com cache local',
+            );
           }
 
           final localDtos = await _localDao.listAll();
@@ -374,7 +426,9 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
         } else {
           // Full sync: substitui todo o cache
           if (kDebugMode) {
-            print('[CategoriesRepository] Substituindo cache local completamente');
+            print(
+              '[CategoriesRepository] Substituindo cache local completamente',
+            );
           }
           await _localDao.upsertAll(allRemoteCategories);
         }
@@ -385,8 +439,12 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
       await _localDao.setLastSync(now);
 
       if (kDebugMode) {
-        print('[CategoriesRepository] Timestamp de sincronização atualizado: $now');
-        print('[CategoriesRepository] ========== SINCRONIZAÇÃO CONCLUÍDA ==========');
+        print(
+          '[CategoriesRepository] Timestamp de sincronização atualizado: $now',
+        );
+        print(
+          '[CategoriesRepository] ========== SINCRONIZAÇÃO CONCLUÍDA ==========',
+        );
       }
 
       return allRemoteCategories.length;
@@ -420,6 +478,7 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
       rethrow;
     }
   }
+
   @override
   Future<void> forceSyncAll() async {
     try {

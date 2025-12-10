@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../app/infrastructure/dtos/category_dto.dart';
 
 /// DAO para gerenciar cache local de categorias usando SharedPreferences
-/// 
+///
 /// Responsabilidades:
 /// - Persistir lista de categorias em cache local
 /// - Gerenciar timestamp de última sincronização
@@ -23,10 +23,10 @@ abstract class CategoriesLocalDao {
 /// Implementação do DAO usando SharedPreferences
 class CategoriesLocalDaoSharedPrefs implements CategoriesLocalDao {
   final SharedPreferences _prefs;
-  
+
   // Chave para armazenar a lista de categorias em cache
   static const String _cacheKey = 'taskflow_categories_cache_v1';
-  
+
   // Chave para armazenar o timestamp da última sincronização
   static const String _lastSyncKey = 'taskflow_categories_last_sync_v1';
 
@@ -50,7 +50,9 @@ class CategoriesLocalDaoSharedPrefs implements CategoriesLocalDao {
           .toList();
 
       if (kDebugMode) {
-        print('[CategoriesLocalDao] ${categories.length} categorias carregadas do cache');
+        print(
+          '[CategoriesLocalDao] ${categories.length} categorias carregadas do cache',
+        );
       }
 
       return categories;
@@ -66,7 +68,7 @@ class CategoriesLocalDaoSharedPrefs implements CategoriesLocalDao {
   }
 
   /// Substitui todo o cache com uma nova lista de categorias
-  /// 
+  ///
   /// Este método é tipicamente usado após uma sincronização com o servidor
   @override
   Future<void> upsertAll(List<CategoryDto> categories) async {
@@ -76,7 +78,9 @@ class CategoriesLocalDaoSharedPrefs implements CategoriesLocalDao {
       await _prefs.setString(_cacheKey, jsonString);
 
       if (kDebugMode) {
-        print('[CategoriesLocalDao] ${categories.length} categorias salvas no cache');
+        print(
+          '[CategoriesLocalDao] ${categories.length} categorias salvas no cache',
+        );
       }
     } catch (e, stack) {
       if (kDebugMode) {
@@ -88,7 +92,7 @@ class CategoriesLocalDaoSharedPrefs implements CategoriesLocalDao {
   }
 
   /// Insere ou atualiza uma categoria específica no cache
-  /// 
+  ///
   /// Busca a categoria existente por ID e substitui, ou adiciona se não existir
   @override
   Future<void> upsert(CategoryDto category) async {
@@ -99,12 +103,16 @@ class CategoriesLocalDaoSharedPrefs implements CategoriesLocalDao {
       if (index != -1) {
         categories[index] = category;
         if (kDebugMode) {
-          print('[CategoriesLocalDao] Categoria ${category.id} atualizada no cache');
+          print(
+            '[CategoriesLocalDao] Categoria ${category.id} atualizada no cache',
+          );
         }
       } else {
         categories.add(category);
         if (kDebugMode) {
-          print('[CategoriesLocalDao] Categoria ${category.id} adicionada ao cache');
+          print(
+            '[CategoriesLocalDao] Categoria ${category.id} adicionada ao cache',
+          );
         }
       }
 
@@ -193,7 +201,9 @@ class CategoriesLocalDaoSharedPrefs implements CategoriesLocalDao {
       final timestamp = _prefs.getInt(_lastSyncKey);
       if (timestamp == null) {
         if (kDebugMode) {
-          print('[CategoriesLocalDao] Nenhuma sincronização anterior registrada');
+          print(
+            '[CategoriesLocalDao] Nenhuma sincronização anterior registrada',
+          );
         }
         return null;
       }
@@ -219,11 +229,15 @@ class CategoriesLocalDaoSharedPrefs implements CategoriesLocalDao {
     try {
       await _prefs.setInt(_lastSyncKey, timestamp.millisecondsSinceEpoch);
       if (kDebugMode) {
-        print('[CategoriesLocalDao] Timestamp de sincronização atualizado: $timestamp');
+        print(
+          '[CategoriesLocalDao] Timestamp de sincronização atualizado: $timestamp',
+        );
       }
     } catch (e, stack) {
       if (kDebugMode) {
-        print('[CategoriesLocalDao] Erro ao salvar timestamp de sincronização: $e');
+        print(
+          '[CategoriesLocalDao] Erro ao salvar timestamp de sincronização: $e',
+        );
         print(stack);
       }
       rethrow;

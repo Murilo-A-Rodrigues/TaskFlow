@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 /// CategoryDto - Data Transfer Object que espelha a tabela categories do Supabase
-/// 
+///
 /// Esta classe representa os dados como eles são transferidos de e para
 /// o Supabase/rede. Os nomes dos campos seguem snake_case (igual ao banco)
 /// e os tipos são primitivos para facilitar serialização.
@@ -10,14 +10,16 @@ class CategoryDto {
   final String id;
   final String name;
   final String? description;
-  final String user_id;            // FK para users table
-  final String? parent_id;         // FK para categories table (self-reference)
-  final String color;              // Cor em hex
-  final String? icon;              // Nome do ícone
-  final int sort_order;            // Ordem de exibição
-  final bool is_active;            // snake_case igual ao banco
-  final String created_at;         // ISO8601 String para o fio
-  final String updated_at;         // ISO8601 String para sincronização
+  final String user_id; // FK para users table
+  final String? parent_id; // FK para categories table (self-reference)
+  final String color; // Cor em hex
+  final String? icon; // Nome do ícone
+  final int sort_order; // Ordem de exibição
+  final bool is_active; // snake_case igual ao banco
+  final String created_at; // ISO8601 String para o fio
+  final String updated_at; // ISO8601 String para sincronização
+  final bool is_deleted; // Soft delete flag
+  final String? deleted_at; // ISO8601 String ou null
 
   CategoryDto({
     required this.id,
@@ -31,6 +33,8 @@ class CategoryDto {
     required this.is_active,
     required this.created_at,
     required this.updated_at,
+    this.is_deleted = false,
+    this.deleted_at,
   });
 
   /// Factory constructor para criar CategoryDto a partir de Map (response do Supabase)
@@ -47,6 +51,8 @@ class CategoryDto {
       is_active: map['is_active'] as bool,
       created_at: map['created_at'] as String,
       updated_at: map['updated_at'] as String,
+      is_deleted: (map['is_deleted'] as bool?) ?? false,
+      deleted_at: map['deleted_at'] as String?,
     );
   }
 
@@ -64,6 +70,8 @@ class CategoryDto {
       'is_active': is_active,
       'created_at': created_at,
       'updated_at': updated_at,
+      'is_deleted': is_deleted,
+      'deleted_at': deleted_at,
     };
   }
 
@@ -89,6 +97,8 @@ class CategoryDto {
     int? sort_order,
     bool? is_active,
     String? updated_at,
+    bool? is_deleted,
+    String? deleted_at,
   }) {
     return CategoryDto(
       id: id,
@@ -102,6 +112,8 @@ class CategoryDto {
       is_active: is_active ?? this.is_active,
       created_at: created_at,
       updated_at: updated_at ?? this.updated_at,
+      is_deleted: is_deleted ?? this.is_deleted,
+      deleted_at: deleted_at ?? this.deleted_at,
     );
   }
 

@@ -21,7 +21,7 @@ class FirstStepsCard extends StatelessWidget {
     }
 
     final tasksRemaining = 3 - taskService.totalTasks;
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
@@ -51,7 +51,9 @@ class FirstStepsCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -71,37 +73,43 @@ class FirstStepsCard extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               Text(
                 'Crie suas primeiras $tasksRemaining tarefas do dia para começar a organizar sua produtividade!',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.8),
                   height: 1.4,
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               LinearProgressIndicator(
                 value: taskService.totalTasks / 3,
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   Theme.of(context).primaryColor,
                 ),
                 minHeight: 6,
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               Text(
                 '${taskService.totalTasks}/3 tarefas criadas',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],

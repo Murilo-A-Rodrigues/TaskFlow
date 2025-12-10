@@ -4,7 +4,7 @@ import '../../categories/application/category_service.dart';
 import '../../../features/app/domain/entities/category.dart';
 
 /// CategoryPickerWidget - Widget para selecionar categoria
-/// 
+///
 /// Usado no formulário de tarefas para associar uma categoria.
 /// Exibe lista de categorias em um bottom sheet.
 class CategoryPickerWidget extends StatelessWidget {
@@ -31,9 +31,7 @@ class CategoryPickerWidget extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -50,19 +48,24 @@ class CategoryPickerWidget extends StatelessWidget {
                       Text(
                         'Categoria',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       selectedCategory != null
                           ? Row(
                               children: [
                                 Container(
-                                  width: 16,
-                                  height: 16,
+                                  width: 24,
+                                  height: 24,
                                   decoration: BoxDecoration(
+                                    color: _parseColor(selectedCategory.color).withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    _parseIcon(selectedCategory.icon),
                                     color: _parseColor(selectedCategory.color),
-                                    shape: BoxShape.circle,
+                                    size: 16,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -120,6 +123,45 @@ class CategoryPickerWidget extends StatelessWidget {
       return Colors.blue;
     }
   }
+
+  /// Parse do nome do ícone para IconData
+  IconData _parseIcon(String? iconName) {
+    if (iconName == null || iconName.isEmpty) {
+      return Icons.category;
+    }
+
+    switch (iconName.toLowerCase()) {
+      case 'work':
+        return Icons.work;
+      case 'person':
+      case 'personal':
+        return Icons.person;
+      case 'school':
+      case 'study':
+        return Icons.school;
+      case 'favorite':
+      case 'health':
+        return Icons.favorite;
+      case 'home':
+        return Icons.home;
+      case 'shopping':
+      case 'shopping_cart':
+        return Icons.shopping_cart;
+      case 'sports':
+      case 'sports_soccer':
+        return Icons.sports_soccer;
+      case 'restaurant':
+      case 'food':
+        return Icons.restaurant;
+      case 'local_activity':
+      case 'entertainment':
+        return Icons.local_activity;
+      case 'category':
+        return Icons.category;
+      default:
+        return Icons.category;
+    }
+  }
 }
 
 /// Bottom sheet para seleção de categoria
@@ -137,9 +179,7 @@ class _CategoryPickerSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -162,9 +202,9 @@ class _CategoryPickerSheet extends StatelessWidget {
               children: [
                 Text(
                   'Selecionar Categoria',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 if (selectedCategoryId != null)
@@ -255,12 +295,11 @@ class _CategoryOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categoryColor = _parseColor(category.color);
+    final iconData = _parseIcon(category.icon);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: isSelected
-          ? categoryColor.withOpacity(0.1)
-          : null,
+      color: isSelected ? categoryColor.withOpacity(0.1) : null,
       child: ListTile(
         onTap: onTap,
         leading: Container(
@@ -271,9 +310,9 @@ class _CategoryOption extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
-            _parseIcon(category.icon),
+            iconData,
             color: categoryColor,
-            size: 20,
+            size: 24,
           ),
         ),
         title: Text(
@@ -290,10 +329,7 @@ class _CategoryOption extends StatelessWidget {
               )
             : null,
         trailing: isSelected
-            ? Icon(
-                Icons.check_circle,
-                color: categoryColor,
-              )
+            ? Icon(Icons.check_circle, color: categoryColor)
             : null,
       ),
     );
@@ -334,8 +370,10 @@ class _CategoryOption extends StatelessWidget {
       case 'home':
         return Icons.home;
       case 'shopping':
+      case 'shopping_cart':
         return Icons.shopping_cart;
       case 'sports':
+      case 'sports_soccer':
         return Icons.sports_soccer;
       case 'restaurant':
       case 'food':
@@ -343,6 +381,8 @@ class _CategoryOption extends StatelessWidget {
       case 'local_activity':
       case 'entertainment':
         return Icons.local_activity;
+      case 'category':
+        return Icons.category;
       default:
         return Icons.category;
     }

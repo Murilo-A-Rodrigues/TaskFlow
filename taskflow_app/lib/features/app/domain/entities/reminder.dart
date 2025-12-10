@@ -1,5 +1,5 @@
 /// Reminder Entity - Modelo de lembrete de tarefa
-/// 
+///
 /// Representa um lembrete agendado para uma tarefa específica
 class Reminder {
   final String id;
@@ -79,10 +79,10 @@ class Reminder {
 
 /// Tipos de lembrete
 enum ReminderType {
-  once,         // Uma única vez
-  daily,        // Diariamente
-  weekly,       // Semanalmente
-  monthly,      // Mensalmente
+  once, // Uma única vez
+  daily, // Diariamente
+  weekly, // Semanalmente
+  monthly, // Mensalmente
 }
 
 extension ReminderTypeExtension on ReminderType {

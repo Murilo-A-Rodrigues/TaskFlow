@@ -1,20 +1,20 @@
 import '../entities/provider.dart';
 
 /// Interface do repositório de Providers (Prompt 14)
-/// 
+///
 /// Define o contrato para gerenciamento de provedores seguindo
 /// o padrão offline-first com sincronização bidirecional.
-/// 
+///
 /// Utilizar interfaces facilita a troca de implementações (ex.: local, remota)
 /// e permite criar mocks para testes unitários.
-/// 
+///
 /// ⚠️ Boas práticas ao implementar:
-/// - Certifique-se de que a entidade Provider possui métodos de conversão robustos 
+/// - Certifique-se de que a entidade Provider possui métodos de conversão robustos
 ///   entre Entity e DTO (Map<String, dynamic>).
-/// - Ao implementar esta interface, adicione prints/logs (usando kDebugMode) 
-///   nos métodos principais para facilitar o diagnóstico de problemas de cache, 
+/// - Ao implementar esta interface, adicione prints/logs (usando kDebugMode)
+///   nos métodos principais para facilitar o diagnóstico de problemas de cache,
 ///   conversão e sync.
-/// - Em métodos assíncronos usados na UI, sempre verifique se o widget está 
+/// - Em métodos assíncronos usados na UI, sempre verifique se o widget está
 ///   "mounted" antes de chamar setState, evitando exceções de widget desmontado.
 abstract class ProvidersRepository {
   /// Carrega provedores do cache local.

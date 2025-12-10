@@ -2,14 +2,14 @@ import '../../domain/entities/comment.dart';
 import '../dtos/comment_dto.dart';
 
 /// CommentMapper - Conversor centralizado entre CommentDto e Comment Entity
-/// 
+///
 /// Esta classe é responsável por traduzir entre o formato de transporte (DTO)
 /// e o formato interno da aplicação (Entity). Centraliza todas as regras de
 /// conversão em um único local, facilitando manutenção e testes.
 /// Segue o padrão Mapper do documento "Modelo DTO e Mapeamento".
 class CommentMapper {
   /// Converte CommentDto (formato de rede/banco) para Comment Entity (formato interno)
-  /// 
+  ///
   /// Aplica conversões como:
   /// - String ISO8601 -> DateTime
   /// - snake_case -> camelCase
@@ -22,8 +22,8 @@ class CommentMapper {
       authorId: dto.author_id,
       parentId: dto.parent_id,
       isEdited: dto.is_edited,
-      editedAt: dto.edited_at != null 
-          ? DateTime.tryParse(dto.edited_at!) 
+      editedAt: dto.edited_at != null
+          ? DateTime.tryParse(dto.edited_at!)
           : null,
       isDeleted: dto.is_deleted,
       createdAt: DateTime.parse(dto.created_at),
@@ -32,7 +32,7 @@ class CommentMapper {
   }
 
   /// Converte Comment Entity (formato interno) para CommentDto (formato de rede/banco)
-  /// 
+  ///
   /// Aplica conversões inversas como:
   /// - DateTime -> String ISO8601
   /// - camelCase -> snake_case
@@ -62,7 +62,7 @@ class CommentMapper {
   }
 
   /// Converte Map (vindo diretamente do Supabase) para Comment Entity
-  /// 
+  ///
   /// Útil para quando recebemos dados diretamente do Supabase
   /// sem passar pelo CommentDto primeiro
   static Comment fromMap(Map<String, dynamic> map) {
@@ -71,7 +71,7 @@ class CommentMapper {
   }
 
   /// Converte Comment Entity para Map (para enviar ao Supabase)
-  /// 
+  ///
   /// Útil para quando queremos enviar dados diretamente ao Supabase
   /// sem criar CommentDto primeiro
   static Map<String, dynamic> toMap(Comment entity) {
@@ -90,12 +90,15 @@ class CommentMapper {
   }
 
   /// Atualiza um CommentDto existente com dados de uma Comment Entity
-  /// 
+  ///
   /// Útil para operações de update onde queremos manter alguns
   /// campos do DTO original e atualizar outros com dados da Entity
-  static CommentDto updateDtoFromEntity(CommentDto originalDto, Comment updatedEntity) {
+  static CommentDto updateDtoFromEntity(
+    CommentDto originalDto,
+    Comment updatedEntity,
+  ) {
     return CommentDto(
-      id: originalDto.id,  // Mantém ID original
+      id: originalDto.id, // Mantém ID original
       content: updatedEntity.content,
       task_id: updatedEntity.taskId,
       author_id: updatedEntity.authorId,
@@ -103,13 +106,13 @@ class CommentMapper {
       is_edited: updatedEntity.isEdited,
       edited_at: updatedEntity.editedAt?.toIso8601String(),
       is_deleted: updatedEntity.isDeleted,
-      created_at: originalDto.created_at,  // Mantém data criação original
+      created_at: originalDto.created_at, // Mantém data criação original
       updated_at: updatedEntity.updatedAt.toIso8601String(),
     );
   }
 
   /// Helpers para threading - constrói árvore de comentários com replies
-  /// 
+  ///
   /// Útil para transformar lista flat em estrutura hierárquica
   static List<CommentWithReplies> buildThreads(List<Comment> comments) {
     final List<CommentWithReplies> topLevel = [];
@@ -129,9 +132,12 @@ class CommentMapper {
     void buildReplies(CommentWithReplies parent) {
       final replies = repliesMap[parent.comment.id] ?? [];
       replies.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      
+
       for (final reply in replies) {
-        final replyWithReplies = CommentWithReplies(comment: reply, replies: []);
+        final replyWithReplies = CommentWithReplies(
+          comment: reply,
+          replies: [],
+        );
         parent.replies.add(replyWithReplies);
         buildReplies(replyWithReplies); // Recursão para sub-replies
       }
@@ -144,7 +150,7 @@ class CommentMapper {
 
     // Ordena por data de criação (mais recentes primeiro)
     topLevel.sort((a, b) => b.comment.createdAt.compareTo(a.comment.createdAt));
-    
+
     return topLevel;
   }
 
@@ -164,14 +170,11 @@ class CommentWithReplies {
   final Comment comment;
   final List<CommentWithReplies> replies;
 
-  CommentWithReplies({
-    required this.comment,
-    required this.replies,
-  });
+  CommentWithReplies({required this.comment, required this.replies});
 
   /// Conveniência para verificar se tem replies
   bool get hasReplies => replies.isNotEmpty;
-  
+
   /// Conta total de replies (recursivo)
   int get totalReplies {
     int count = replies.length;
@@ -184,12 +187,12 @@ class CommentWithReplies {
   /// Busca comentário por ID na thread
   Comment? findById(String id) {
     if (comment.id == id) return comment;
-    
+
     for (final reply in replies) {
       final found = reply.findById(id);
       if (found != null) return found;
     }
-    
+
     return null;
   }
 

@@ -17,10 +17,10 @@ class PhotoService {
 
   /// Solicita permissão de câmera ou galeria
   Future<bool> requestPermission(ImageSource source) async {
-    Permission permission = source == ImageSource.camera 
-        ? Permission.camera 
+    Permission permission = source == ImageSource.camera
+        ? Permission.camera
         : Permission.photos;
-    
+
     // No Android 13+, use Permission.photos ao invés de Permission.storage
     if (Platform.isAndroid && source == ImageSource.gallery) {
       permission = Permission.photos;
@@ -38,7 +38,9 @@ class PhotoService {
       bool hasPermission = await requestPermission(source);
       if (!hasPermission) {
         if (kDebugMode) {
-          print('Permissão negada para acessar ${source == ImageSource.camera ? 'câmera' : 'galeria'}');
+          print(
+            'Permissão negada para acessar ${source == ImageSource.camera ? 'câmera' : 'galeria'}',
+          );
         }
         return null;
       }
@@ -87,7 +89,7 @@ class PhotoService {
       // Verifica o tamanho
       final file = File(result.path);
       final sizeKB = await file.length() / 1024;
-      
+
       if (kDebugMode) {
         print('Imagem comprimida: ${sizeKB.toStringAsFixed(2)} KB');
       }
@@ -118,31 +120,37 @@ class PhotoService {
   /// Retorna o caminho final da foto salva
   Future<String?> savePhoto(String compressedImagePath) async {
     try {
-      if (kDebugMode) print('📁 PhotoService - Iniciando savePhoto: $compressedImagePath');
-      
+      if (kDebugMode)
+        print('📁 PhotoService - Iniciando savePhoto: $compressedImagePath');
+
       // Verifica se o arquivo temporário existe
       final tempFile = File(compressedImagePath);
       if (!await tempFile.exists()) {
-        if (kDebugMode) print('❌ PhotoService - Arquivo temporário não existe: $compressedImagePath');
+        if (kDebugMode)
+          print(
+            '❌ PhotoService - Arquivo temporário não existe: $compressedImagePath',
+          );
         return null;
       }
-      
+
       // Estratégia robusta: usar cache directory que sempre tem permissão de escrita
       final appDir = await getApplicationDocumentsDirectory();
       if (kDebugMode) print('📂 PhotoService - App directory: ${appDir.path}');
-      
+
       Directory photoDir;
       try {
         photoDir = Directory(path.join(appDir.path, 'user_photos'));
-        if (kDebugMode) print('📂 PhotoService - Tentando usar Documents: ${photoDir.path}');
-        
+        if (kDebugMode)
+          print('📂 PhotoService - Tentando usar Documents: ${photoDir.path}');
+
         // Testa se consegue escrever no diretório documents
         if (!await photoDir.exists()) {
           await photoDir.create(recursive: true);
         }
       } catch (e) {
         // Fallback: usar cache directory se documents falhar
-        if (kDebugMode) print('⚠️ PhotoService - Falha no Documents, usando Cache: $e');
+        if (kDebugMode)
+          print('⚠️ PhotoService - Falha no Documents, usando Cache: $e');
         final cacheDir = await getTemporaryDirectory();
         photoDir = Directory(path.join(cacheDir.path, 'user_photos'));
         if (!await photoDir.exists()) {
@@ -154,37 +162,50 @@ class PhotoService {
       try {
         final oldPhotoPath = await getPhotoPath();
         if (oldPhotoPath != null && File(oldPhotoPath).existsSync()) {
-          if (kDebugMode) print('🗑️ PhotoService - Removendo foto anterior: $oldPhotoPath');
+          if (kDebugMode)
+            print('🗑️ PhotoService - Removendo foto anterior: $oldPhotoPath');
           await File(oldPhotoPath).delete();
         }
       } catch (e) {
-        if (kDebugMode) print('⚠️ PhotoService - Erro ao remover foto anterior (continuando): $e');
+        if (kDebugMode)
+          print(
+            '⚠️ PhotoService - Erro ao remover foto anterior (continuando): $e',
+          );
       }
 
       // Copia a foto comprimida para o diretório permanente
-      final fileName = 'user_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'user_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final finalPath = path.join(photoDir.path, fileName);
       if (kDebugMode) print('📋 PhotoService - Copiando para: $finalPath');
-      
+
       // Usa readAsBytes + writeAsBytes para maior compatibilidade
       final bytes = await tempFile.readAsBytes();
       final finalFile = File(finalPath);
       await finalFile.writeAsBytes(bytes);
-      
-      if (kDebugMode) print('✅ PhotoService - Arquivo salvo com sucesso (${bytes.length} bytes)');
+
+      if (kDebugMode)
+        print(
+          '✅ PhotoService - Arquivo salvo com sucesso (${bytes.length} bytes)',
+        );
 
       // Remove o arquivo temporário
       try {
-        if (kDebugMode) print('🗑️ PhotoService - Removendo arquivo temporário');
+        if (kDebugMode)
+          print('🗑️ PhotoService - Removendo arquivo temporário');
         await tempFile.delete();
       } catch (e) {
-        if (kDebugMode) print('⚠️ PhotoService - Erro ao remover temp (não crítico): $e');
+        if (kDebugMode)
+          print('⚠️ PhotoService - Erro ao remover temp (não crítico): $e');
       }
 
       // Verifica se o arquivo final existe
       if (await finalFile.exists()) {
         final finalSize = await finalFile.length();
-        if (kDebugMode) print('🎉 PhotoService - savePhoto concluído: $finalPath (${finalSize} bytes)');
+        if (kDebugMode)
+          print(
+            '🎉 PhotoService - savePhoto concluído: $finalPath (${finalSize} bytes)',
+          );
         return finalPath;
       } else {
         if (kDebugMode) print('❌ PhotoService - Arquivo final não foi criado');
@@ -205,19 +226,19 @@ class PhotoService {
       final prefs = await SharedPreferences.getInstance();
       // Usa a mesma chave que o PreferencesService
       final photoPath = prefs.getString('user_photo_path');
-      
+
       if (kDebugMode) print('📖 PhotoService - getPhotoPath lendo: $photoPath');
-      
+
       // Verifica se o arquivo existe
       if (photoPath != null && File(photoPath).existsSync()) {
         return photoPath;
       }
-      
+
       // Se não existe, remove a referência
       if (photoPath != null) {
         await prefs.remove('user_photo_path');
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -238,7 +259,7 @@ class PhotoService {
       final prefs = await SharedPreferences.getInstance();
       // Usa a mesma chave que o PreferencesService
       await prefs.remove('user_photo_path');
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -251,7 +272,7 @@ class PhotoService {
   /// Fluxo completo: selecionar, comprimir e salvar
   Future<String?> pickCompressAndSave(ImageSource source) async {
     if (kDebugMode) print('🔄 PhotoService - Iniciando fluxo completo');
-    
+
     final imagePath = await pickImage(source);
     if (imagePath == null) {
       if (kDebugMode) print('❌ PhotoService - pickImage retornou null');
@@ -264,7 +285,8 @@ class PhotoService {
       if (kDebugMode) print('❌ PhotoService - compressImage retornou null');
       return null;
     }
-    if (kDebugMode) print('✅ PhotoService - Imagem comprimida: $compressedPath');
+    if (kDebugMode)
+      print('✅ PhotoService - Imagem comprimida: $compressedPath');
 
     final savedPath = await savePhoto(compressedPath);
     if (savedPath == null) {
@@ -272,7 +294,7 @@ class PhotoService {
       return null;
     }
     if (kDebugMode) print('✅ PhotoService - Imagem salva: $savedPath');
-    
+
     return savedPath;
   }
 }

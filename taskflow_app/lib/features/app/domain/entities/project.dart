@@ -2,7 +2,7 @@ import 'package:uuid/uuid.dart';
 import 'project_status.dart';
 
 /// Project Entity - Representação interna rica e validada do projeto
-/// 
+///
 /// Esta classe representa um projeto no domínio da aplicação TaskFlow.
 /// Contém tipos fortes, validações e invariantes de domínio.
 /// Segue o padrão Entity do documento "Modelo DTO e Mapeamento".
@@ -10,12 +10,12 @@ class Project {
   final String id;
   final String name;
   final String description;
-  final String ownerId;           // FK para User
+  final String ownerId; // FK para User
   final ProjectStatus status;
-  final DateTime? startDate;      // Nullable - pode ser definida depois
-  final DateTime? endDate;        // Nullable - pode ser definida depois
-  final DateTime? deadline;       // Nullable - prazo final
-  final String? color;           // Cor em hex para identificação visual
+  final DateTime? startDate; // Nullable - pode ser definida depois
+  final DateTime? endDate; // Nullable - pode ser definida depois
+  final DateTime? deadline; // Nullable - prazo final
+  final String? color; // Cor em hex para identificação visual
   final bool isArchived;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -33,14 +33,14 @@ class Project {
     bool? isArchived,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? const Uuid().v4(),
-        name = _validateName(name),
-        description = description?.trim() ?? '',
-        ownerId = _validateOwnerId(ownerId),
-        status = status ?? ProjectStatus.planning,
-        isArchived = isArchived ?? false,
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now() {
+  }) : id = id ?? const Uuid().v4(),
+       name = _validateName(name),
+       description = description?.trim() ?? '',
+       ownerId = _validateOwnerId(ownerId),
+       status = status ?? ProjectStatus.planning,
+       isArchived = isArchived ?? false,
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now() {
     _validateDates();
   }
 
@@ -75,13 +75,21 @@ class Project {
     }
 
     // Deadline não pode ser no passado para projetos ativos
-    if (deadline != null && status.isActive && deadline!.isBefore(DateTime.now())) {
-      throw ArgumentError('Prazo não pode estar no passado para projetos ativos');
+    if (deadline != null &&
+        status.isActive &&
+        deadline!.isBefore(DateTime.now())) {
+      throw ArgumentError(
+        'Prazo não pode estar no passado para projetos ativos',
+      );
     }
 
     // End date não pode ser no futuro para projetos concluídos
-    if (endDate != null && status.isCompleted && endDate!.isAfter(DateTime.now())) {
-      throw ArgumentError('Data de fim não pode estar no futuro para projetos concluídos');
+    if (endDate != null &&
+        status.isCompleted &&
+        endDate!.isAfter(DateTime.now())) {
+      throw ArgumentError(
+        'Data de fim não pode estar no futuro para projetos concluídos',
+      );
     }
   }
 
@@ -89,9 +97,12 @@ class Project {
   String get displayName => name;
   String get statusText => status.displayName;
   bool get hasDeadline => deadline != null;
-  bool get isOverdue => deadline != null && deadline!.isBefore(DateTime.now()) && !status.isCompleted;
+  bool get isOverdue =>
+      deadline != null &&
+      deadline!.isBefore(DateTime.now()) &&
+      !status.isCompleted;
   bool get hasDateRange => startDate != null && endDate != null;
-  
+
   Duration? get duration {
     if (startDate == null || endDate == null) return null;
     return endDate!.difference(startDate!);
@@ -100,15 +111,17 @@ class Project {
   double get progress {
     if (!hasDateRange || status == ProjectStatus.planning) return 0.0;
     if (status.isCompleted) return 1.0;
-    
+
     final now = DateTime.now();
     if (now.isBefore(startDate!)) return 0.0;
     if (now.isAfter(endDate!)) return 1.0;
-    
+
     final totalDuration = endDate!.difference(startDate!).inDays;
     final elapsedDuration = now.difference(startDate!).inDays;
-    
-    return totalDuration > 0 ? (elapsedDuration / totalDuration).clamp(0.0, 1.0) : 0.0;
+
+    return totalDuration > 0
+        ? (elapsedDuration / totalDuration).clamp(0.0, 1.0)
+        : 0.0;
   }
 
   /// Métodos de domínio
@@ -134,44 +147,31 @@ class Project {
     if (!status.isActive) {
       throw StateError('Apenas projetos ativos podem ser pausados');
     }
-    return copyWith(
-      status: ProjectStatus.onHold,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(status: ProjectStatus.onHold, updatedAt: DateTime.now());
   }
 
   Project resume() {
     if (status != ProjectStatus.onHold) {
       throw StateError('Apenas projetos em pausa podem ser retomados');
     }
-    return copyWith(
-      status: ProjectStatus.active,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(status: ProjectStatus.active, updatedAt: DateTime.now());
   }
 
   Project cancel() {
     if (status.isCompleted || status.isCancelled) {
-      throw StateError('Projetos concluídos ou cancelados não podem ser cancelados novamente');
+      throw StateError(
+        'Projetos concluídos ou cancelados não podem ser cancelados novamente',
+      );
     }
-    return copyWith(
-      status: ProjectStatus.cancelled,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(status: ProjectStatus.cancelled, updatedAt: DateTime.now());
   }
 
   Project archive() {
-    return copyWith(
-      isArchived: true,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(isArchived: true, updatedAt: DateTime.now());
   }
 
   Project unarchive() {
-    return copyWith(
-      isArchived: false,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(isArchived: false, updatedAt: DateTime.now());
   }
 
   /// Copy with para imutabilidade

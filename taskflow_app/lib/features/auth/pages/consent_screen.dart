@@ -21,10 +21,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
   Future<void> _openPolicyViewer(String policyType) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => PolicyViewerScreen(
-          policyType: policyType,
-          onMarkAsRead: () {},
-        ),
+        builder: (context) =>
+            PolicyViewerScreen(policyType: policyType, onMarkAsRead: () {}),
       ),
     );
 
@@ -36,7 +34,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
           _termsRead = true;
         }
       });
-      
+
       // Atualiza as preferências conforme PRD
       final prefsService = context.read<PreferencesService>();
       if (policyType == 'privacy') {
@@ -56,10 +54,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
 
     try {
       final prefsService = context.read<PreferencesService>();
-      
+
       // Concede o consentimento
       await prefsService.grantConsent();
-      
+
       // Marca onboarding como completo (mas não marca como completeFirstTimeSetup ainda)
       // O tutorial ainda precisa ser mostrado na HomeScreen
       if (prefsService.isFirstTimeUser) {
@@ -104,109 +102,114 @@ class _ConsentScreenState extends State<ConsentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-              // Título e descrição
-              Text(
-                'Antes de continuar',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              
-              const SizedBox(height: 16),
-              
-              Text(
-                'Para usar o TaskFlow, precisamos do seu consentimento com nossas políticas. Por favor, leia os documentos abaixo.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                  height: 1.5,
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Card da Política de Privacidade
-              _buildPolicyCard(
-                title: 'Política de Privacidade',
-                description: 'Como coletamos, usamos e protegemos seus dados',
-                icon: Icons.privacy_tip,
-                isRead: _privacyPolicyRead,
-                onTap: () => _openPolicyViewer('privacy'),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Card dos Termos de Uso
-              _buildPolicyCard(
-                title: 'Termos de Uso',
-                description: 'Regras e condições para usar nosso serviço',
-                icon: Icons.description,
-                isRead: _termsRead,
-                onTap: () => _openPolicyViewer('terms'),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Checkbox de consentimento
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: _privacyPolicyRead && _termsRead 
-                        ? Theme.of(context).primaryColor.withValues(alpha: 0.3)
-                        : Colors.grey.shade300,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                  color: _privacyPolicyRead && _termsRead
-                      ? Theme.of(context).primaryColor.withValues(alpha: 0.05)
-                      : Colors.grey.shade50,
-                ),
-                child: CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: _consentGiven,
-                  onChanged: _privacyPolicyRead && _termsRead
-                      ? (value) {
-                          setState(() {
-                            _consentGiven = value ?? false;
-                          });
-                        }
-                      : null,
-                  title: const Text(
-                    'Eu li e concordo com a Política de Privacidade e os Termos de Uso',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                    // Título e descrição
+                    Text(
+                      'Antes de continuar',
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                  ),
-                  subtitle: !(_privacyPolicyRead && _termsRead)
-                      ? const Text(
-                          'Leia ambos os documentos para habilitar esta opção',
+
+                    const SizedBox(height: 16),
+
+                    Text(
+                      'Para usar o TaskFlow, precisamos do seu consentimento com nossas políticas. Por favor, leia os documentos abaixo.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                        height: 1.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Card da Política de Privacidade
+                    _buildPolicyCard(
+                      title: 'Política de Privacidade',
+                      description:
+                          'Como coletamos, usamos e protegemos seus dados',
+                      icon: Icons.privacy_tip,
+                      isRead: _privacyPolicyRead,
+                      onTap: () => _openPolicyViewer('privacy'),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Card dos Termos de Uso
+                    _buildPolicyCard(
+                      title: 'Termos de Uso',
+                      description: 'Regras e condições para usar nosso serviço',
+                      icon: Icons.description,
+                      isRead: _termsRead,
+                      onTap: () => _openPolicyViewer('terms'),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Checkbox de consentimento
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: _privacyPolicyRead && _termsRead
+                              ? Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.3)
+                              : Colors.grey.shade300,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        color: _privacyPolicyRead && _termsRead
+                            ? Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.05)
+                            : Colors.grey.shade50,
+                      ),
+                      child: CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _consentGiven,
+                        onChanged: _privacyPolicyRead && _termsRead
+                            ? (value) {
+                                setState(() {
+                                  _consentGiven = value ?? false;
+                                });
+                              }
+                            : null,
+                        title: const Text(
+                          'Eu li e concordo com a Política de Privacidade e os Termos de Uso',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
-                        )
-                      : null,
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Informação sobre versão
-              Center(
-                child: Text(
-                  'Versão das políticas: ${PreferencesService.currentPolicyVersion}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-            ],
+                        ),
+                        subtitle: !(_privacyPolicyRead && _termsRead)
+                            ? const Text(
+                                'Leia ambos os documentos para habilitar esta opção',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Informação sobre versão
+                    Center(
+                      child: Text(
+                        'Versão das políticas: ${PreferencesService.currentPolicyVersion}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
             ),
-            
+
             // Botão fixo na parte inferior
             Container(
               padding: const EdgeInsets.all(24),
@@ -236,7 +239,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text(
@@ -276,7 +281,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isRead 
+                  color: isRead
                       ? Colors.green.withValues(alpha: 0.1)
                       : Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(24),
@@ -287,9 +292,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
                   size: 24,
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Conteúdo
               Expanded(
                 child: Column(
@@ -327,9 +332,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
                           ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 4),
-                    
+
                     Text(
                       description,
                       style: TextStyle(
@@ -340,13 +345,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
                   ],
                 ),
               ),
-              
+
               // Seta
-              const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.grey,
-              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             ],
           ),
         ),

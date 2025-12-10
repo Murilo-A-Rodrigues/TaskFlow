@@ -13,105 +13,110 @@ class PreferencesService extends ChangeNotifier {
   static const String _keyUserName = 'user_name';
   static const String _keyUserPhotoPath = 'user_photo_path';
   static const String _keyThemeMode = 'theme_mode';
-  
+
   // Mantém compatibilidade com versões antigas
   static const String _keyPrivacyPolicyAccepted = 'privacy_policy_accepted';
   static const String _keyTermsAccepted = 'terms_accepted';
   static const String _keyPolicyVersion = 'policy_version';
-  
+
   static const String currentPolicyVersion = 'v1';
-  
+
   SharedPreferences? _prefs;
-  
+
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
-  
+
   SharedPreferences get prefs {
     if (_prefs == null) {
-      throw StateError('PreferencesService não foi inicializado. Chame init() primeiro.');
+      throw StateError(
+        'PreferencesService não foi inicializado. Chame init() primeiro.',
+      );
     }
     return _prefs!;
   }
-  
+
   // First Time User
   bool get isFirstTimeUser {
     final value = prefs.getBool(_keyFirstTimeUser) ?? true;
     print('📱 isFirstTimeUser check: $value');
     return value;
   }
-  
+
   Future<void> setFirstTimeUser(bool value) async {
     await prefs.setBool(_keyFirstTimeUser, value);
     print('📝 First time user set to: $value');
     notifyListeners();
   }
-  
+
   // Método para marcar que o usuário completou o primeiro uso
   Future<void> completeFirstTimeSetup() async {
     await setFirstTimeUser(false);
     print('✅ Primeiro uso marcado como completo');
   }
-  
+
   // Onboarding
-  bool get isOnboardingCompleted => prefs.getBool(_keyOnboardingCompleted) ?? false;
-  
+  bool get isOnboardingCompleted =>
+      prefs.getBool(_keyOnboardingCompleted) ?? false;
+
   Future<void> setOnboardingCompleted(bool value) async {
     await prefs.setBool(_keyOnboardingCompleted, value);
   }
-  
+
   // Privacy Policy
-  bool get isPrivacyPolicyAccepted => prefs.getBool(_keyPrivacyPolicyAccepted) ?? false;
-  
+  bool get isPrivacyPolicyAccepted =>
+      prefs.getBool(_keyPrivacyPolicyAccepted) ?? false;
+
   Future<void> setPrivacyPolicyAccepted(bool value) async {
     await prefs.setBool(_keyPrivacyPolicyAccepted, value);
   }
-  
+
   // Terms
   bool get isTermsAccepted => prefs.getBool(_keyTermsAccepted) ?? false;
-  
+
   Future<void> setTermsAccepted(bool value) async {
     await prefs.setBool(_keyTermsAccepted, value);
   }
-  
+
   // Policy Version
   String get policyVersion => prefs.getString(_keyPolicyVersion) ?? '';
-  
+
   Future<void> setPolicyVersion(String version) async {
     await prefs.setString(_keyPolicyVersion, version);
   }
-  
+
   // Accepted At
   String get acceptedAt => prefs.getString(_keyAcceptedAt) ?? '';
-  
+
   Future<void> setAcceptedAt(String dateTime) async {
     await prefs.setString(_keyAcceptedAt, dateTime);
   }
-  
+
   // Novas propriedades do PRD
   bool get privacyReadV1 => prefs.getBool(_keyPrivacyReadV1) ?? false;
-  
+
   Future<void> setPrivacyReadV1(bool value) async {
     await prefs.setBool(_keyPrivacyReadV1, value);
     notifyListeners();
   }
-  
+
   bool get termsReadV1 => prefs.getBool(_keyTermsReadV1) ?? false;
-  
+
   Future<void> setTermsReadV1(bool value) async {
     await prefs.setBool(_keyTermsReadV1, value);
     notifyListeners();
   }
-  
-  String get policiesVersionAccepted => prefs.getString(_keyPoliciesVersionAccepted) ?? '';
-  
+
+  String get policiesVersionAccepted =>
+      prefs.getString(_keyPoliciesVersionAccepted) ?? '';
+
   Future<void> setPoliciesVersionAccepted(String version) async {
     await prefs.setString(_keyPoliciesVersionAccepted, version);
     notifyListeners();
   }
-  
+
   bool get tipsEnabled => prefs.getBool(_keyTipsEnabled) ?? true;
-  
+
   Future<void> setTipsEnabled(bool value) async {
     await prefs.setBool(_keyTipsEnabled, value);
     notifyListeners();
@@ -119,7 +124,7 @@ class PreferencesService extends ChangeNotifier {
 
   // User Name
   String get userName => prefs.getString(_keyUserName) ?? 'Usuário';
-  
+
   Future<void> setUserName(String name) async {
     await prefs.setString(_keyUserName, name);
     notifyListeners();
@@ -131,7 +136,7 @@ class PreferencesService extends ChangeNotifier {
     print('📖 PreferencesService - Lendo photo path: $path');
     return path;
   }
-  
+
   Future<void> setUserPhotoPath(String? path) async {
     print('💾 PreferencesService - Salvando photo path: $path');
     if (path == null) {
@@ -147,7 +152,7 @@ class PreferencesService extends ChangeNotifier {
 
   // Theme Mode
   String get themeMode => prefs.getString(_keyThemeMode) ?? 'light';
-  
+
   Future<void> setThemeMode(String mode) async {
     await prefs.setString(_keyThemeMode, mode);
     notifyListeners();
@@ -155,11 +160,11 @@ class PreferencesService extends ChangeNotifier {
 
   // Métodos conforme especificação do PRD
   bool isFullyAccepted() {
-    return privacyReadV1 && 
-           termsReadV1 && 
-           policiesVersionAccepted == currentPolicyVersion;
+    return privacyReadV1 &&
+        termsReadV1 &&
+        policiesVersionAccepted == currentPolicyVersion;
   }
-  
+
   Future<void> migratePolicyVersion(String from, String to) async {
     if (policiesVersionAccepted == from) {
       await Future.wait([
@@ -174,7 +179,7 @@ class PreferencesService extends ChangeNotifier {
   bool get hasValidConsent {
     return isFullyAccepted();
   }
-  
+
   Future<void> grantConsent() async {
     await Future.wait([
       // Mantém compatibilidade
@@ -189,7 +194,7 @@ class PreferencesService extends ChangeNotifier {
     ]);
     notifyListeners();
   }
-  
+
   Future<void> revokeConsent() async {
     await Future.wait([
       // Compatibilidade
@@ -205,7 +210,7 @@ class PreferencesService extends ChangeNotifier {
     ]);
     notifyListeners();
   }
-  
+
   // Helper method to determine initial route
   String getInitialRoute() {
     if (!hasValidConsent || policiesVersionAccepted != currentPolicyVersion) {
@@ -213,7 +218,7 @@ class PreferencesService extends ChangeNotifier {
     }
     return '/home';
   }
-  
+
   // Método de debug para verificar o estado das preferências
   void debugPrintState() {
     print('🔍 === Estado das Preferências ===');
@@ -226,7 +231,7 @@ class PreferencesService extends ChangeNotifier {
     print('currentPolicyVersion: $currentPolicyVersion');
     print('=================================');
   }
-  
+
   // Método para limpar todas as preferências (útil para testes)
   Future<void> clearAllPreferences() async {
     await prefs.clear();

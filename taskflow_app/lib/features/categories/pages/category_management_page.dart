@@ -11,13 +11,13 @@ import '../infrastructure/remote/supabase_categories_remote_datasource.dart';
 import '../infrastructure/repositories/categories_repository_impl.dart';
 
 /// CategoryManagementPage - Tela de gerenciamento de categorias
-/// 
+///
 /// Implementa os Prompts 16, 17 e 18:
 /// - Sincronização offline-first com Supabase
 /// - Push-then-Pull sync automático
 /// - Uso de Entity (domínio) ao invés de DTO na UI
 /// - Indicador visual durante sincronização
-/// 
+///
 /// Permite ao usuário:
 /// - Visualizar todas as categorias
 /// - Adicionar novas categorias
@@ -37,7 +37,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   @override
   void initState() {
     super.initState();
-    
+
     // Inicializa repositório e carrega dados (Prompt 18: two-way sync)
     _initAndLoad();
   }
@@ -49,7 +49,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
       remoteApi: SupabaseCategoriesRemoteDatasource(SupabaseService.client),
       localDao: CategoriesLocalDaoSharedPrefs(prefs),
     );
-    
+
     await _loadAndSync();
   }
 
@@ -66,7 +66,9 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
       final syncedCount = await _repository.syncFromServer();
 
       if (kDebugMode) {
-        print('[CategoryManagementPage] Sincronização concluída: $syncedCount items');
+        print(
+          '[CategoryManagementPage] Sincronização concluída: $syncedCount items',
+        );
       }
     } catch (e, stack) {
       if (kDebugMode) {
@@ -83,15 +85,18 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gerenciar Categorias'),
-        backgroundColor: isDarkMode 
+        backgroundColor: isDarkMode
             ? const Color(0xFF0F172A) // Tom mais escuro no dark mode
-            : Theme.of(context).colorScheme.primaryContainer, // Tom claro no light mode
+            : Theme.of(
+                context,
+              ).colorScheme.primaryContainer, // Tom claro no light mode
         foregroundColor: isDarkMode
-            ? Colors.white // Texto branco no dark mode
+            ? Colors
+                  .white // Texto branco no dark mode
             : Theme.of(context).colorScheme.onPrimaryContainer,
         bottom: _isSyncing
             ? PreferredSize(
@@ -130,14 +135,16 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                           const SizedBox(height: 16),
                           Text(
                             'Nenhuma categoria encontrada',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Adicione sua primeira categoria',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                           ),
@@ -208,7 +215,9 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await context.read<CategoryService>().deleteCategory(category.id);
+                await context.read<CategoryService>().deleteCategory(
+                  category.id,
+                );
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -228,9 +237,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                 }
               }
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Excluir'),
           ),
         ],
@@ -266,16 +273,11 @@ class _CategoryCard extends StatelessWidget {
             color: categoryColor.withOpacity(0.2),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            _parseIcon(category.icon),
-            color: categoryColor,
-          ),
+          child: Icon(_parseIcon(category.icon), color: categoryColor),
         ),
         title: Text(
           category.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: category.description != null
             ? Text(

@@ -55,10 +55,10 @@ class ConfigService {
 
   /// Verifica se as configurações do Supabase estão válidas
   static bool get hasValidSupabaseConfig {
-    return supabaseUrl.isNotEmpty && 
-           supabaseAnonKey.isNotEmpty &&
-           supabaseUrl.startsWith('https://') &&
-           supabaseUrl.contains('.supabase.co');
+    return supabaseUrl.isNotEmpty &&
+        supabaseAnonKey.isNotEmpty &&
+        supabaseUrl.startsWith('https://') &&
+        supabaseUrl.contains('.supabase.co');
   }
 
   /// Retorna informações de debug da configuração
@@ -73,8 +73,8 @@ class ConfigService {
       'hasSupabaseUrl': supabaseUrl.isNotEmpty,
       'hasSupabaseKey': supabaseAnonKey.isNotEmpty,
       'hasValidSupabaseConfig': hasValidSupabaseConfig,
-      'supabaseUrlPrefix': supabaseUrl.isNotEmpty 
-          ? '${supabaseUrl.substring(0, 20)}...' 
+      'supabaseUrlPrefix': supabaseUrl.isNotEmpty
+          ? '${supabaseUrl.substring(0, 20)}...'
           : 'não configurado',
     };
   }
@@ -82,7 +82,7 @@ class ConfigService {
   /// Método para validar configuração na inicialização
   static void validateConfiguration() {
     print('🔧 ConfigService - Validando configurações...');
-    
+
     final debugInfo = getDebugInfo();
     debugInfo.forEach((key, value) {
       print('   $key: $value');
@@ -90,7 +90,9 @@ class ConfigService {
 
     if (!hasValidSupabaseConfig) {
       print('⚠️ ConfigService - ATENÇÃO: Configuração do Supabase inválida!');
-      print('   Por favor, configure SUPABASE_URL e SUPABASE_ANON_KEY no arquivo .env');
+      print(
+        '   Por favor, configure SUPABASE_URL e SUPABASE_ANON_KEY no arquivo .env',
+      );
     } else {
       print('✅ ConfigService - Configurações válidas!');
     }

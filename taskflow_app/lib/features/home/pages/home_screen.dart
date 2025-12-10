@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  
+
   // Tutorial e animação do FAB
   late AnimationController _fabAnimationController;
   late Animation<double> _fabScaleAnimation;
@@ -40,23 +40,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _searchQuery = _searchController.text;
       });
     });
-    
+
     // Animação do FAB (pulsação contínua)
     _fabAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
-    _fabScaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.2,
-    ).animate(
-      CurvedAnimation(
-        parent: _fabAnimationController,
-        curve: Curves.easeInOut,
-      ),
+    _fabScaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeInOut),
     );
-    
+
     // Verifica se deve mostrar tutorial após a build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkFirstTimeUser();
@@ -74,10 +68,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
     }
   }
-  
+
   void _checkFirstTimeUser() {
     if (!mounted) return;
-    
+
     try {
       final prefsService = context.read<PreferencesService>();
 
@@ -85,17 +79,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       print('   isFirstTimeUser: ${prefsService.isFirstTimeUser}');
       print('   isOnboardingCompleted: ${prefsService.isOnboardingCompleted}');
       print('   hasValidConsent: ${prefsService.hasValidConsent}');
-      
+
       if (prefsService.isFirstTimeUser) {
-        print('🎉 First time detected! Showing tutorial and starting animation...');
-        
+        print(
+          '🎉 First time detected! Showing tutorial and starting animation...',
+        );
+
         // Inicia a pulsação do FAB
         _fabAnimationController.repeat(reverse: true);
-        
+
         setState(() {
           _showTutorial = true;
         });
-        
+
         print('✅ Tutorial state set to true, animation started');
         print('✅ _showTutorial = $_showTutorial');
       } else {
@@ -108,11 +104,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       print('❌ Error checking first time user: $e');
     }
   }
-  
+
   void _dismissTutorial({bool dontShowAgain = false}) async {
     // NÃO para a pulsação - ela continua até criar primeira tarefa
     // Apenas fecha o tutorial overlay
-    
+
     setState(() {
       _showTutorial = false;
     });
@@ -138,170 +134,174 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Scaffold(
           drawer: const HomeDrawer(),
           appBar: AppBar(
-        title: const Text('TaskFlow'),
-        centerTitle: true,
-        actions: [
-          // Botão de filtros
-          Consumer<TaskFilterService>(
-            builder: (context, filterService, child) {
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.filter_list),
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => const FilterBottomSheet(),
-                      );
-                    },
-                  ),
-                  if (filterService.hasActiveFilters)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '${filterService.activeFiltersCount}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+            title: const Text('TaskFlow'),
+            centerTitle: true,
+            actions: [
+              // Botão de filtros
+              Consumer<TaskFilterService>(
+                builder: (context, filterService, child) {
+                  return Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.filter_list),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => const FilterBottomSheet(),
+                          );
+                        },
+                      ),
+                      if (filterService.hasActiveFilters)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '${filterService.activeFiltersCount}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              // Avatar do usuário no AppBar
+              Consumer<PreferencesService>(
+                builder: (context, prefsService, child) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: UserAvatar(
+                      photoPath: prefsService.userPhotoPath,
+                      userName: prefsService.userName,
+                      radius: 16,
+                      onTap: () => _showPhotoOptions(context),
+                      showBorder: true,
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/settings');
+                },
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(
+                160,
+              ), // Aumentado para comportar filtros
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      16,
+                      4,
+                      16,
+                      4,
+                    ), // Reduzido padding
+                    child: SizedBox(
+                      height: 44,
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Buscar tarefas...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          isDense: true,
                         ),
                       ),
                     ),
+                  ),
+                  // Chips de filtros ativos com SafeArea
+                  SafeArea(bottom: false, child: const ActiveFiltersChip()),
+                  SizedBox(
+                    height: 48, // Altura fixa para o TabBar
+                    child: TabBar(
+                      controller: _tabController,
+                      tabs: const [
+                        Tab(text: 'Todas'),
+                        Tab(text: 'Pendentes'),
+                        Tab(text: 'Concluídas'),
+                      ],
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          body: Consumer2<TaskService, TaskFilterService>(
+            builder: (context, taskService, filterService, child) {
+              // Aplica busca e filtros
+              List<Task> allTasks = taskService.searchTasks(_searchQuery);
+              allTasks = filterService.applyFilters(allTasks);
+
+              return TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildScrollableTaskView(
+                    taskService: taskService,
+                    tasks: allTasks,
+                  ),
+                  _buildScrollableTaskView(
+                    taskService: taskService,
+                    tasks: allTasks.where((task) => !task.isCompleted).toList(),
+                  ),
+                  _buildScrollableTaskView(
+                    taskService: taskService,
+                    tasks: allTasks.where((task) => task.isCompleted).toList(),
+                  ),
                 ],
               );
             },
           ),
-          // Avatar do usuário no AppBar
-          Consumer<PreferencesService>(
-            builder: (context, prefsService, child) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: UserAvatar(
-                  photoPath: prefsService.userPhotoPath,
-                  userName: prefsService.userName,
-                  radius: 16,
-                  onTap: () => _showPhotoOptions(context),
-                  showBorder: true,
+          floatingActionButton: AnimatedBuilder(
+            animation: _fabAnimationController,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _fabScaleAnimation.value,
+                child: FloatingActionButton(
+                  onPressed: _addNewTask,
+                  child: const Icon(Icons.add),
                 ),
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).pushNamed('/settings');
-            },
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(
-              minWidth: 40,
-              minHeight: 40,
-            ),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(160), // Aumentado para comportar filtros
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4), // Reduzido padding
-                child: SizedBox(
-                  height: 44,
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Buscar tarefas...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-              ),
-              // Chips de filtros ativos com SafeArea
-              SafeArea(
-                bottom: false,
-                child: const ActiveFiltersChip(),
-              ),
-              SizedBox(
-                height: 48, // Altura fixa para o TabBar
-                child: TabBar(
-                  controller: _tabController,
-                  tabs: const [
-                    Tab(text: 'Todas'),
-                    Tab(text: 'Pendentes'),
-                    Tab(text: 'Concluídas'),
-                  ],
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-              ),
-            ],
-          ),
         ),
-      ),
-      body: Consumer2<TaskService, TaskFilterService>(
-        builder: (context, taskService, filterService, child) {
-          // Aplica busca e filtros
-          List<Task> allTasks = taskService.searchTasks(_searchQuery);
-          allTasks = filterService.applyFilters(allTasks);
-          
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildScrollableTaskView(
-                taskService: taskService,
-                tasks: allTasks,
-              ),
-              _buildScrollableTaskView(
-                taskService: taskService,
-                tasks: allTasks.where((task) => !task.isCompleted).toList(),
-              ),
-              _buildScrollableTaskView(
-                taskService: taskService,
-                tasks: allTasks.where((task) => task.isCompleted).toList(),
-              ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: AnimatedBuilder(
-        animation: _fabAnimationController,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _fabScaleAnimation.value,
-            child: FloatingActionButton(
-              onPressed: _addNewTask,
-              child: const Icon(Icons.add),
-            ),
-          );
-        },
-      ),
-    ),
-    // Tutorial Overlay sobre tudo
-    if (_showTutorial) _buildTutorialOverlay(),
+        // Tutorial Overlay sobre tudo
+        if (_showTutorial) _buildTutorialOverlay(),
       ],
     );
   }
@@ -312,17 +312,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (result != null && mounted) {
       await context.read<TaskService>().addTask(result);
-      
+
       // Para a pulsação do FAB SOMENTE quando criar primeira tarefa
       _fabAnimationController.stop();
       _fabAnimationController.value = 1.0;
-      
+
       // Marca que não é mais primeira vez
       final prefsService = context.read<PreferencesService>();
       if (prefsService.isFirstTimeUser) {
         await prefsService.completeFirstTimeSetup();
       }
-      
+
       // Fecha o tutorial se ainda estiver aberto
       setState(() {
         _showTutorial = false;
@@ -349,11 +349,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(32.0),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.task_alt,
-                      size: 48,
-                      color: Colors.grey.shade400,
-                    ),
+                    Icon(Icons.task_alt, size: 48, color: Colors.grey.shade400),
                     const SizedBox(height: 16),
                     Text(
                       'Nenhuma tarefa encontrada',
@@ -369,18 +365,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           )
         else
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final task = tasks[index];
-                return TaskCard(
-                  task: task,
-                  onToggle: () => _toggleTask(task.id),
-                  onEdit: () => _editTask(task),
-                  onDelete: () => _deleteTask(task),
-                );
-              },
-              childCount: tasks.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final task = tasks[index];
+              return TaskCard(
+                task: task,
+                onToggle: () => _toggleTask(task.id),
+                onEdit: () => _editTask(task),
+                onDelete: () => _deleteTask(task),
+              );
+            }, childCount: tasks.length),
           ),
       ],
     );
@@ -430,9 +423,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       await taskService.updateTask(updatedTask);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao atualizar tarefa: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao atualizar tarefa: $e')));
       }
     }
   }
@@ -442,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Mantida aqui para compatibilidade com o AppBar avatar
     Scaffold.of(context).openDrawer();
   }
-  
+
   /// Tutorial Overlay
   Widget _buildTutorialOverlay() {
     return Positioned.fill(
@@ -479,8 +472,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Text(
                     'Bem-vindo ao TaskFlow!',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
@@ -511,9 +504,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           });
                         },
                       ),
-                      const Expanded(
-                        child: Text('Não exibir dica novamente'),
-                      ),
+                      const Expanded(child: Text('Não exibir dica novamente')),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -522,9 +513,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () => _dismissTutorial(
-                        dontShowAgain: _dontShowAgain,
-                      ),
+                      onPressed: () =>
+                          _dismissTutorial(dontShowAgain: _dontShowAgain),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
@@ -550,24 +540,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildFeatureItem(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: Theme.of(context).primaryColor,
-            size: 24,
-          ),
+          Icon(icon, color: Theme.of(context).primaryColor, size: 24),
           const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 16))),
         ],
       ),
     );

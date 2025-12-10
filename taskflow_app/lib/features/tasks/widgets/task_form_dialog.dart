@@ -7,10 +7,10 @@ import '../../reminders/application/reminder_service.dart';
 import '../../app/domain/entities/reminder.dart';
 
 /// Dialog reutilizável para criação e edição de tarefas
-/// 
+///
 /// Implementa o Prompt 05 - Dialog parametrizável e validável.
 /// Suporta múltiplos tipos de campo e validação em tempo real.
-/// 
+///
 /// Uso:
 /// ```dart
 /// final result = await showTaskFormDialog(
@@ -24,10 +24,7 @@ import '../../app/domain/entities/reminder.dart';
 class TaskFormDialog extends StatefulWidget {
   final Task? initialTask;
 
-  const TaskFormDialog({
-    super.key,
-    this.initialTask,
-  });
+  const TaskFormDialog({super.key, this.initialTask});
 
   @override
   State<TaskFormDialog> createState() => _TaskFormDialogState();
@@ -35,25 +32,25 @@ class TaskFormDialog extends StatefulWidget {
 
 class _TaskFormDialogState extends State<TaskFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers para campos de texto
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
-  
+
   // Estado dos campos
   TaskPriority _selectedPriority = TaskPriority.medium;
   DateTime? _selectedDueDate;
   String? _selectedCategoryId;
   DateTime? _selectedReminderDate;
   TimeOfDay? _selectedReminderTime;
-  
+
   // Validação
   bool _titleHasError = false;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Inicializa controllers
     _titleController = TextEditingController(
       text: widget.initialTask?.title ?? '',
@@ -61,33 +58,40 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
     _descriptionController = TextEditingController(
       text: widget.initialTask?.description ?? '',
     );
-    
+
     // Se estiver editando, preenche campos
     if (widget.initialTask != null) {
       _selectedPriority = widget.initialTask!.priority;
       _selectedDueDate = widget.initialTask!.dueDate;
       _selectedCategoryId = widget.initialTask!.categoryId;
-      
+
       // Carrega lembrete existente (se houver)
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (mounted) {
-          final reminderService = Provider.of<ReminderService>(context, listen: false);
-          
+          final reminderService = Provider.of<ReminderService>(
+            context,
+            listen: false,
+          );
+
           // Aguarda inicialização
           await reminderService.waitForInitialization();
-          
-          final reminders = reminderService.getRemindersForTask(widget.initialTask!.id);
+
+          final reminders = reminderService.getRemindersForTask(
+            widget.initialTask!.id,
+          );
           if (reminders.isNotEmpty) {
             final reminder = reminders.first;
             setState(() {
               _selectedReminderDate = reminder.reminderDate;
-              _selectedReminderTime = TimeOfDay.fromDateTime(reminder.reminderDate);
+              _selectedReminderTime = TimeOfDay.fromDateTime(
+                reminder.reminderDate,
+              );
             });
           }
         }
       });
     }
-    
+
     // Listener para validação em tempo real
     _titleController.addListener(_validateTitle);
   }
@@ -118,7 +122,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
       cancelText: 'Cancelar',
       confirmText: 'OK',
     );
-    
+
     if (date != null) {
       setState(() {
         _selectedDueDate = date;
@@ -134,7 +138,8 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
 
     // Cria/atualiza tarefa
     final task = Task(
-      id: widget.initialTask?.id ?? 
+      id:
+          widget.initialTask?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
@@ -148,13 +153,16 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
 
     // Gerenciar lembretes
     if (mounted) {
-      final reminderService = Provider.of<ReminderService>(context, listen: false);
-      
+      final reminderService = Provider.of<ReminderService>(
+        context,
+        listen: false,
+      );
+
       // Aguarda inicialização do serviço
       await reminderService.waitForInitialization();
-      
+
       final existingReminders = reminderService.getRemindersForTask(task.id);
-      
+
       if (_selectedReminderDate != null) {
         // Validar se o horário não é passado
         if (_selectedReminderDate!.isBefore(DateTime.now())) {
@@ -163,17 +171,22 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
             _selectedReminderDate = null;
             _selectedReminderTime = null;
           });
-          
+
           // Mostra um AlertDialog em cima de TUDO (usa rootNavigator)
           if (mounted) {
             showDialog(
               context: context,
-              useRootNavigator: true, // IMPORTANTE: Garante que aparece acima do dialog de tarefa
+              useRootNavigator:
+                  true, // IMPORTANTE: Garante que aparece acima do dialog de tarefa
               barrierDismissible: false,
               builder: (dialogContext) => AlertDialog(
                 title: const Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.orange,
+                      size: 28,
+                    ),
                     SizedBox(width: 12),
                     Text('Horário Inválido'),
                   ],
@@ -192,10 +205,10 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
               ),
             );
           }
-          
+
           return; // Não salva a tarefa se o lembrete for inválido
         }
-        
+
         // Criar ou atualizar lembrete
         if (existingReminders.isNotEmpty) {
           // Atualiza o primeiro lembrete
@@ -231,11 +244,9 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.initialTask != null;
     final theme = Theme.of(context);
-    
+
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500),
         child: Column(
@@ -275,7 +286,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                 ],
               ),
             ),
-            
+
             // Form
             Flexible(
               child: SingleChildScrollView(
@@ -297,7 +308,10 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                            borderSide: const BorderSide(
+                              color: Colors.red,
+                              width: 2,
+                            ),
                           ),
                         ),
                         maxLength: 100,
@@ -311,7 +325,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Campo Descrição (opcional)
                       TextFormField(
                         controller: _descriptionController,
@@ -329,7 +343,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                         textCapitalization: TextCapitalization.sentences,
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Campo Prioridade *
                       DropdownButtonFormField<TaskPriority>(
                         value: _selectedPriority,
@@ -368,7 +382,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Campo Data de Vencimento (opcional)
                       InkWell(
                         onTap: _selectDueDate,
@@ -405,11 +419,11 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Campo Categoria (opcional)
                       _buildCategoryField(theme),
                       const SizedBox(height: 16),
-                      
+
                       // Campo Lembrete (opcional)
                       _buildReminderField(theme),
                     ],
@@ -417,17 +431,14 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                 ),
               ),
             ),
-            
+
             // Footer com botões
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
                 border: Border(
-                  top: BorderSide(
-                    color: theme.dividerColor,
-                    width: 1,
-                  ),
+                  top: BorderSide(color: theme.dividerColor, width: 1),
                 ),
               ),
               child: Row(
@@ -445,7 +456,8 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                           ? const Color(0xFFFBBF24) // AMBER no dark mode
                           : theme.primaryColor, // AZUL no light mode
                       foregroundColor: theme.brightness == Brightness.dark
-                          ? Colors.black // Texto preto no dark mode para contraste
+                          ? Colors
+                                .black // Texto preto no dark mode para contraste
                           : Colors.white, // Texto branco no light mode
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -478,9 +490,12 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
   }
 
   Widget _buildCategoryField(ThemeData theme) {
-    final categoryService = Provider.of<CategoryService>(context, listen: false);
+    final categoryService = Provider.of<CategoryService>(
+      context,
+      listen: false,
+    );
     final categories = categoryService.categories;
-    
+
     return InkWell(
       onTap: () async {
         final selected = await showDialog<String>(
@@ -497,24 +512,35 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                     leading: const Icon(Icons.cancel),
                     onTap: () => Navigator.pop(context, ''),
                   ),
-                  ...categories.map((cat) => ListTile(
-                    title: Text(cat.name),
-                    leading: Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: Color(int.parse(cat.color.replaceAll('#', '0xff'))),
-                        shape: BoxShape.circle,
+                  ...categories.map(
+                    (cat) => ListTile(
+                      title: Text(cat.name),
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Color(
+                            int.parse(cat.color.replaceAll('#', '0xff')),
+                          ).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(cat.icon),
+                          color: Color(
+                            int.parse(cat.color.replaceAll('#', '0xff')),
+                          ),
+                          size: 20,
+                        ),
                       ),
+                      onTap: () => Navigator.pop(context, cat.id),
                     ),
-                    onTap: () => Navigator.pop(context, cat.id),
-                  )),
+                  ),
                 ],
               ),
             ),
           ),
         );
-        
+
         if (selected != null) {
           setState(() {
             _selectedCategoryId = selected.isEmpty ? null : selected;
@@ -537,17 +563,15 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                   tooltip: 'Remover categoria',
                 )
               : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: Text(
           _selectedCategoryId != null
               ? () {
                   try {
-                    return categories.firstWhere(
-                      (c) => c.id == _selectedCategoryId,
-                    ).name;
+                    return categories
+                        .firstWhere((c) => c.id == _selectedCategoryId)
+                        .name;
                   } catch (e) {
                     // Categoria foi deletada, limpa a seleção
                     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -577,18 +601,19 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
         // Mostrar date picker
         final date = await showDatePicker(
           context: context,
-          initialDate: _selectedReminderDate ?? _selectedDueDate ?? DateTime.now(),
+          initialDate:
+              _selectedReminderDate ?? _selectedDueDate ?? DateTime.now(),
           firstDate: DateTime.now(),
           lastDate: DateTime.now().add(const Duration(days: 365)),
           helpText: 'Selecionar data do lembrete',
           cancelText: 'Cancelar',
           confirmText: 'OK',
         );
-        
+
         if (date != null) {
           // Mostrar time picker customizado
           final time = await _showCustomTimePicker();
-          
+
           if (time != null) {
             setState(() {
               _selectedReminderDate = DateTime(
@@ -620,9 +645,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
                   tooltip: 'Remover lembrete',
                 )
               : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: Text(
           _selectedReminderDate != null
@@ -639,11 +662,12 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
   }
 
   Future<TimeOfDay?> _showCustomTimePicker() async {
-    final initialTime = _selectedReminderTime ?? 
-                       (_selectedDueDate != null 
-                         ? TimeOfDay(hour: _selectedDueDate!.hour - 1, minute: 0)
-                         : const TimeOfDay(hour: 9, minute: 0));
-    
+    final initialTime =
+        _selectedReminderTime ??
+        (_selectedDueDate != null
+            ? TimeOfDay(hour: _selectedDueDate!.hour - 1, minute: 0)
+            : const TimeOfDay(hour: 9, minute: 0));
+
     return showDialog<TimeOfDay>(
       context: context,
       barrierDismissible: false,
@@ -656,15 +680,54 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
     final dateOnly = DateTime(date.year, date.month, date.day);
-    
+
     if (dateOnly == today) {
       return 'Hoje';
     } else if (dateOnly == tomorrow) {
       return 'Amanhã';
     } else {
       return '${date.day.toString().padLeft(2, '0')}/'
-             '${date.month.toString().padLeft(2, '0')}/'
-             '${date.year}';
+          '${date.month.toString().padLeft(2, '0')}/'
+          '${date.year}';
+    }
+  }
+
+  /// Parse do nome do ícone para IconData
+  IconData _getCategoryIcon(String? iconName) {
+    if (iconName == null || iconName.isEmpty) {
+      return Icons.category;
+    }
+
+    switch (iconName.toLowerCase()) {
+      case 'work':
+        return Icons.work;
+      case 'person':
+      case 'personal':
+        return Icons.person;
+      case 'school':
+      case 'study':
+        return Icons.school;
+      case 'favorite':
+      case 'health':
+        return Icons.favorite;
+      case 'home':
+        return Icons.home;
+      case 'shopping':
+      case 'shopping_cart':
+        return Icons.shopping_cart;
+      case 'sports':
+      case 'sports_soccer':
+        return Icons.sports_soccer;
+      case 'restaurant':
+      case 'food':
+        return Icons.restaurant;
+      case 'local_activity':
+      case 'entertainment':
+        return Icons.local_activity;
+      case 'category':
+        return Icons.category;
+      default:
+        return Icons.category;
     }
   }
 }
@@ -676,7 +739,8 @@ class _CustomTimePickerDialog extends StatefulWidget {
   const _CustomTimePickerDialog({required this.initialTime});
 
   @override
-  State<_CustomTimePickerDialog> createState() => _CustomTimePickerDialogState();
+  State<_CustomTimePickerDialog> createState() =>
+      _CustomTimePickerDialogState();
 }
 
 class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
@@ -691,7 +755,9 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
     _selectedHour = widget.initialTime.hour;
     _selectedMinute = widget.initialTime.minute;
     _hourController = FixedExtentScrollController(initialItem: _selectedHour);
-    _minuteController = FixedExtentScrollController(initialItem: _selectedMinute);
+    _minuteController = FixedExtentScrollController(
+      initialItem: _selectedMinute,
+    );
   }
 
   @override
@@ -704,7 +770,7 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return AlertDialog(
       title: const Text('Selecionar Horário'),
       content: SizedBox(
@@ -740,12 +806,18 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
                               index.toString().padLeft(2, '0'),
                               style: TextStyle(
                                 fontSize: isSelected ? 32 : 24,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected 
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isSelected
                                     ? (theme.brightness == Brightness.dark
-                                        ? const Color(0xFFFBBF24) // AMBER no dark mode
-                                        : theme.primaryColor) // AZUL no light mode
-                                    : theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
+                                          ? const Color(
+                                              0xFFFBBF24,
+                                            ) // AMBER no dark mode
+                                          : theme
+                                                .primaryColor) // AZUL no light mode
+                                    : theme.textTheme.bodyLarge?.color
+                                          ?.withOpacity(0.5),
                               ),
                             ),
                           );
@@ -758,7 +830,10 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(':', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+              child: Text(
+                ':',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
             ),
             // Minuto
             Expanded(
@@ -787,12 +862,18 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
                               index.toString().padLeft(2, '0'),
                               style: TextStyle(
                                 fontSize: isSelected ? 32 : 24,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected 
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isSelected
                                     ? (theme.brightness == Brightness.dark
-                                        ? const Color(0xFFFBBF24) // AMBER no dark mode
-                                        : theme.primaryColor) // AZUL no light mode
-                                    : theme.textTheme.bodyLarge?.color?.withOpacity(0.5),
+                                          ? const Color(
+                                              0xFFFBBF24,
+                                            ) // AMBER no dark mode
+                                          : theme
+                                                .primaryColor) // AZUL no light mode
+                                    : theme.textTheme.bodyLarge?.color
+                                          ?.withOpacity(0.5),
                               ),
                             ),
                           );
@@ -813,7 +894,10 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
         ),
         ElevatedButton(
           onPressed: () {
-            Navigator.pop(context, TimeOfDay(hour: _selectedHour, minute: _selectedMinute));
+            Navigator.pop(
+              context,
+              TimeOfDay(hour: _selectedHour, minute: _selectedMinute),
+            );
           },
           child: const Text('OK'),
         ),
@@ -823,12 +907,9 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
 }
 
 /// Função helper para mostrar o dialog
-/// 
+///
 /// Retorna a tarefa criada/editada ou null se cancelado
-Future<Task?> showTaskFormDialog(
-  BuildContext context, {
-  Task? initial,
-}) {
+Future<Task?> showTaskFormDialog(BuildContext context, {Task? initial}) {
   return showDialog<Task>(
     context: context,
     barrierDismissible: false,
