@@ -4,6 +4,7 @@
 class Reminder {
   final String id;
   final String taskId;
+  final String userId; // FK para User - lembretes são por usuário
   final DateTime reminderDate;
   final ReminderType type;
   final bool isActive;
@@ -13,6 +14,7 @@ class Reminder {
   Reminder({
     required this.id,
     required this.taskId,
+    required this.userId,
     required this.reminderDate,
     required this.type,
     this.isActive = true,
@@ -23,6 +25,7 @@ class Reminder {
   Reminder copyWith({
     String? id,
     String? taskId,
+    String? userId,
     DateTime? reminderDate,
     ReminderType? type,
     bool? isActive,
@@ -32,6 +35,7 @@ class Reminder {
     return Reminder(
       id: id ?? this.id,
       taskId: taskId ?? this.taskId,
+      userId: userId ?? this.userId,
       reminderDate: reminderDate ?? this.reminderDate,
       type: type ?? this.type,
       isActive: isActive ?? this.isActive,
@@ -56,6 +60,7 @@ class Reminder {
     return Reminder(
       id: map['id'] as String,
       taskId: map['task_id'] as String,
+      userId: map['user_id'] as String,
       reminderDate: DateTime.parse(map['reminder_date'] as String),
       type: ReminderType.values.firstWhere(
         (e) => e.name == map['type'],

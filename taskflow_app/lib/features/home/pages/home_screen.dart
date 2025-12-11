@@ -51,9 +51,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeInOut),
     );
 
-    // Verifica se deve mostrar tutorial após a build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkFirstTimeUser();
+    // Verifica se deve mostrar tutorial após a build E após aguardar sincronização
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Aguarda um momento para dar tempo das tarefas sincronizarem
+      print('⏳ Aguardando sincronização de tarefas...');
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        print('🔍 Verificando tutorial após delay...');
+        _checkFirstTimeUser();
+      }
     });
   }
 
@@ -74,15 +80,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     try {
       final prefsService = context.read<PreferencesService>();
+      final taskService = context.read<TaskService>();
 
-      print('🔍 Checking first time user on HomeScreen...');
-      print('   isFirstTimeUser: ${prefsService.isFirstTimeUser}');
-      print('   isOnboardingCompleted: ${prefsService.isOnboardingCompleted}');
-      print('   hasValidConsent: ${prefsService.hasValidConsent}');
+      print('🔍 Checking home tutorial status...');
+      print('   hasSeenHomeTutorial: ${prefsService.hasSeenHomeTutorial}');
+      print('   tarefas existentes: ${taskService.tasks.length}');
+      print('   Lista de IDs: ${taskService.tasks.map((t) => t.id).take(3).toList()}');
 
-      if (prefsService.isFirstTimeUser) {
+      // Mostra tutorial apenas se:
+      // 1. Nunca viu o tutorial antes E
+      // 2. Não tem nenhuma tarefa criada (usuário realmente novo)
+      final shouldShowTutorial = !prefsService.hasSeenHomeTutorial && 
+                                  taskService.tasks.isEmpty;
+
+      print('❓ shouldShowTutorial = $shouldShowTutorial');
+
+      if (shouldShowTutorial) {
         print(
-          '🎉 First time detected! Showing tutorial and starting animation...',
+          '🎉 First time in home! Showing tutorial and starting animation...',
         );
 
         // Inicia a pulsação do FAB
@@ -95,17 +110,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         print('✅ Tutorial state set to true, animation started');
         print('✅ _showTutorial = $_showTutorial');
       } else {
-        print('ℹ️ Not first time, skipping tutorial');
-        // Garante que animação está parada se não for primeira vez
+        print('ℹ️ Tutorial already seen or user has tasks, skipping');
+        
+        // Se tem tarefas mas flag não está setada, seta agora
+        if (taskService.tasks.isNotEmpty && !prefsService.hasSeenHomeTutorial) {
+          print('✅ Auto-marking tutorial as seen (user has ${taskService.tasks.length} tasks)');
+          prefsService.markHomeTutorialAsSeen();
+        }
+        
+        // Garante que o tutorial está DESLIGADO se já foi visto ou se tem tarefas
+        if (_showTutorial) {
+          print('🔄 Forçando tutorial OFF (estado inconsistente)');
+          setState(() {
+            _showTutorial = false;
+          });
+        }
+        
+        // Para a animação se já viu o tutorial OU se já tem tarefas
         _fabAnimationController.stop();
         _fabAnimationController.value = 1.0;
+        
+        // Marca o tutorial como visto se o usuário já tem tarefas
+        if (taskService.tasks.isNotEmpty && !prefsService.hasSeenHomeTutorial) {
+          print('📝 Marcando tutorial como visto pois usuário já tem tarefas');
+          prefsService.markHomeTutorialAsSeen();
+        }
       }
     } catch (e) {
-      print('❌ Error checking first time user: $e');
+      print('❌ Error checking home tutorial: $e');
     }
   }
 
   void _dismissTutorial({bool dontShowAgain = false}) async {
+    // Marca tutorial como visto
+    if (dontShowAgain) {
+      final prefsService = context.read<PreferencesService>();
+      await prefsService.markHomeTutorialAsSeen();
+    }
+    
     // NÃO para a pulsação - ela continua até criar primeira tarefa
     // Apenas fecha o tutorial overlay
 
@@ -178,19 +220,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 },
               ),
               // Avatar do usuário no AppBar
-              Consumer<PreferencesService>(
-                builder: (context, prefsService, child) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: UserAvatar(
-                      photoPath: prefsService.userPhotoPath,
-                      userName: prefsService.userName,
-                      radius: 16,
-                      onTap: () => _showPhotoOptions(context),
-                      showBorder: true,
-                    ),
-                  );
-                },
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: UserAvatar(
+                  radius: 16,
+                  onTap: () => _showPhotoOptions(context),
+                  showBorder: true,
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.settings),
@@ -317,10 +353,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _fabAnimationController.stop();
       _fabAnimationController.value = 1.0;
 
-      // Marca que não é mais primeira vez
+      // Marca que não é mais primeira vez E que já viu o tutorial
       final prefsService = context.read<PreferencesService>();
       if (prefsService.isFirstTimeUser) {
         await prefsService.completeFirstTimeSetup();
+      }
+      
+      // Marca tutorial como visto (independente de ser primeira vez)
+      if (!prefsService.hasSeenHomeTutorial) {
+        await prefsService.markHomeTutorialAsSeen();
       }
 
       // Fecha o tutorial se ainda estiver aberto

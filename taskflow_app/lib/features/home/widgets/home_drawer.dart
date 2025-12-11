@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../services/storage/preferences_service.dart';
+import '../../../services/user/user_profile_service.dart';
 import '../../../services/integrations/photo_service.dart';
+import '../../../features/auth/application/auth_service.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../theme/theme_controller.dart';
 
@@ -14,12 +16,9 @@ class HomeDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final prefsService = context.watch<PreferencesService>();
-    final userName = prefsService.userName;
-    final userPhotoPath = prefsService.userPhotoPath;
-
-    // Debug log para rastrear o caminho da foto
-    print('🖼️ HomeDrawer - userPhotoPath: $userPhotoPath');
+    final profileService = context.watch<UserProfileService>();
+    final userName = profileService.userName ?? 'Usuário';
+    final userPhotoPath = profileService.userPhotoPath;
 
     return Drawer(
       child: ListView(
@@ -47,19 +46,10 @@ class HomeDrawer extends StatelessWidget {
                     const SizedBox(height: 8),
                     // Avatar com espaçamento adequado
                     Center(
-                      child: Consumer<PreferencesService>(
-                        builder: (context, prefs, child) {
-                          print(
-                            '🔄 Consumer rebuilding UserAvatar with path: ${prefs.userPhotoPath}',
-                          );
-                          return UserAvatar(
-                            photoPath: prefs.userPhotoPath,
-                            userName: prefs.userName,
-                            radius: 28,
-                            onTap: () => _showPhotoOptions(context),
-                            showBorder: true,
-                          );
-                        },
+                      child: UserAvatar(
+                        radius: 28,
+                        onTap: () => _showPhotoOptions(context),
+                        showBorder: true,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -183,8 +173,8 @@ class HomeDrawer extends StatelessWidget {
   }
 
   void _showPhotoOptions(BuildContext context) {
-    final prefsService = context.read<PreferencesService>();
-    final hasPhoto = prefsService.userPhotoPath != null;
+    final profileService = context.read<UserProfileService>();
+    final hasPhoto = profileService.userPhotoPath != null;
 
     showModalBottomSheet(
       context: context,
@@ -241,71 +231,52 @@ class HomeDrawer extends StatelessWidget {
     try {
       print('📸 Iniciando seleção de imagem...');
 
-      // SOLUÇÃO: Obter a referência do Provider ANTES da seleção de imagem
-      print('🚀 PASSO 1: Obtendo PreferencesService ANTES da seleção...');
-      final prefsService = Provider.of<PreferencesService>(
+      // Obter serviços necessários ANTES da seleção
+      final profileService = Provider.of<UserProfileService>(
         context,
         listen: false,
       );
-      print('✅ PreferencesService obtido ANTES da seleção');
+      final authService = Provider.of<AuthService>(
+        context,
+        listen: false,
+      );
 
-      print('🚀 PASSO 2: Iniciando seleção e processamento...');
+      // Selecionar e processar imagem
       final photoService = PhotoService();
       final compressedPath = await photoService.pickCompressAndSave(source);
 
-      print('📦 Caminho da foto processada: $compressedPath');
-
-      // Agora usar a referência já obtida, não o contexto
-      try {
-        print('🚀 PASSO 3: Verificando caminho...');
-        if (compressedPath == null) {
-          print('❌ Caminho é null, não pode salvar');
-          return;
-        }
-        print('✅ Caminho válido: $compressedPath');
-
-        print(
-          '🚀 PASSO 4: Salvando caminho (usando referência obtida antes)...',
-        );
-        await prefsService.setUserPhotoPath(compressedPath);
-        print('✅ Caminho salvo no PreferencesService');
-
-        print('🚀 PASSO 5: Verificando salvamento...');
-        final savedPath = prefsService.userPhotoPath;
-        print('🔍 Verificação: caminho recuperado = $savedPath');
-
-        if (savedPath == compressedPath) {
-          print('🎉 SUCESSO TOTAL! Foto salva e verificada');
-        } else {
-          print('⚠️ ATENÇÃO: Caminho salvo difere do esperado');
-        }
-      } catch (stepError, stepStack) {
-        print('💥 ERRO em um dos passos: $stepError');
-        print('📋 Stack trace do passo: $stepStack');
+      if (compressedPath == null) {
+        print('❌ Nenhuma imagem selecionada');
+        return;
       }
 
-      // Mostrar mensagem de sucesso se tudo funcionou
-      if (compressedPath != null && context.mounted) {
-        print('🎉 Mostrando mensagem de sucesso...');
+      // Salvar foto usando UserProfileService
+      await profileService.updatePhoto(
+        compressedPath,
+        authService.userId!,
+        isGuest: authService.isGuest,
+      );
+      
+      print('✅ Foto atualizada com sucesso');
 
-        // Pequeno delay para garantir que o SharedPreferences foi atualizado
-        await Future.delayed(const Duration(milliseconds: 100));
+      
+      print('✅ Foto atualizada com sucesso');
 
+      // Mostrar mensagem de sucesso
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Foto atualizada com sucesso!'),
+            content: Text('Foto atualizada e sincronizada!'),
             backgroundColor: Colors.green,
           ),
         );
-
-        print('✅ Mensagem de sucesso exibida');
       }
     } catch (e) {
-      print('💥 Erro inesperado ao processar foto: $e');
+      print('💥 Erro ao processar foto: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro inesperado: $e'),
+            content: Text('Erro ao atualizar foto: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -331,8 +302,13 @@ class HomeDrawer extends StatelessWidget {
             onPressed: () async {
               Navigator.of(context).pop();
 
-              final prefsService = context.read<PreferencesService>();
-              await prefsService.setUserPhotoPath(null);
+              final profileService = context.read<UserProfileService>();
+              final authService = context.read<AuthService>();
+              
+              await profileService.removePhoto(
+                authService.userId!,
+                isGuest: authService.isGuest,
+              );
 
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -348,7 +324,7 @@ class HomeDrawer extends StatelessWidget {
   }
 
   void _showPhotoPreview(BuildContext context) {
-    final photoPath = context.read<PreferencesService>().userPhotoPath;
+    final photoPath = context.read<UserProfileService>().userPhotoPath;
     if (photoPath == null) return;
 
     showDialog(
@@ -383,8 +359,8 @@ class HomeDrawer extends StatelessWidget {
   }
 
   void _showEditNameDialog(BuildContext context) {
-    final prefsService = context.read<PreferencesService>();
-    final controller = TextEditingController(text: prefsService.userName);
+    final profileService = context.read<UserProfileService>();
+    final controller = TextEditingController(text: profileService.userName);
 
     showDialog(
       context: context,
@@ -408,12 +384,17 @@ class HomeDrawer extends StatelessWidget {
             onPressed: () async {
               final newName = controller.text.trim();
               if (newName.isNotEmpty) {
-                await prefsService.setUserName(newName);
+                final authService = context.read<AuthService>();
+                await profileService.updateName(
+                  newName,
+                  authService.userId!,
+                  isGuest: authService.isGuest,
+                );
                 if (context.mounted) {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Nome atualizado com sucesso!'),
+                      content: Text('Nome atualizado e sincronizado!'),
                     ),
                   );
                 }

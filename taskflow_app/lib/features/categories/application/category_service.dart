@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../app/domain/entities/category.dart';
 import '../../app/infrastructure/local/category_local_dto_shared_prefs.dart';
 import '../../app/infrastructure/mappers/category_mapper.dart';
+import '../infrastructure/remote/supabase_categories_remote_datasource.dart';
+import '../../../services/core/supabase_service.dart';
 
 /// CategoryService - Gerencia categorias do sistema
 ///
@@ -13,12 +15,37 @@ import '../../app/infrastructure/mappers/category_mapper.dart';
 /// - Notificação de mudanças para UI
 class CategoryService extends ChangeNotifier {
   final CategoryLocalDtoSharedPrefs _localDao;
+  SupabaseCategoriesRemoteDatasource? _remoteApi;
 
   final List<Category> _categories = [];
   bool _isInitialized = false;
 
   CategoryService(this._localDao) {
+    try {
+      _remoteApi = SupabaseCategoriesRemoteDatasource(SupabaseService.client);
+      if (kDebugMode) {
+        print('✅ CategoryService: Remote datasource inicializado com sucesso');
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        print('❌ CategoryService: Erro ao inicializar Supabase - modo offline');
+        print('   Erro: $e');
+        print('   Stack: $stack');
+      }
+      _remoteApi = null;
+    }
     _initializeCategories();
+  }
+
+  /// Retorna o userId do usuário autenticado ou um UUID fixo para modo local
+  String get _userId {
+    // Tenta obter o userId do Supabase
+    final supabaseUserId = SupabaseService.currentUserId;
+    if (supabaseUserId != null) {
+      return supabaseUserId;
+    }
+    // UUID fixo para modo local (compatível com PostgreSQL)
+    return '00000000-0000-0000-0000-000000000000';
   }
 
   /// Inicializa o serviço carregando categorias do cache local
@@ -28,6 +55,7 @@ class CategoryService extends ChangeNotifier {
     try {
       print('🏷️ Inicializando CategoryService...');
 
+      // Carrega do cache local primeiro
       final dtos = await _localDao.listAll();
       _categories.clear();
 
@@ -36,13 +64,23 @@ class CategoryService extends ChangeNotifier {
       }
 
       print(
-        '📋 CategoryService inicializado com ${_categories.length} categorias',
+        '📋 CategoryService inicializado com ${_categories.length} categorias do cache',
       );
       _isInitialized = true;
+      notifyListeners();
 
-      // Se não houver categorias, criar categorias padrão
-      if (_categories.isEmpty) {
-        await _createDefaultCategories();
+      // Sincroniza com Supabase se não for modo convidado
+      if (_userId != '00000000-0000-0000-0000-000000000000') {
+        print('🔄 Sincronizando categorias com Supabase...');
+        await _syncFromSupabase();
+        print('✅ Sincronização completa: ${_categories.length} categorias');
+      } else {
+        print('👤 Modo convidado detectado');
+        // Se não houver categorias no modo convidado, criar localmente
+        if (_categories.isEmpty) {
+          print('🎨 Criando categorias padrão para modo convidado');
+          await _createDefaultCategories();
+        }
       }
 
       notifyListeners();
@@ -50,6 +88,38 @@ class CategoryService extends ChangeNotifier {
       print('❌ Erro ao inicializar CategoryService: $e');
       _isInitialized = true;
       notifyListeners();
+    }
+  }
+
+  /// Sincroniza categorias do Supabase para o cache local
+  Future<void> _syncFromSupabase() async {
+    if (_remoteApi == null) {
+      print('⚠️ Remote API não disponível');
+      return;
+    }
+
+    try {
+      // Busca todas as categorias do usuário no Supabase
+      final remotePage = await _remoteApi!.fetchCategories();
+      final remoteDtos = remotePage.data;
+      
+      print('📥 Recebidas ${remoteDtos.length} categorias do Supabase');
+
+      // Atualiza o cache local com dados do servidor (usa upsertAll)
+      if (remoteDtos.isNotEmpty) {
+        await _localDao.upsertAll(remoteDtos);
+      }
+
+      // Recarrega as categorias do cache atualizado
+      final dtos = await _localDao.listAll();
+      _categories.clear();
+      for (final dto in dtos) {
+        _categories.add(CategoryMapper.toEntity(dto));
+      }
+
+      notifyListeners();
+    } catch (e) {
+      print('❌ Erro ao sincronizar com Supabase: $e');
     }
   }
 
@@ -63,7 +133,7 @@ class CategoryService extends ChangeNotifier {
         name: 'Trabalho',
         color: '#2196F3',
         icon: 'work',
-        userId: 'local-user',
+        userId: _userId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -72,25 +142,25 @@ class CategoryService extends ChangeNotifier {
         name: 'Pessoal',
         color: '#4CAF50',
         icon: 'person',
-        userId: 'local-user',
+        userId: _userId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
       Category(
         id: 'cat-study',
         name: 'Estudos',
-        color: '#9C27B0',
+        color: '#FF9800',
         icon: 'school',
-        userId: 'local-user',
+        userId: _userId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
       Category(
         id: 'cat-health',
         name: 'Saúde',
-        color: '#F44336',
+        color: '#E91E63',
         icon: 'favorite',
-        userId: 'local-user',
+        userId: _userId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -99,7 +169,7 @@ class CategoryService extends ChangeNotifier {
         name: 'Casa',
         color: '#FF9800',
         icon: 'home',
-        userId: 'local-user',
+        userId: _userId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -147,7 +217,34 @@ class CategoryService extends ChangeNotifier {
       final allDtos = _categories.map((c) => CategoryMapper.toDto(c)).toList();
       await _localDao.upsertAll(allDtos);
 
-      print('✅ Categoria adicionada com sucesso');
+      print('✅ Categoria adicionada ao cache local');
+
+      // Tenta sincronizar com Supabase
+      if (_remoteApi != null) {
+        try {
+          if (kDebugMode) print('📤 Sincronizando categoria com Supabase...');
+          final dto = CategoryMapper.toDto(category);
+          if (kDebugMode) print('   DTO: ${dto.toMap()}');
+          
+          // Verifica se não é modo convidado
+          final currentUserId = SupabaseService.currentUserId;
+          if (currentUserId != null && 
+              currentUserId != '00000000-0000-0000-0000-000000000000') {
+            await _remoteApi!.upsertCategories([dto]);
+            if (kDebugMode) print('✅ Categoria sincronizada com Supabase');
+          } else {
+            if (kDebugMode) print('⚠️ Modo convidado - categoria não sincronizada');
+          }
+        } catch (syncError, stack) {
+          if (kDebugMode) {
+            print('❌ Erro ao sincronizar com Supabase:');
+            print('   $syncError');
+            print('   Stack: $stack');
+          }
+        }
+      } else {
+        if (kDebugMode) print('⚠️ Modo offline - categoria não sincronizada');
+      }
     } catch (e) {
       print('❌ Erro ao adicionar categoria: $e');
       _categories.removeWhere((c) => c.id == category.id);
@@ -174,7 +271,33 @@ class CategoryService extends ChangeNotifier {
       final allDtos = _categories.map((c) => CategoryMapper.toDto(c)).toList();
       await _localDao.upsertAll(allDtos);
 
-      print('✅ Categoria atualizada com sucesso');
+      print('✅ Categoria atualizada no cache local');
+
+      // Tenta sincronizar com Supabase
+      if (_remoteApi != null) {
+        try {
+          if (kDebugMode) print('📤 Sincronizando categoria atualizada com Supabase...');
+          final dto = CategoryMapper.toDto(updatedCategory);
+          
+          // Verifica se não é modo convidado
+          final currentUserId = SupabaseService.currentUserId;
+          if (currentUserId != null && 
+              currentUserId != '00000000-0000-0000-0000-000000000000') {
+            await _remoteApi!.upsertCategories([dto]);
+            if (kDebugMode) print('✅ Categoria atualizada sincronizada com Supabase');
+          } else {
+            if (kDebugMode) print('⚠️ Modo convidado - categoria não sincronizada');
+          }
+        } catch (syncError, stack) {
+          if (kDebugMode) {
+            print('❌ Erro ao sincronizar com Supabase:');
+            print('   $syncError');
+            print('   Stack: $stack');
+          }
+        }
+      } else {
+        if (kDebugMode) print('⚠️ Modo offline - categoria não sincronizada');
+      }
     } catch (e) {
       print('❌ Erro ao atualizar categoria: $e');
       await _refreshCategories();
@@ -219,18 +342,35 @@ class CategoryService extends ChangeNotifier {
     }
   }
 
-  /// Limpa todas as categorias (para testes)
+  /// Limpa todas as categorias (usado no logout)
   Future<void> clearAllCategories() async {
     try {
-      print('🧹 Limpando todas as categorias...');
-
+      print('🧹 Limpando todas as categorias do cache...');
+      
       _categories.clear();
       await _localDao.clear();
+      
+      // NÃO marca como não inicializado aqui
+      // O reinitialize() logo após o login cuidará disso
+      
       notifyListeners();
-
-      print('✅ Categorias limpas com sucesso');
+      print('✅ Cache de categorias limpo');
     } catch (e) {
       print('❌ Erro ao limpar categorias: $e');
     }
+  }
+
+  /// Reinicializa o serviço (usado após login/logout)
+  Future<void> reinitialize() async {
+    print('🔄 Reinicializando CategoryService...');
+    print('   Estado atual: _isInitialized = $_isInitialized, categorias = ${_categories.length}');
+    
+    // Limpa TUDO: memória E cache local
+    _categories.clear();
+    await _localDao.clear();
+    
+    // Marca como não inicializado e reinicializa
+    _isInitialized = false;
+    await _initializeCategories();
   }
 }

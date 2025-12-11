@@ -16,6 +16,7 @@ class TaskDto {
   final int priority; // número para o banco
   final String updated_at; // ISO8601 String para sincronização
   final String? category_id; // FK para categories table
+  final String user_id; // FK para users table
   final bool is_deleted; // Soft delete flag
   final String? deleted_at; // ISO8601 String ou null
 
@@ -29,6 +30,7 @@ class TaskDto {
     required this.priority,
     required this.updated_at,
     this.category_id,
+    required this.user_id,
     this.is_deleted = false,
     this.deleted_at,
   });
@@ -45,6 +47,7 @@ class TaskDto {
       priority: (map['priority'] as num).toInt(),
       updated_at: map['updated_at'] as String,
       category_id: map['category_id'] as String?,
+      user_id: map['user_id'] as String,
       is_deleted: (map['is_deleted'] as bool?) ?? false,
       deleted_at: map['deleted_at'] as String?,
     );
@@ -62,6 +65,7 @@ class TaskDto {
       'priority': priority,
       'updated_at': updated_at,
       'category_id': category_id,
+      'user_id': user_id,
       'is_deleted': is_deleted,
       'deleted_at': deleted_at,
     };
@@ -91,6 +95,7 @@ class TaskDto {
     int? priority,
     String? updated_at,
     String? category_id,
+    String? user_id,
     bool? is_deleted,
     String? deleted_at,
   }) {
@@ -104,6 +109,7 @@ class TaskDto {
       priority: priority ?? this.priority,
       updated_at: updated_at ?? this.updated_at,
       category_id: category_id ?? this.category_id,
+      user_id: user_id ?? this.user_id,
       is_deleted: is_deleted ?? this.is_deleted,
       deleted_at: deleted_at ?? this.deleted_at,
     );

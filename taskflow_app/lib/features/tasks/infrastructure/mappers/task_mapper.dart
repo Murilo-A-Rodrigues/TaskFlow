@@ -27,6 +27,7 @@ class TaskMapper {
       priority: TaskPriorityHelper.fromValue(dto.priority),
       updatedAt: DateTime.parse(dto.updated_at),
       categoryId: dto.category_id,
+      userId: dto.user_id,
       isDeleted: dto.is_deleted,
       deletedAt: dto.deleted_at != null
           ? DateTime.tryParse(dto.deleted_at!)
@@ -51,6 +52,7 @@ class TaskMapper {
       priority: entity.priority.value,
       updated_at: entity.updatedAt.toIso8601String(),
       category_id: entity.categoryId,
+      user_id: entity.userId,
       is_deleted: entity.isDeleted,
       deleted_at: entity.deletedAt?.toIso8601String(),
     );
@@ -96,7 +98,7 @@ class TaskMapper {
 
   /// Atualiza um TaskDto existente com dados de uma Task Entity
   ///
-  /// Útil para operações de update onde queremos manter alguns
+  /// Ütil para operações de update onde queremos manter alguns
   /// campos do DTO original e atualizar outros com dados da Entity
   static TaskDto updateDtoFromEntity(TaskDto originalDto, Task updatedEntity) {
     return TaskDto(
@@ -111,6 +113,7 @@ class TaskMapper {
       priority: updatedEntity.priority.value,
       updated_at: DateTime.now().toIso8601String(), // Atualiza timestamp
       category_id: updatedEntity.categoryId,
+      user_id: updatedEntity.userId,
     );
   }
 }

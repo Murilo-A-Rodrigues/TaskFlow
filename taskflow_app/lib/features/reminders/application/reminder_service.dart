@@ -6,6 +6,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../app/domain/entities/reminder.dart';
 import '../../tasks/domain/entities/task.dart';
 import '../../../services/notifications/notification_helper.dart';
+import '../infrastructure/remote/supabase_reminders_remote_datasource.dart';
+import '../../../services/core/supabase_service.dart';
+import '../../app/infrastructure/mappers/reminder_mapper.dart';
+import '../../auth/application/auth_service.dart';
 
 /// ReminderService - Gerencia lembretes de tarefas
 ///
@@ -18,10 +22,25 @@ class ReminderService extends ChangeNotifier {
   static const String _cacheKey = 'reminders_cache_v1';
 
   final NotificationHelper _notificationHelper;
+  final AuthService _authService;
+  late final SupabaseRemindersRemoteDatasource? _remoteApi;
   final List<Reminder> _reminders = [];
   bool _isInitialized = false;
 
-  ReminderService(this._notificationHelper) {
+  ReminderService(this._notificationHelper, this._authService) {
+    try {
+      _remoteApi = SupabaseRemindersRemoteDatasource(client: SupabaseService.client);
+      if (kDebugMode) {
+        print('✅ ReminderService: Remote datasource inicializado com sucesso');
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        print('❌ ReminderService: Erro ao inicializar Supabase - modo offline');
+        print('   Erro: $e');
+        print('   Stack: $stack');
+      }
+      _remoteApi = null;
+    }
     _initializeReminders();
   }
 
@@ -82,9 +101,16 @@ class ReminderService extends ChangeNotifier {
     String? customMessage,
   }) async {
     try {
+      // Obtém o userId do usuário autenticado
+      final userId = _authService.userId;
+      if (userId == null) {
+        throw Exception('Usuário não autenticado');
+      }
+
       final reminder = Reminder(
         id: const Uuid().v4(),
         taskId: task.id,
+        userId: userId,
         reminderDate: reminderDate,
         type: type,
         createdAt: DateTime.now(),
@@ -106,6 +132,33 @@ class ReminderService extends ChangeNotifier {
 
       print('✅ Lembrete criado: ${reminder.id}');
       print('📱 ID da notificação: ${_getNotificationId(reminder.id)}');
+
+      // Tenta sincronizar com Supabase
+      if (_remoteApi != null) {
+        try {
+          if (kDebugMode) print('📤 Sincronizando lembrete com Supabase...');
+          final dto = ReminderMapper.toDto(reminder);
+          if (kDebugMode) print('   DTO: ${dto.toMap()}');
+          
+          // Verifica se não é modo convidado
+          final currentUserId = SupabaseService.currentUserId;
+          if (currentUserId != null && 
+              currentUserId != '00000000-0000-0000-0000-000000000000') {
+            await _remoteApi.upsertReminders([dto]);
+            if (kDebugMode) print('✅ Lembrete sincronizado com Supabase');
+          } else {
+            if (kDebugMode) print('⚠️ Modo convidado - lembrete não sincronizado');
+          }
+        } catch (syncError, stack) {
+          if (kDebugMode) {
+            print('❌ Erro ao sincronizar lembrete com Supabase:');
+            print('   $syncError');
+            print('   Stack: $stack');
+          }
+        }
+      } else {
+        if (kDebugMode) print('⚠️ Modo offline - lembrete não sincronizado');
+      }
 
       // Debug: Lista todas as notificações pendentes
       await debugPendingNotifications();
@@ -141,6 +194,33 @@ class ReminderService extends ChangeNotifier {
       }
 
       print('✅ Lembrete atualizado: ${updatedReminder.id}');
+
+      // Tenta sincronizar com Supabase
+      if (_remoteApi != null) {
+        try {
+          if (kDebugMode) print('📤 Sincronizando lembrete atualizado com Supabase...');
+          final dto = ReminderMapper.toDto(updatedReminder);
+          
+          // Verifica se não é modo convidado
+          final currentUserId = SupabaseService.currentUserId;
+          if (currentUserId != null && 
+              currentUserId != '00000000-0000-0000-0000-000000000000') {
+            await _remoteApi.upsertReminders([dto]);
+            if (kDebugMode) print('✅ Lembrete atualizado sincronizado com Supabase');
+          } else {
+            if (kDebugMode) print('⚠️ Modo convidado - lembrete não sincronizado');
+          }
+        } catch (syncError, stack) {
+          if (kDebugMode) {
+            print('❌ Erro ao sincronizar lembrete com Supabase:');
+            print('   $syncError');
+            print('   Stack: $stack');
+          }
+        }
+      } else {
+        if (kDebugMode) print('⚠️ Modo offline - lembrete não sincronizado');
+      }
+
       notifyListeners();
     } catch (e) {
       print('❌ Erro ao atualizar lembrete: $e');

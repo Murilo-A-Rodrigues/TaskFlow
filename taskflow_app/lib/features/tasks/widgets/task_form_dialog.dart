@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import '../domain/entities/task.dart';
 import '../domain/entities/task_priority.dart';
 import '../../categories/application/category_service.dart';
 import '../../reminders/application/reminder_service.dart';
 import '../../app/domain/entities/reminder.dart';
+import '../../auth/application/auth_service.dart';
 
 /// Dialog reutilizável para criação e edição de tarefas
 ///
@@ -136,11 +138,20 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
       return;
     }
 
+    // Obtém o userId do usuário autenticado
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final userId = authService.userId;
+    
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuário não autenticado')),
+      );
+      return;
+    }
+
     // Cria/atualiza tarefa
     final task = Task(
-      id:
-          widget.initialTask?.id ??
-          DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.initialTask?.id ?? const Uuid().v4(),
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       priority: _selectedPriority,
@@ -149,6 +160,7 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
       createdAt: widget.initialTask?.createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
       isCompleted: widget.initialTask?.isCompleted ?? false,
+      userId: widget.initialTask?.userId ?? userId,
     );
 
     // Gerenciar lembretes

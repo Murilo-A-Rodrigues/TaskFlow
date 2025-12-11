@@ -19,6 +19,7 @@ class ReminderMapper {
     return Reminder(
       id: dto.id,
       taskId: dto.task_id,
+      userId: dto.user_id,
       reminderDate: DateTime.parse(dto.reminder_date),
       type: _stringToReminderType(dto.type),
       isActive: dto.is_active,
@@ -37,6 +38,7 @@ class ReminderMapper {
     return ReminderDto(
       id: entity.id,
       task_id: entity.taskId,
+      user_id: entity.userId,
       reminder_date: entity.reminderDate.toIso8601String(),
       type: entity.type.name,
       is_active: entity.isActive,
@@ -85,7 +87,7 @@ class ReminderMapper {
 
   /// Atualiza um ReminderDto existente com dados de uma Reminder Entity
   ///
-  /// Útil para operações de update onde queremos manter alguns
+  /// Ütil para operações de update onde queremos manter alguns
   /// campos do DTO original e atualizar outros com dados da Entity
   static ReminderDto updateDtoFromEntity(
     ReminderDto originalDto,
@@ -94,6 +96,7 @@ class ReminderMapper {
     return ReminderDto(
       id: updatedEntity.id,
       task_id: updatedEntity.taskId,
+      user_id: updatedEntity.userId,
       reminder_date: updatedEntity.reminderDate.toIso8601String(),
       type: updatedEntity.type.name,
       is_active: updatedEntity.isActive,

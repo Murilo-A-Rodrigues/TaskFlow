@@ -9,6 +9,7 @@ import 'dart:convert';
 class ReminderDto {
   final String id;
   final String task_id; // snake_case igual ao banco
+  final String user_id; // FK para users table
   final String reminder_date; // ISO8601 String para o fio
   final String type; // 'once', 'daily', 'weekly', 'monthly'
   final bool is_active; // snake_case igual ao banco
@@ -18,6 +19,7 @@ class ReminderDto {
   ReminderDto({
     required this.id,
     required this.task_id,
+    required this.user_id,
     required this.reminder_date,
     required this.type,
     required this.is_active,
@@ -30,6 +32,7 @@ class ReminderDto {
     return ReminderDto(
       id: map['id'] as String,
       task_id: map['task_id'] as String,
+      user_id: map['user_id'] as String,
       reminder_date: map['reminder_date'] as String,
       type: map['type'] as String,
       is_active: map['is_active'] as bool? ?? true,
@@ -43,6 +46,7 @@ class ReminderDto {
     return {
       'id': id,
       'task_id': task_id,
+      'user_id': user_id,
       'reminder_date': reminder_date,
       'type': type,
       'is_active': is_active,
@@ -68,6 +72,7 @@ class ReminderDto {
   ReminderDto copyWith({
     String? id,
     String? task_id,
+    String? user_id,
     String? reminder_date,
     String? type,
     bool? is_active,
@@ -77,6 +82,7 @@ class ReminderDto {
     return ReminderDto(
       id: id ?? this.id,
       task_id: task_id ?? this.task_id,
+      user_id: user_id ?? this.user_id,
       reminder_date: reminder_date ?? this.reminder_date,
       type: type ?? this.type,
       is_active: is_active ?? this.is_active,

@@ -40,10 +40,20 @@ class SupabaseRemindersRemoteDatasource implements RemindersRemoteApi {
         );
       }
 
-      // Inicia query na tabela reminders
+      // Obtém o user_id do usuário autenticado
+      final currentUser = client.auth.currentUser;
+      if (currentUser == null) {
+        if (kDebugMode) {
+          print('SupabaseRemindersRemoteDatasource.fetchReminders: Usuário não autenticado');
+        }
+        return const RemotePage<ReminderDto>(items: []);
+      }
+
+      // Inicia query na tabela reminders filtrando por user_id
       var query = client
           .from('reminders')
           .select('*')
+          .eq('user_id', currentUser.id)
           .order('created_at', ascending: false);
 
       // Aplica paginação por offset

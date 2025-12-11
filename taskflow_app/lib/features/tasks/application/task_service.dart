@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../domain/entities/task.dart';
 import '../domain/entities/task_priority.dart';
 import '../domain/repositories/task_repository.dart';
+import '../../auth/application/auth_service.dart';
 
 /// TaskService - Camada de serviço usando arquitetura Entity/DTO/Mapper
 ///
@@ -12,12 +13,13 @@ import '../domain/repositories/task_repository.dart';
 /// - Separação clara de responsabilidades
 class TaskService extends ChangeNotifier {
   final TaskRepository _repository;
+  final AuthService _authService;
   final List<Task> _tasks = [];
   bool _isInitialized = false;
   bool _isSyncing = false;
 
   // Injeção de dependência via construtor (padrão correto do documento)
-  TaskService(this._repository) {
+  TaskService(this._repository, this._authService) {
     initializeTasks();
   }
 
@@ -144,6 +146,13 @@ class TaskService extends ChangeNotifier {
     try {
       print('📄 Carregando tarefas de exemplo...');
 
+      // Obtém o userId do usuário autenticado
+      final userId = _authService.userId;
+      if (userId == null) {
+        print('❌ Usuário não autenticado, não é possível criar tarefas de exemplo');
+        return;
+      }
+
       // Tarefas de exemplo usando Entity diretamente (não DTO)
       final sampleTasks = [
         Task(
@@ -155,6 +164,7 @@ class TaskService extends ChangeNotifier {
           createdAt: DateTime.now().subtract(const Duration(days: 2)),
           updatedAt: DateTime.now(),
           dueDate: DateTime.now().subtract(const Duration(days: 1)),
+          userId: userId,
         ),
         Task(
           id: 'sample-2',
@@ -165,6 +175,7 @@ class TaskService extends ChangeNotifier {
           createdAt: DateTime.now().subtract(const Duration(days: 1)),
           updatedAt: DateTime.now(),
           dueDate: DateTime.now().add(const Duration(days: 3)),
+          userId: userId,
         ),
         Task(
           id: 'sample-3',
@@ -175,6 +186,7 @@ class TaskService extends ChangeNotifier {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
           dueDate: DateTime.now().add(const Duration(days: 7)),
+          userId: userId,
         ),
       ];
 

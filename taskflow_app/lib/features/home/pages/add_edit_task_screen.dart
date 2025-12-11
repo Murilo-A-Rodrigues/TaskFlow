@@ -38,6 +38,8 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
 
   void _save() {
     if (_formKey.currentState!.validate()) {
+      // Nota: Este arquivo legado precisa ser atualizado para obter userId do AuthService
+      // Por ora, usar um placeholder - este código precisa ser refatorado
       final task = Task(
         id: widget.task?.id ?? '',
         title: _titleController.text.trim(),
@@ -47,6 +49,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
         isCompleted: widget.task?.isCompleted ?? false,
         createdAt: widget.task?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
+        userId: widget.task?.userId ?? '00000000-0000-0000-0000-000000000000', // FIXME: Obter do AuthService
       );
 
       Navigator.of(context).pop(task);

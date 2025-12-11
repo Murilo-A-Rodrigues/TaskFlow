@@ -40,10 +40,20 @@ class SupabaseTasksRemoteDatasource implements TasksRemoteApi {
         );
       }
 
-      // Inicia query na tabela tasks
+      // Obtém o user_id do usuário autenticado
+      final currentUser = client.auth.currentUser;
+      if (currentUser == null) {
+        if (kDebugMode) {
+          print('SupabaseTasksRemoteDatasource.fetchTasks: Usuário não autenticado');
+        }
+        return const RemotePage<TaskDto>(items: []);
+      }
+
+      // Inicia query na tabela tasks filtrando por user_id
       var query = client
           .from('tasks')
           .select('*')
+          .eq('user_id', currentUser.id)
           .order('updated_at', ascending: false);
 
       // Aplica paginação por offset

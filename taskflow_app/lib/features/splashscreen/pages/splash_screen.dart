@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/storage/preferences_service.dart';
 import '../../../shared/widgets/taskflow_icon.dart';
+import '../../auth/application/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -53,27 +54,42 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     final prefsService = context.read<PreferencesService>();
+    final authService = context.read<AuthService>();
 
     // Debug: mostra o estado atual das preferências
+    print('🔍 SplashScreen - Debug de navegação:');
+    print('   isFirstTimeUser: ${prefsService.isFirstTimeUser}');
+    print('   isOnboardingCompleted: ${prefsService.isOnboardingCompleted}');
+    print('   hasValidConsent: ${prefsService.hasValidConsent}');
+    print('   isAuthenticated: ${authService.isAuthenticated}');
+    print('   isGuest: ${authService.isGuest}');
+    
     prefsService.debugPrintState();
 
-    // Decide a rota baseada nas flags/versão de aceite (RF-5)
+    // Fluxo: Onboarding → Termos → Login → Home
     String nextRoute;
 
-    if (!prefsService.hasValidConsent ||
+    // 1. Verifica se precisa ver onboarding (primeira vez)
+    if (prefsService.isFirstTimeUser || !prefsService.isOnboardingCompleted) {
+      nextRoute = '/onboarding';
+      print('➡️ SplashScreen - Indo para: $nextRoute (onboarding necessário)');
+    }
+    // 2. Verifica se precisa aceitar termos
+    else if (!prefsService.hasValidConsent ||
         prefsService.policiesVersionAccepted !=
             PreferencesService.currentPolicyVersion) {
-      // Usuário precisa ver onboarding ou reaceitar políticas
-      if (prefsService.isFirstTimeUser) {
-        nextRoute = '/onboarding';
-      } else {
-        // Usuário existente, mas precisa reaceitar políticas
-        nextRoute = '/consent';
-      }
-    } else if (!prefsService.isOnboardingCompleted) {
-      nextRoute = '/onboarding';
-    } else {
+      nextRoute = '/consent';
+      print('➡️ SplashScreen - Indo para: $nextRoute (termos necessários)');
+    }
+    // 3. Verifica se está autenticado
+    else if (!authService.isAuthenticated) {
+      nextRoute = '/login';
+      print('➡️ SplashScreen - Indo para: $nextRoute (não autenticado)');
+    }
+    // 4. Tudo ok, vai para home
+    else {
       nextRoute = '/home';
+      print('➡️ SplashScreen - Indo para: $nextRoute (tudo completo)');
     }
 
     Navigator.of(context).pushReplacementNamed(nextRoute);

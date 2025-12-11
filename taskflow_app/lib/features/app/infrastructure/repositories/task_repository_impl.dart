@@ -72,7 +72,10 @@ class TaskRepositoryImpl implements TaskRepository {
 
       // 3. Tenta enviar para Supabase (não crítico)
       try {
+        print('📤 Enviando tarefa para Supabase...');
         final taskMap = TaskMapper.toMap(entity);
+        print('📋 Dados a enviar: $taskMap');
+        
         final response = await _supabase
             .from('tasks')
             .insert(taskMap)
@@ -83,10 +86,12 @@ class TaskRepositoryImpl implements TaskRepository {
         final serverDto = TaskDto.fromMap(response);
         await _updateDtoInCache(serverDto);
 
-        print('✅ Tarefa sincronizada com servidor');
+        print('✅ Tarefa sincronizada com servidor - ID: ${serverDto.id}');
         return TaskMapper.toEntity(serverDto);
-      } catch (syncError) {
-        print('⚠️ Falha na sincronização (funcionando offline): $syncError');
+      } catch (syncError, stackTrace) {
+        print('⚠️ Falha na sincronização (funcionando offline)');
+        print('❌ Erro detalhado: $syncError');
+        print('📍 Stack trace: $stackTrace');
         // Retorna a versão do cache local
         return TaskMapper.toEntity(dto);
       }

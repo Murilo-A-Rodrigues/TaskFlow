@@ -5,9 +5,11 @@ import 'features/tasks/application/task_service.dart';
 import 'features/tasks/application/task_filter_service.dart';
 import 'features/categories/application/category_service.dart';
 import 'features/reminders/application/reminder_service.dart';
+import 'features/auth/application/auth_service.dart';
 // Clean Architecture - Infrastructure Layer
 import 'services/notifications/notification_helper.dart';
 import 'services/storage/preferences_service.dart';
+import 'services/user/user_profile_service.dart';
 import 'services/core/supabase_service.dart';
 import 'services/core/config_service.dart';
 import 'features/app/infrastructure/repositories/task_repository_impl.dart';
@@ -15,6 +17,7 @@ import 'features/app/infrastructure/local/category_local_dto_shared_prefs.dart';
 import 'features/splashscreen/pages/splash_screen.dart';
 import 'features/onboarding/pages/onboarding_screen.dart';
 import 'features/auth/pages/consent_screen.dart';
+import 'features/auth/pages/login_screen.dart';
 import 'features/app/presentation/main_navigation_scaffold.dart';
 import 'features/settings/pages/settings_screen.dart';
 import 'features/settings/pages/policy_viewer_screen.dart';
@@ -35,6 +38,15 @@ Future<void> main() async {
   final preferencesService = PreferencesService();
   await preferencesService.init();
 
+  // Inicializa o AuthService
+  final authService = AuthService();
+  
+  // Inicializa o UserProfileService
+  final userProfileService = UserProfileService(preferencesService);
+  authService.setProfileService(userProfileService);
+  
+  await authService.initialize();
+
   // Inicializa o NotificationHelper
   final notificationHelper = NotificationHelper();
   await notificationHelper.initialize();
@@ -43,6 +55,8 @@ Future<void> main() async {
   runApp(
     TaskFlowApp(
       preferencesService: preferencesService,
+      authService: authService,
+      userProfileService: userProfileService,
       notificationHelper: notificationHelper,
     ),
   );
@@ -50,11 +64,15 @@ Future<void> main() async {
 
 class TaskFlowApp extends StatelessWidget {
   final PreferencesService preferencesService;
+  final AuthService authService;
+  final UserProfileService userProfileService;
   final NotificationHelper notificationHelper;
 
   const TaskFlowApp({
     super.key,
     required this.preferencesService,
+    required this.authService,
+    required this.userProfileService,
     required this.notificationHelper,
   });
 
@@ -63,13 +81,17 @@ class TaskFlowApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: preferencesService),
+        // AuthService já inicializado
+        ChangeNotifierProvider.value(value: authService),
+        // UserProfileService já inicializado e conectado ao AuthService
+        ChangeNotifierProvider.value(value: userProfileService),
         // ThemeController para gerenciar o tema
         ChangeNotifierProvider<ThemeController>(
           create: (context) => ThemeController(preferencesService),
         ),
-        // TaskService com Repository atualizado
+        // TaskService com Repository e AuthService
         ChangeNotifierProvider<TaskService>(
-          create: (_) => TaskService(TaskRepositoryImpl()),
+          create: (_) => TaskService(TaskRepositoryImpl(), authService),
         ),
         // CategoryService com DAO local
         ChangeNotifierProvider<CategoryService>(
@@ -79,9 +101,9 @@ class TaskFlowApp extends StatelessWidget {
         ChangeNotifierProvider<TaskFilterService>(
           create: (_) => TaskFilterService(),
         ),
-        // ReminderService com NotificationHelper já inicializado
+        // ReminderService com NotificationHelper e AuthService
         ChangeNotifierProvider<ReminderService>(
-          create: (_) => ReminderService(notificationHelper),
+          create: (_) => ReminderService(notificationHelper, authService),
         ),
       ],
       child: Consumer<ThemeController>(
@@ -292,6 +314,7 @@ class TaskFlowApp extends StatelessWidget {
             routes: {
               '/splash': (context) => const SplashScreen(),
               '/onboarding': (context) => const OnboardingScreen(),
+              '/login': (context) => const LoginScreen(),
               '/consent': (context) => const ConsentScreen(),
               '/home': (context) => const MainNavigationScaffold(),
               '/settings': (context) => const SettingsScreen(),

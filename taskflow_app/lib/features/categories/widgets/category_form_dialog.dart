@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import '../../../services/core/supabase_service.dart';
 import '../../categories/application/category_service.dart';
 import '../../../features/app/domain/entities/category.dart';
 
@@ -267,7 +268,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
             : _descriptionController.text.trim(),
         color: _selectedColor,
         icon: _selectedIcon,
-        userId: 'local-user',
+        userId: SupabaseService.currentUserId ?? '00000000-0000-0000-0000-000000000000',
         createdAt: widget.category?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );

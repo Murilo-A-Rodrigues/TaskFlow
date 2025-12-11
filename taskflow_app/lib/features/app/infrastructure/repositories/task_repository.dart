@@ -259,6 +259,7 @@ class TaskRepository {
       due_date: data['due_date'],
       priority: data['priority'] ?? 2,
       updated_at: data['updated_at'] ?? DateTime.now().toIso8601String(),
+      user_id: data['user_id'] ?? '00000000-0000-0000-0000-000000000000',
     );
     return TaskMapper.toEntity(dto);
   }

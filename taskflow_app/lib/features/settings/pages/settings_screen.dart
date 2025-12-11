@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/storage/preferences_service.dart';
 import '../../tasks/application/task_service.dart';
+import '../../auth/application/auth_service.dart';
+import '../../categories/application/category_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -97,6 +99,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       }
     }
+  }
+
+  void _showLogoutDialog(AuthService authService) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sair'),
+        content: Text(
+          authService.isGuest
+              ? 'Deseja sair do modo convidado? Seus dados locais serão mantidos.'
+              : 'Deseja fazer logout? Você precisará fazer login novamente.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              
+              // Limpa o cache de categorias antes do logout
+              final categoryService = context.read<CategoryService>();
+              await categoryService.clearAllCategories();
+              
+              // Faz o logout
+              await authService.signOut();
+              
+              if (context.mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -275,6 +321,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     );
                   }
+                },
+              ),
+
+              const Divider(height: 32),
+
+              // Seção de Conta
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Conta',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              Consumer<AuthService>(
+                builder: (context, authService, _) {
+                  return Column(
+                    children: [
+                      if (authService.isAuthenticated && !authService.isGuest)
+                        ListTile(
+                          leading: const Icon(Icons.person, color: Colors.blue),
+                          title: const Text('Conta'),
+                          subtitle: Text(authService.userEmail ?? 'Usuário'),
+                        ),
+                      if (authService.isGuest)
+                        const ListTile(
+                          leading: Icon(Icons.person_outline, color: Colors.grey),
+                          title: Text('Modo Convidado'),
+                          subtitle: Text('Usando apenas armazenamento local'),
+                        ),
+                      ListTile(
+                        leading: const Icon(Icons.logout, color: Colors.red),
+                        title: const Text('Sair'),
+                        subtitle: Text(
+                          authService.isGuest
+                              ? 'Sair do modo convidado'
+                              : 'Fazer logout',
+                        ),
+                        onTap: () => _showLogoutDialog(authService),
+                      ),
+                    ],
+                  );
                 },
               ),
             ],

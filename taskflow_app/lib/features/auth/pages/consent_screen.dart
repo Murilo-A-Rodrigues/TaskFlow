@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/storage/preferences_service.dart';
+import '../application/auth_service.dart';
 import 'policy_viewer_screen.dart';
 
 class ConsentScreen extends StatefulWidget {
@@ -54,19 +55,22 @@ class _ConsentScreenState extends State<ConsentScreen> {
 
     try {
       final prefsService = context.read<PreferencesService>();
+      final authService = context.read<AuthService>();
 
       // Concede o consentimento
       await prefsService.grantConsent();
 
-      // Marca onboarding como completo (mas não marca como completeFirstTimeSetup ainda)
-      // O tutorial ainda precisa ser mostrado na HomeScreen
-      if (prefsService.isFirstTimeUser) {
-        await prefsService.setOnboardingCompleted(true);
-        // NÃO chama completeFirstTimeSetup() aqui - deixa para o tutorial
-      }
+      // Marca onboarding como completo e não é mais primeira vez
+      await prefsService.setOnboardingCompleted(true);
+      await prefsService.setFirstTimeUser(false);
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Se já está autenticado, vai para home, senão vai para login
+        if (authService.isAuthenticated) {
+          Navigator.of(context).pushReplacementNamed('/home');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
       }
     } catch (e) {
       if (mounted) {

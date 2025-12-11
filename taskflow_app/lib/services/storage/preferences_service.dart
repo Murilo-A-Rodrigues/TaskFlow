@@ -55,12 +55,33 @@ class PreferencesService extends ChangeNotifier {
     print('✅ Primeiro uso marcado como completo');
   }
 
+  // Tutorial da Home (independente do onboarding)
+  static const String _keyHomeTutorialShown = 'home_tutorial_shown';
+  
+  bool get hasSeenHomeTutorial {
+    return prefs.getBool(_keyHomeTutorialShown) ?? false;
+  }
+
+  Future<void> markHomeTutorialAsSeen() async {
+    await prefs.setBool(_keyHomeTutorialShown, true);
+    print('✅ Tutorial da home marcado como visto');
+    notifyListeners();
+  }
+
+  Future<void> resetHomeTutorial() async {
+    await prefs.setBool(_keyHomeTutorialShown, false);
+    print('🔄 Tutorial da home resetado');
+    notifyListeners();
+  }
+
   // Onboarding
   bool get isOnboardingCompleted =>
       prefs.getBool(_keyOnboardingCompleted) ?? false;
 
   Future<void> setOnboardingCompleted(bool value) async {
     await prefs.setBool(_keyOnboardingCompleted, value);
+    print('💾 PreferencesService - Onboarding completed salvo: $value');
+    notifyListeners();
   }
 
   // Privacy Policy
@@ -181,6 +202,7 @@ class PreferencesService extends ChangeNotifier {
   }
 
   Future<void> grantConsent() async {
+    print('💾 PreferencesService - Concedendo consentimento...');
     await Future.wait([
       // Mantém compatibilidade
       setPrivacyPolicyAccepted(true),
@@ -192,6 +214,7 @@ class PreferencesService extends ChangeNotifier {
       setPoliciesVersionAccepted(currentPolicyVersion),
       setAcceptedAt(DateTime.now().toIso8601String()),
     ]);
+    print('✅ PreferencesService - Consentimento salvo com sucesso');
     notifyListeners();
   }
 

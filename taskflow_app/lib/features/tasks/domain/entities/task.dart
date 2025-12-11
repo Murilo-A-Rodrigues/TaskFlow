@@ -15,6 +15,7 @@ class Task {
   final TaskPriority priority;
   final DateTime updatedAt;
   final String? categoryId;
+  final String userId; // FK para User - tarefas são por usuário
   final bool isDeleted; // Soft delete flag
   final DateTime? deletedAt; // Timestamp de quando foi deletado
 
@@ -28,6 +29,7 @@ class Task {
     TaskPriority? priority,
     required this.updatedAt,
     this.categoryId,
+    required this.userId,
     this.isDeleted = false,
     this.deletedAt,
   }) : description = description?.trim() ?? '',
@@ -116,6 +118,7 @@ class Task {
     TaskPriority? priority,
     DateTime? updatedAt,
     String? categoryId,
+    String? userId,
     bool? isDeleted,
     DateTime? deletedAt,
   }) {
@@ -128,6 +131,7 @@ class Task {
       dueDate: dueDate ?? this.dueDate,
       priority: priority ?? this.priority,
       categoryId: categoryId ?? this.categoryId,
+      userId: userId ?? this.userId,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
       deletedAt: deletedAt ?? this.deletedAt,

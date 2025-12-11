@@ -94,6 +94,9 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   deleted_at TIMESTAMPTZ NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   
+  -- Relacionamento obrigatório com usuário (dono da tarefa)
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  
   -- Relacionamentos opcionais
   project_id UUID NULL REFERENCES public.projects(id) ON DELETE SET NULL,
   category_id UUID NULL REFERENCES public.categories(id) ON DELETE SET NULL,
@@ -101,6 +104,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
 );
 
 -- Índices para performance
+CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON public.tasks(user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON public.tasks(project_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_category_id ON public.tasks(category_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON public.tasks(assigned_to);
@@ -114,6 +118,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_updated_at ON public.tasks(updated_at DESC)
 CREATE TABLE IF NOT EXISTS public.reminders (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   task_id UUID NOT NULL REFERENCES public.tasks(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   reminder_date TIMESTAMPTZ NOT NULL,
   type TEXT NOT NULL DEFAULT 'once' CHECK (type IN ('once', 'daily', 'weekly', 'custom')),
   custom_message TEXT NULL,
@@ -124,6 +129,7 @@ CREATE TABLE IF NOT EXISTS public.reminders (
 );
 
 -- Índices para performance
+CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON public.reminders(user_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_task_id ON public.reminders(task_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_reminder_date ON public.reminders(reminder_date);
 CREATE INDEX IF NOT EXISTS idx_reminders_is_active ON public.reminders(is_active);
@@ -230,20 +236,50 @@ CREATE POLICY "public write projects" ON public.projects
 -- ========================================
 -- 🏷️ POLÍTICAS PARA CATEGORIES
 -- ========================================
-CREATE POLICY "public read categories" ON public.categories
-  FOR SELECT TO anon USING (true);
+-- Política para permitir que usuários vejam apenas suas próprias categorias
+CREATE POLICY "Users can view own categories" ON public.categories
+  FOR SELECT TO anon USING (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
 
-CREATE POLICY "public write categories" ON public.categories
-  FOR ALL TO anon USING (true);
+-- Política para permitir que usuários criem suas próprias categorias
+CREATE POLICY "Users can create own categories" ON public.categories
+  FOR INSERT TO anon WITH CHECK (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
+
+-- Política para permitir que usuários atualizem suas próprias categorias
+CREATE POLICY "Users can update own categories" ON public.categories
+  FOR UPDATE TO anon USING (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
+
+-- Política para permitir que usuários deletem suas próprias categorias
+CREATE POLICY "Users can delete own categories" ON public.categories
+  FOR DELETE TO anon USING (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
 
 -- ========================================
 -- 📝 POLÍTICAS PARA TASKS
 -- ========================================
-CREATE POLICY "public read tasks" ON public.tasks
-  FOR SELECT TO anon USING (true);
+-- Política para permitir que usuários vejam apenas suas próprias tarefas
+CREATE POLICY "Users can view own tasks" ON public.tasks
+  FOR SELECT TO anon USING (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
 
-CREATE POLICY "public write tasks" ON public.tasks
-  FOR ALL TO anon USING (true);
+-- Política para permitir que usuários criem suas próprias tarefas
+CREATE POLICY "Users can create own tasks" ON public.tasks
+-- ========================================
+-- ⏰ POLÍTICAS PARA REMINDERS
+-- ========================================
+-- Política para permitir que usuários vejam apenas seus próprios lembretes
+CREATE POLICY "Users can view own reminders" ON public.reminders
+  FOR SELECT TO anon USING (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
+
+-- Política para permitir que usuários criem seus próprios lembretes
+CREATE POLICY "Users can create own reminders" ON public.reminders
+  FOR INSERT TO anon WITH CHECK (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
+
+-- Política para permitir que usuários atualizem seus próprios lembretes
+CREATE POLICY "Users can update own reminders" ON public.reminders
+  FOR UPDATE TO anon USING (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
+
+-- Política para permitir que usuários deletem seus próprios lembretes
+CREATE POLICY "Users can delete own reminders" ON public.reminders
+  FOR DELETE TO anon USING (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub'); own tasks" ON public.tasks
+  FOR DELETE TO anon USING (user_id::text = current_setting('request.jwt.claims', true)::json->>'sub');
 
 -- ========================================
 -- ⏰ POLÍTICAS PARA REMINDERS

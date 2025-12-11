@@ -21,6 +21,7 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
   /// - Paginação usando offset/limit
   /// - Sincronização incremental usando timestamp 'since'
   /// - Ordenação por updated_at para garantir consistência
+  /// - Filtro por user_id para exibir apenas categorias do usuário autenticado
   @override
   Future<RemotePage<CategoryDto>> fetchCategories({
     PageCursor? cursor,
@@ -37,14 +38,24 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
         }
       }
 
+      // Obtém o user_id do usuário autenticado
+      final currentUser = _client.auth.currentUser;
+      if (currentUser == null) {
+        if (kDebugMode) {
+          print('[SupabaseCategoriesRemote] Usuário não autenticado');
+        }
+        return RemotePage(data: [], nextCursor: null);
+      }
+
       // Configuração padrão de paginação
       final offset = cursor?.offset ?? 0;
       final limit = cursor?.limit ?? 100;
 
-      // Inicia a query na tabela de categorias
+      // Inicia a query na tabela de categorias filtrando por user_id
       var query = _client
           .from(_tableName)
           .select()
+          .eq('user_id', currentUser.id)
           .order('updated_at', ascending: true)
           .range(offset, offset + limit - 1);
 
@@ -132,15 +143,15 @@ class SupabaseCategoriesRemoteDatasource implements CategoriesRemoteApi {
         return [];
       }
 
-      // Converte DTOs para JSON
-      final jsonList = categories.map((cat) => cat.toJson()).toList();
+      // Converte DTOs para Map (não JSON string)
+      final mapList = categories.map((cat) => cat.toMap()).toList();
 
       if (kDebugMode) {
         print('[SupabaseCategoriesRemote] Enviando dados para Supabase...');
       }
 
       // Executa upsert no Supabase
-      final response = await _client.from(_tableName).upsert(jsonList).select();
+      final response = await _client.from(_tableName).upsert(mapList).select();
 
       if (kDebugMode) {
         print('[SupabaseCategoriesRemote] Upsert concluído com sucesso');

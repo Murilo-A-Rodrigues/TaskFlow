@@ -1,26 +1,24 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../services/user/user_profile_service.dart';
 
 /// Widget de avatar do usuário com suporte a foto e fallback para iniciais
 /// Acessível e com área clicável >= 48dp
 class UserAvatar extends StatelessWidget {
-  final String? photoPath;
-  final String userName;
   final double radius;
   final VoidCallback? onTap;
   final bool showBorder;
 
   const UserAvatar({
     super.key,
-    this.photoPath,
-    required this.userName,
     this.radius = 40,
     this.onTap,
     this.showBorder = true,
   });
 
   /// Retorna as iniciais do nome (máximo 2 letras)
-  String _getInitials() {
+  String _getInitials(String userName) {
     final parts = userName.trim().split(' ');
     if (parts.isEmpty) return '?';
 
@@ -33,21 +31,20 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profileService = context.watch<UserProfileService>();
+    final photoPath = profileService.userPhotoPath;
+    final userName = profileService.userName ?? 'Usuário';
+    
     // Verifica se há foto válida
     bool hasPhoto = false;
     FileImage? photoImage;
 
-    if (photoPath != null && photoPath!.isNotEmpty) {
-      final file = File(photoPath!);
+    if (photoPath != null && photoPath.isNotEmpty) {
+      final file = File(photoPath);
       if (file.existsSync()) {
         hasPhoto = true;
         photoImage = FileImage(file);
-        print('✅ UserAvatar - Foto encontrada: $photoPath');
-      } else {
-        print('❌ UserAvatar - Arquivo de foto não existe: $photoPath');
       }
-    } else {
-      print('⚠️ UserAvatar - Caminho de foto é null ou vazio: $photoPath');
     }
 
     // Widget do avatar
@@ -66,7 +63,7 @@ class UserAvatar extends StatelessWidget {
       child: hasPhoto
           ? null
           : Text(
-              _getInitials(),
+              _getInitials(userName),
               style: TextStyle(
                 fontSize: radius * 0.7,
                 fontWeight: FontWeight.bold,

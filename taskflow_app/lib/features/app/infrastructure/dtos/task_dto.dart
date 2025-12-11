@@ -16,6 +16,7 @@ class TaskDto {
   final int priority; // número para o banco
   final String updated_at; // ISO8601 String para sincronização
   final String? category_id; // FK para categories table
+  final String user_id; // FK para users table
 
   TaskDto({
     required this.id,
@@ -27,6 +28,7 @@ class TaskDto {
     required this.priority,
     required this.updated_at,
     this.category_id,
+    required this.user_id,
   });
 
   /// Factory para criar TaskDto a partir de Map (vindo do Supabase)
@@ -41,6 +43,7 @@ class TaskDto {
       priority: (map['priority'] as num).toInt(),
       updated_at: map['updated_at'] as String,
       category_id: map['category_id'] as String?,
+      user_id: map['user_id'] as String,
     );
   }
 
@@ -56,6 +59,7 @@ class TaskDto {
       'priority': priority,
       'updated_at': updated_at,
       'category_id': category_id,
+      'user_id': user_id,
     };
   }
 
@@ -82,6 +86,8 @@ class TaskDto {
     String? due_date,
     int? priority,
     String? updated_at,
+    String? category_id,
+    String? user_id,
   }) {
     return TaskDto(
       id: id ?? this.id,
@@ -92,6 +98,8 @@ class TaskDto {
       due_date: due_date ?? this.due_date,
       priority: priority ?? this.priority,
       updated_at: updated_at ?? this.updated_at,
+      category_id: category_id ?? this.category_id,
+      user_id: user_id ?? this.user_id,
     );
   }
 
